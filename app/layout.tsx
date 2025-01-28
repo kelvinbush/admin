@@ -3,6 +3,7 @@ import "./globals.css";
 import localFont from "next/font/local";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { Providers } from "@/app/providers";
 
 const montreal = localFont({
   src: [
@@ -63,7 +64,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn(montreal.className)}>{children}</body>
+      <body className={cn(montreal.className)}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
