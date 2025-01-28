@@ -10,6 +10,23 @@ export default {
   theme: {
   	extend: {
   		colors: {
+				primaryGrey: {
+          100: "#B6BABC",
+          200: "#93989C",
+          800: "#0C1116",
+          900: "#090D11",
+        },
+        "midnight-blue": "#151F28",
+        "primary-green": "#00B67C",
+        skyblue: {
+          500: "#00B9FF",
+          600: "#00A8E8",
+        },
+        "deep-blue": {
+          200: "#8AA1C4",
+          400: "#345C99",
+          500: "#01337F",
+        },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
