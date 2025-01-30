@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -250,7 +250,93 @@ const Page = () => {
   const [sortBy, setSortBy] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState({
+    affiliate: "all",
+    sector: "all",
+    verification: "all",
+    progress: "all"
+  });
   const itemsPerPage = 10;
+
+  // Get unique values for filters
+  const affiliates = [...new Set(tableData.map(item => item.affiliate))];
+  const sectors = [...new Set(tableData.map(item => item.sector))];
+
+  // Filter and search data
+  const filteredData = tableData.filter(item => {
+    const matchesSearch = 
+      searchQuery === "" ||
+      item.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.affiliate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.sector.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesAffiliate = filters.affiliate === "all" || item.affiliate === filters.affiliate;
+    const matchesSector = filters.sector === "all" || item.sector.includes(filters.sector);
+    const matchesProgress = filters.progress === "all" || 
+      (filters.progress === "complete" && item.progress === 100) ||
+      (filters.progress === "incomplete" && item.progress < 100);
+
+    // Tab filtering
+    const matchesTab = 
+      activeTab === "all" ||
+      (activeTab === "complete" && item.progress === 100) ||
+      (activeTab === "incomplete" && item.progress < 100) ||
+      (activeTab === "verified" && item.progress === 100) || // Assuming verified means 100% progress
+      (activeTab === "pending" && item.progress < 100);  // Assuming pending means < 100% progress
+
+    return matchesSearch && matchesAffiliate && matchesSector && matchesProgress && matchesTab;
+  });
+
+  // Sort data
+  const sortedData = [...filteredData].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return b.id - a.id;
+      case "oldest":
+        return a.id - b.id;
+      case "ascending":
+        return a.businessName.localeCompare(b.businessName);
+      case "descending":
+        return b.businessName.localeCompare(a.businessName);
+      default:
+        return 0;
+    }
+  });
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const paginatedData = sortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy, filters, activeTab]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    // Filters are already applied through the state changes
+    // This function is here if you need to add any additional logic
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      affiliate: "all",
+      sector: "all",
+      verification: "all",
+      progress: "all"
+    });
+    setSearchQuery("");
+    setSortBy("");
+    setCurrentPage(1);
+  };
 
   const stats = [
     {
@@ -284,12 +370,6 @@ const Page = () => {
       bgColor: "bg-midnight-blue",
     },
   ];
-
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
-  const paginatedData = tableData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div className="p-4 space-y-6">
@@ -362,50 +442,75 @@ const Page = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <Select>
+          <Select value={filters.affiliate} onValueChange={(value) => handleFilterChange("affiliate", value)}>
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="AFFILIATE/PROGRAM" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="affiliate1">Affiliate 1</SelectItem>
-              <SelectItem value="affiliate2">Affiliate 2</SelectItem>
+              <SelectItem value="all">All Affiliates</SelectItem>
+              {affiliates.map((affiliate) => (
+                <SelectItem key={affiliate} value={affiliate}>
+                  {affiliate}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select value={filters.sector} onValueChange={(value) => handleFilterChange("sector", value)}>
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="SECTOR" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="sector1">Sector 1</SelectItem>
-              <SelectItem value="sector2">Sector 2</SelectItem>
+              <SelectItem value="all">All Sectors</SelectItem>
+              {sectors.map((sector) => (
+                <SelectItem key={sector} value={sector}>
+                  {sector}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select value={filters.verification} onValueChange={(value) => handleFilterChange("verification", value)}>
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="VERIFICATION STATUS" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select value={filters.progress} onValueChange={(value) => handleFilterChange("progress", value)}>
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="B/S PROFILE PROGRESS" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Progress</SelectItem>
               <SelectItem value="complete">Complete</SelectItem>
               <SelectItem value="incomplete">Incomplete</SelectItem>
             </SelectContent>
           </Select>
 
-          <Button className="bg-[#00B67C] text-white hover:bg-[#00B67C]/90">
-            APPLY
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              className="bg-[#00B67C] text-white hover:bg-[#00B67C]/90"
+              onClick={handleApplyFilters}
+            >
+              APPLY
+            </Button>
+            {(filters.affiliate !== "all" || filters.sector !== "all" || 
+              filters.verification !== "all" || filters.progress !== "all") && (
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="border-gray-300"
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -428,65 +533,74 @@ const Page = () => {
           </nav>
         </div>
 
+        {/* Show "No results found" message when there's no data */}
+        {paginatedData.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No results found. Try adjusting your filters or search terms.
+          </div>
+        )}
+
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Business Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Registered User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Affiliate/Program
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  B/S Sector
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  B/S Profile Progress
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedData.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {item.businessName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={item.user.image}
-                        alt={item.user.name}
-                        className="h-8 w-8 rounded-full mr-3"
-                      />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.user.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {item.user.email} | {item.user.phone}
+        {paginatedData.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Business Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Registered User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Affiliate/Program
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    B/S Sector
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    B/S Profile Progress
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedData.map((item) => (
+                  <tr key={item.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.businessName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          src={item.user.image}
+                          alt={item.user.name}
+                          className="h-8 w-8 rounded-full mr-3"
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.user.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {item.user.email} | {item.user.phone}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.affiliate}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.sector}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Progress value={item.progress} className="w-24" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.affiliate}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.sector}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Progress value={item.progress} className="w-24" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
