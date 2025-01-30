@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,13 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  MagnifyingGlassIcon,
-  XMarkIcon,
-  FunnelIcon,
-  PlusIcon,
   ArrowDownTrayIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Progress } from "@/components/ui/progress";
+import { Icons } from "@/components/icons";
+import { useRouter } from "next/navigation";
 
 interface StatCardProps {
   title: string;
@@ -253,7 +255,10 @@ const tableData = [
 const tabs = [
   { id: "all", label: "All SMEs" },
   { id: "complete", label: "Complete SME Profiles" },
-  { id: "incomplete", label: "Incomplete SME Profiles" },
+  {
+    id: "incomplete",
+    label: "Incomplete SME Profiles",
+  },
   { id: "verified", label: "Verified SME Profiles" },
   { id: "pending", label: "Profiles Pending Verification" },
 ];
@@ -269,6 +274,7 @@ const Page = () => {
     verification: "all",
     progress: "all",
   });
+  const router = useRouter();
   const itemsPerPage = 10;
 
   // Get unique values for filters
@@ -574,8 +580,12 @@ const Page = () => {
 
         {/* Show "No results found" message when there's no data */}
         {paginatedData.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No results found. Try adjusting your filters or search terms.
+          <div className={"grid place-items-center h-full py-16"}>
+            <Icons.filterEmpty />
+            <div className="text-center py-8">
+              No entrepreneur records found; try refining your search or
+              adjusting your filters.
+            </div>
           </div>
         )}
 
@@ -612,6 +622,7 @@ const Page = () => {
                     className={
                       "hover:bg-[#E6FAF5] cursor-pointer transition duration-300"
                     }
+                    onClick={() => router.push(`/entrepreneurs/${item.id}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {item.businessName}
