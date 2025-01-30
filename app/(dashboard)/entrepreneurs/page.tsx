@@ -640,10 +640,10 @@ const Page = () => {
                       {item.sector}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Progress 
-                        value={item.progress} 
-                        className="w-24 bg-[#E6FAF5]" 
-                        indicatorClassName="bg-[#00B67C]"
+                      <Progress
+                        value={item.progress}
+                        className="w-24 bg-[#E8E9EA]"
+                        indicatorClassName="bg-primary-green"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
