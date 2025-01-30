@@ -18,17 +18,17 @@ const sidenavLinks = [
   {
     title: "Admin Management",
     href: "/#",
-    icon: <Icons.profilesIcon />,
+    icon: <Icons.adminIcon />,
   },
   {
     title: "Entrepreneurs",
-    href: "/#",
-    icon: <Icons.boostIcon />,
+    href: "/entrepreneurs",
+    icon: <Icons.entreIcon />,
   },
   {
     title: "Investor Opportunities",
     href: "/#",
-    icon: <Icons.funding />,
+    icon: <Icons.cashInHandIcon />,
   },
 ];
 
