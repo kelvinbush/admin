@@ -5,6 +5,7 @@ import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -86,11 +87,12 @@ const tableData = [
       name: "Robert Mugabe",
       email: "robert.mugabe@gmail.com",
       phone: "+255712345678",
-      image: "https://randomuser.me/api/portraits/men/1.jpg"
+      image: "https://randomuser.me/api/portraits/men/1.jpg",
     },
     affiliate: "Tuungane2XnaAbsa",
     sector: "Agriculture, Technology",
-    progress: 100
+    progress: 100,
+    verificationStatus: "pending",
   },
   {
     id: 2,
@@ -99,11 +101,12 @@ const tableData = [
       name: "Linet Adani",
       email: "linet.adani@gmail.com",
       phone: "+254712345748",
-      image: "https://randomuser.me/api/portraits/women/2.jpg"
+      image: "https://randomuser.me/api/portraits/women/2.jpg",
     },
     affiliate: "GIZ-SAIS",
     sector: "Real estate, Infrastructure",
-    progress: 100
+    progress: 100,
+    verificationStatus: "pending",
   },
   {
     id: 3,
@@ -112,11 +115,12 @@ const tableData = [
       name: "Tracey Marie",
       email: "tracey.marie@gmail.com",
       phone: "+256775445678",
-      image: "https://randomuser.me/api/portraits/women/3.jpg"
+      image: "https://randomuser.me/api/portraits/women/3.jpg",
     },
     affiliate: "GIZ-CGIAR",
     sector: "Energy, Technology",
-    progress: 100
+    progress: 100,
+    verificationStatus: "pending",
   },
   {
     id: 4,
@@ -125,11 +129,12 @@ const tableData = [
       name: "Shem Minjire",
       email: "shem.minjire@gmail.com",
       phone: "+254712445678",
-      image: "https://randomuser.me/api/portraits/men/4.jpg"
+      image: "https://randomuser.me/api/portraits/men/4.jpg",
     },
     affiliate: "Ecobank",
     sector: "Financial Services",
-    progress: 100
+    progress: 100,
+    verificationStatus: "verified",
   },
   {
     id: 5,
@@ -138,11 +143,12 @@ const tableData = [
       name: "Cecile Soul",
       email: "cecile.soul@gmail.com",
       phone: "+254712345678",
-      image: "https://randomuser.me/api/portraits/women/5.jpg"
+      image: "https://randomuser.me/api/portraits/women/5.jpg",
     },
     affiliate: "Tuungane2XnaAbsa",
     sector: "Healthcare",
-    progress: 100
+    progress: 100,
+    verificationStatus: "verified",
   },
   {
     id: 6,
@@ -151,11 +157,12 @@ const tableData = [
       name: "Soraya Ngure",
       email: "soraya.ngure@gmail.com",
       phone: "+254712448878",
-      image: "https://randomuser.me/api/portraits/women/6.jpg"
+      image: "https://randomuser.me/api/portraits/women/6.jpg",
     },
     affiliate: "GIZ-SAIS",
     sector: "Agriculture, Technology",
-    progress: 100
+    progress: 100,
+    verificationStatus: "verified",
   },
   {
     id: 7,
@@ -164,11 +171,12 @@ const tableData = [
       name: "Paul Lari",
       email: "paul.lari@gmail.com",
       phone: "+254775441238",
-      image: "https://randomuser.me/api/portraits/men/7.jpg"
+      image: "https://randomuser.me/api/portraits/men/7.jpg",
     },
     affiliate: "GIZ-CGIAR",
     sector: "Real estate, Infrastructure",
-    progress: 100
+    progress: 100,
+    verificationStatus: "pending",
   },
   {
     id: 8,
@@ -177,11 +185,12 @@ const tableData = [
       name: "Sarah Kimani",
       email: "sarah.kimani@gmail.com",
       phone: "+254712987654",
-      image: "https://randomuser.me/api/portraits/women/8.jpg"
+      image: "https://randomuser.me/api/portraits/women/8.jpg",
     },
     affiliate: "Ecobank",
     sector: "Technology, Innovation",
-    progress: 85
+    progress: 85,
+    verificationStatus: "pending",
   },
   {
     id: 9,
@@ -190,11 +199,12 @@ const tableData = [
       name: "James Omondi",
       email: "james.omondi@gmail.com",
       phone: "+254723456789",
-      image: "https://randomuser.me/api/portraits/men/9.jpg"
+      image: "https://randomuser.me/api/portraits/men/9.jpg",
     },
     affiliate: "GIZ-SAIS",
     sector: "Agriculture, Sustainability",
-    progress: 75
+    progress: 75,
+    verificationStatus: "verified",
   },
   {
     id: 10,
@@ -203,11 +213,12 @@ const tableData = [
       name: "Grace Njeri",
       email: "grace.njeri@gmail.com",
       phone: "+254734567890",
-      image: "https://randomuser.me/api/portraits/women/10.jpg"
+      image: "https://randomuser.me/api/portraits/women/10.jpg",
     },
     affiliate: "Tuungane2XnaAbsa",
     sector: "Healthcare, Technology",
-    progress: 90
+    progress: 90,
+    verificationStatus: "pending",
   },
   {
     id: 11,
@@ -216,11 +227,12 @@ const tableData = [
       name: "Daniel Mwangi",
       email: "daniel.mwangi@gmail.com",
       phone: "+254745678901",
-      image: "https://randomuser.me/api/portraits/men/11.jpg"
+      image: "https://randomuser.me/api/portraits/men/11.jpg",
     },
     affiliate: "GIZ-CGIAR",
     sector: "Education, Technology",
-    progress: 65
+    progress: 65,
+    verificationStatus: "verified",
   },
   {
     id: 12,
@@ -229,12 +241,13 @@ const tableData = [
       name: "Faith Wanjiku",
       email: "faith.wanjiku@gmail.com",
       phone: "+254756789012",
-      image: "https://randomuser.me/api/portraits/women/12.jpg"
+      image: "https://randomuser.me/api/portraits/women/12.jpg",
     },
     affiliate: "GIZ-SAIS",
     sector: "Energy, Sustainability",
-    progress: 95
-  }
+    progress: 95,
+    verificationStatus: "pending",
+  },
 ];
 
 const tabs = [
@@ -254,17 +267,17 @@ const Page = () => {
     affiliate: "all",
     sector: "all",
     verification: "all",
-    progress: "all"
+    progress: "all",
   });
   const itemsPerPage = 10;
 
   // Get unique values for filters
-  const affiliates = [...new Set(tableData.map(item => item.affiliate))];
-  const sectors = [...new Set(tableData.map(item => item.sector))];
+  const affiliates = [...new Set(tableData.map((item) => item.affiliate))];
+  const sectors = [...new Set(tableData.map((item) => item.sector))];
 
   // Filter and search data
-  const filteredData = tableData.filter(item => {
-    const matchesSearch = 
+  const filteredData = tableData.filter((item) => {
+    const matchesSearch =
       searchQuery === "" ||
       item.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -272,21 +285,34 @@ const Page = () => {
       item.affiliate.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.sector.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesAffiliate = filters.affiliate === "all" || item.affiliate === filters.affiliate;
-    const matchesSector = filters.sector === "all" || item.sector.includes(filters.sector);
-    const matchesProgress = filters.progress === "all" || 
+    const matchesAffiliate =
+      filters.affiliate === "all" || item.affiliate === filters.affiliate;
+    const matchesSector =
+      filters.sector === "all" || item.sector.includes(filters.sector);
+    const matchesProgress =
+      filters.progress === "all" ||
       (filters.progress === "complete" && item.progress === 100) ||
       (filters.progress === "incomplete" && item.progress < 100);
+    const matchesVerification =
+      filters.verification === "all" ||
+      item.verificationStatus === filters.verification;
 
     // Tab filtering
-    const matchesTab = 
+    const matchesTab =
       activeTab === "all" ||
       (activeTab === "complete" && item.progress === 100) ||
       (activeTab === "incomplete" && item.progress < 100) ||
-      (activeTab === "verified" && item.progress === 100) || // Assuming verified means 100% progress
-      (activeTab === "pending" && item.progress < 100);  // Assuming pending means < 100% progress
+      (activeTab === "verified" && item.verificationStatus === "verified") ||
+      (activeTab === "pending" && item.verificationStatus === "pending");
 
-    return matchesSearch && matchesAffiliate && matchesSector && matchesProgress && matchesTab;
+    return (
+      matchesSearch &&
+      matchesAffiliate &&
+      matchesSector &&
+      matchesProgress &&
+      matchesVerification &&
+      matchesTab
+    );
   });
 
   // Sort data
@@ -308,7 +334,7 @@ const Page = () => {
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const paginatedData = sortedData.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Reset page when filters change
@@ -317,7 +343,7 @@ const Page = () => {
   }, [searchQuery, sortBy, filters, activeTab]);
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleApplyFilters = () => {
@@ -331,7 +357,7 @@ const Page = () => {
       affiliate: "all",
       sector: "all",
       verification: "all",
-      progress: "all"
+      progress: "all",
     });
     setSearchQuery("");
     setSortBy("");
@@ -442,7 +468,10 @@ const Page = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <Select value={filters.affiliate} onValueChange={(value) => handleFilterChange("affiliate", value)}>
+          <Select
+            value={filters.affiliate}
+            onValueChange={(value) => handleFilterChange("affiliate", value)}
+          >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="AFFILIATE/PROGRAM" />
             </SelectTrigger>
@@ -456,7 +485,10 @@ const Page = () => {
             </SelectContent>
           </Select>
 
-          <Select value={filters.sector} onValueChange={(value) => handleFilterChange("sector", value)}>
+          <Select
+            value={filters.sector}
+            onValueChange={(value) => handleFilterChange("sector", value)}
+          >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="SECTOR" />
             </SelectTrigger>
@@ -470,7 +502,10 @@ const Page = () => {
             </SelectContent>
           </Select>
 
-          <Select value={filters.verification} onValueChange={(value) => handleFilterChange("verification", value)}>
+          <Select
+            value={filters.verification}
+            onValueChange={(value) => handleFilterChange("verification", value)}
+          >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="VERIFICATION STATUS" />
             </SelectTrigger>
@@ -478,11 +513,13 @@ const Page = () => {
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select value={filters.progress} onValueChange={(value) => handleFilterChange("progress", value)}>
+          <Select
+            value={filters.progress}
+            onValueChange={(value) => handleFilterChange("progress", value)}
+          >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="B/S PROFILE PROGRESS" />
             </SelectTrigger>
@@ -494,16 +531,18 @@ const Page = () => {
           </Select>
 
           <div className="flex gap-2">
-            <Button 
+            <Button
               className="bg-[#00B67C] text-white hover:bg-[#00B67C]/90"
               onClick={handleApplyFilters}
             >
               APPLY
             </Button>
-            {(filters.affiliate !== "all" || filters.sector !== "all" || 
-              filters.verification !== "all" || filters.progress !== "all") && (
-              <Button 
-                variant="outline" 
+            {(filters.affiliate !== "all" ||
+              filters.sector !== "all" ||
+              filters.verification !== "all" ||
+              filters.progress !== "all") && (
+              <Button
+                variant="outline"
                 onClick={clearFilters}
                 className="border-gray-300"
               >
@@ -524,7 +563,7 @@ const Page = () => {
                   "py-4 px-1 border-b-2 font-medium text-sm",
                   activeTab === tab.id
                     ? "border-[#00B67C] text-[#00B67C]"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
                 {tab.label}
@@ -544,29 +583,37 @@ const Page = () => {
         {paginatedData.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-gray-100">
+              <thead className="bg-[#E8E9EA] border-b border-b-[#B6BABC]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium  uppercase tracking-wider">
                     Business Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium  uppercase tracking-wider">
                     Registered User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium  uppercase tracking-wider">
                     Affiliate/Program
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium  uppercase tracking-wider">
                     B/S Sector
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium  uppercase tracking-wider">
                     B/S Profile Progress
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    Verification Status
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedData.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr
+                    key={item.id}
+                    className={
+                      "hover:bg-[#E6FAF5] cursor-pointer transition duration-300"
+                    }
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {item.businessName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -577,23 +624,38 @@ const Page = () => {
                           className="h-8 w-8 rounded-full mr-3"
                         />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium">
                             {item.user.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm">
                             {item.user.email} | {item.user.phone}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {item.affiliate}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {item.sector}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Progress value={item.progress} className="w-24" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "font-medium",
+                          item.verificationStatus === "verified"
+                            ? "bg-[#B0EFDF] text-[#007054]"
+                            : "bg-[#B1EFFE] text-[#1E429F]",
+                        )}
+                      >
+                        {item.verificationStatus === "verified"
+                          ? "Verified"
+                          : "Pending verification"}
+                      </Badge>
                     </td>
                   </tr>
                 ))}
@@ -611,7 +673,7 @@ const Page = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
               Previous
@@ -629,7 +691,7 @@ const Page = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
               Next
