@@ -640,13 +640,17 @@ const Page = () => {
                       {item.sector}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Progress value={item.progress} className="w-24" />
+                      <Progress 
+                        value={item.progress} 
+                        className="w-24 bg-[#E6FAF5]" 
+                        indicatorClassName="bg-[#00B67C]"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "font-medium",
+                          "font-medium shadow-none hover:shadow-none",
                           item.verificationStatus === "verified"
                             ? "bg-[#B0EFDF] text-[#007054]"
                             : "bg-[#B1EFFE] text-[#1E429F]",
