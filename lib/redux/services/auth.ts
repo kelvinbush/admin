@@ -19,7 +19,7 @@ export const authApi = apiSlice.injectEndpoints({
       { email: string; password: string }
     >({
       query: (credentials) => ({
-        url: "/Authentication/Login",
+        url: "/Authentication/AdminLogin",
         method: "POST",
         body: credentials,
       }),
@@ -48,28 +48,28 @@ export const authApi = apiSlice.injectEndpoints({
     }),
     forgotPassword: build.mutation<void, { email: string }>({
       query: (credentials) => ({
-        url: "/Authentication/GetPasswordCode",
+        url: "/Authentication/GetAdminPasswordCode",
         method: "POST",
         body: credentials,
       }),
     }),
     resetPassword: build.mutation<void, { code: string; guid: string }>({
       query: (data) => ({
-        url: "/Authentication/PostResetPasswordCode",
+        url: "/Authentication/PostAdminResetPasswordCode",
         method: "POST",
         body: data,
       }),
     }),
     resendEmailOtp: build.mutation<void, { guid: string }>({
       query: (credentials) => ({
-        url: "/Authentication/ResendUserEmailOtp",
+        url: "/Authentication/ResendAdminEmailOtp",
         method: "POST",
         body: credentials,
       }),
     }),
     resendPhoneOtp: build.mutation<void, { guid: string }>({
       query: (credentials) => ({
-        url: "/Authentication/ResendUserSmsOtp",
+        url: "/Authentication/ResendAdminSmsOtp",
         method: "POST",
         body: credentials,
       }),
@@ -79,7 +79,7 @@ export const authApi = apiSlice.injectEndpoints({
       { personalGuid: string; password: string }
     >({
       query: (data) => ({
-        url: "/Authentication/PostResetPassword",
+        url: "/Authentication/PostAdminResetPassword",
         method: "POST",
         body: data,
       }),

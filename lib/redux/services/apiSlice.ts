@@ -9,7 +9,7 @@ import { AUTH, FUNDING, USER } from "@/lib/constants/tags";
 import { logOut, setAccessToken } from "@/lib/redux/features/authSlice";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://dev.melaninkapital.com/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://dev.api.melaninkapital.com/api";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
@@ -39,15 +39,10 @@ const baseQueryWithReAuth = async (
     // Check if the original request was a login attempt
     const isLoginRequest =
       typeof args === "string"
-        ? args === "/Authentication/Login"
-        : args.url === "/Authentication/Login";
+        ? args === "/Authentication/AdminLogin"
+        : args.url === "/Authentication/AdminLogin";
 
-    const isRegisterRequest =
-      typeof args === "string"
-        ? args === "/Authentication/Register"
-        : args.url === "/Authentication/Register";
-
-    if (!isLoginRequest && !isRegisterRequest) {
+    if (!isLoginRequest) {
       // If it wasn't a login request, log out
       api.dispatch(logOut());
       return result;

@@ -9,14 +9,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <div className="relative min-h-svh bg-[#E8E9EA]">
-        <Sidenav />
-        <Topnav />
-        <main className={"max-w-[2000px] py-4 pl-[308px] pr-4"}>
-          {children}
-        </main>
-      </div>
-    </>
+    <div className="relative min-h-svh bg-[#E8E9EA]">
+      <Sidenav />
+      <Topnav />
+      <main className={"max-w-[2000px] py-4 pl-[308px] pr-4"}>{children}</main>
+    </div>
   );
 }
