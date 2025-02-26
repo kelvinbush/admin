@@ -35,6 +35,14 @@ export const userApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      providesTags: [{ type: USER, id: "USER-ADMIN" }],
+    }),
+    getEntrepreneur: build.query<UserResponse, { guid: string }>({
+      query: (credentials) => ({
+        url: "/PersonalProfile/GetPersonalProfile",
+        method: "POST",
+        body: credentials,
+      }),
       providesTags: [{ type: USER, id: "USER" }],
     }),
     verifyEmail: build.mutation<void, { guid: string; code: string }>({
@@ -144,6 +152,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetUserQuery,
+  useGetEntrepreneurQuery,
   useGetBusinessProfileQuery,
   useGetBusinessProfileByPersonalGuidQuery,
   useGetBusinessDocumentsQuery,

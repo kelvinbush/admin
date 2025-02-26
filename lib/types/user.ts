@@ -15,7 +15,7 @@ export interface UserResponse {
     firstName: string;
     lastName: string;
     email: string;
-    gender: string;
+    gender: "female" | "male" | "other";
     phoneNumber: string;
     address: string;
     city: string;
@@ -28,6 +28,9 @@ export interface UserResponse {
     positionHeld: string;
     profilePhoto: string;
     program: string;
+    taxIdNumber: string;
+    identityDocNumber: string;
+    identityDocType: string;
   };
   status: string;
   message: string;
@@ -39,12 +42,16 @@ export enum DocType {
   BusinessPermit = 2,
   TaxRegistrationDocument = 3,
   AnnualBankStatement = 4,
-  CompanyBudget = 5,
-  BusinessPlan = 6,
+  BusinessPlan = 5,
   PitchDeck = 7,
-  OtherDocuments = 8,
-  TaxClearanceDocument = 9,
-  IncomeStatements = 10,
+  CertificateOfIncorporation = 6,
+  TaxClearanceDocument = 8,
+  PartnershipDeed = 9,
+  MemorandumOfAssociation = 10,
+  AuditedFinancialStatement = 11,
+  BalanceCahsFlowIncomeStatement = 12,
+  AuditedFinancialStatementyear2 = 13,
+  AuditedFinancialStatementyear3 = 14,
 }
 
 export interface BusinessDocument {
@@ -58,27 +65,12 @@ export interface BusinessDocument {
   status: string;
   statusRemarks: string;
 }
+
 export interface PersonalDocument {
   id: string;
   path: string;
   docType: number;
   personalGuid: string;
-}
-
-export enum MonthlyTurnover {
-  LESS_THAN_100K = "Less than KES 100,000",
-  BETWEEN_100K_500K = "KES 100,000 - KES 500,000",
-  BETWEEN_500K_1M = "KES 500,000 - KES 1,000,000",
-  BETWEEN_1M_5M = "KES 1,000,000 - KES 5,000,000",
-  OVER_5M = "Over KES 5,000,000",
-}
-
-export enum YearlyTurnover {
-  LESS_THAN_1M = "Less than KES 1,000,000",
-  BETWEEN_1M_5M = "KES 1,000,000 - KES 5,000,000",
-  BETWEEN_5M_10M = "KES 5,000,000 - KES 10,000,000",
-  BETWEEN_10M_50M = "KES 10,000,000 - KES 50,000,000",
-  OVER_50M = "Over KES 50,000,000",
 }
 
 export interface BusinessProfile {
@@ -92,8 +84,8 @@ export interface BusinessProfile {
   street1: string;
   street2: string;
   postalCode: string;
-  averageAnnualTurnover: YearlyTurnover;
-  averageMonthlyTurnover: MonthlyTurnover;
+  averageAnnualTurnover: number;
+  averageMonthlyTurnover: number;
   previousLoans: boolean;
   loanAmount: number;
   recentLoanStatus: string | null;
@@ -102,4 +94,5 @@ export interface BusinessProfile {
   businessLogo: string;
   yearOfRegistration: string;
   isBeneficalOwner: boolean;
+  defaultCurrency: string;
 }

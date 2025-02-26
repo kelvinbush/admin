@@ -581,7 +581,7 @@ const Page = () => {
         {/* Show "No results found" message when there's no data */}
         {paginatedData.length === 0 && (
           <div className={"grid place-items-center h-full py-16"}>
-            <Icons.filterEmpty />
+            <Icons.entreIcon />
             <div className="text-center py-8">
               No entrepreneur records found; try refining your search or
               adjusting your filters.

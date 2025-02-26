@@ -25,11 +25,6 @@ const sidenavLinks = [
     href: "/entrepreneurs",
     icon: <Icons.entreIcon />,
   },
-  {
-    title: "Investor Opportunities",
-    href: "/#",
-    icon: <Icons.cashInHandIcon />,
-  },
 ];
 
 const otherLinks = [
