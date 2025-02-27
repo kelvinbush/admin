@@ -159,12 +159,9 @@ export const userApiSlice = apiSlice.injectEndpoints({
         response?.loanApplications,
       providesTags: [{ type: USER, id: "LOAN_APPLICATIONS" }],
     }),
-    getLoanApplication: build.query<
-      { loanApplication: LoanApplication },
-      { guid: string }
-    >({
+    getLoanApplication: build.query<LoanApplication, { guid: string }>({
       query: (credentials) => ({
-        url: "/Admin/GetLoanApplication",
+        url: "/LoanApplication/GetLoanApplication",
         method: "POST",
         body: credentials,
       }),
