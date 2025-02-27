@@ -13,7 +13,9 @@ export default function CompanyDetailsLayout({
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CompanyDetails userId={userId as string}>{children}</CompanyDetails>
+      <CompanyDetails loanId={""} userId={userId as string}>
+        {children}
+      </CompanyDetails>
     </Suspense>
   );
 }

@@ -2,13 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 import { useGetLoanApplicationQuery } from "@/lib/redux/services/user";
 import { LoanApplication } from "@/lib/types/user";

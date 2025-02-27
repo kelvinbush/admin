@@ -16,6 +16,8 @@ const profileFormSchema = z.object({
   phoneNumber: z.string().min(6, "Phone number must be at least 6 digits"),
   gender: z.enum(["female", "male", "other"]),
   birthDate: z.string(),
+  identityDocNumber: z.string(),
+  taxIdNumber: z.string(),
   positionHeld: z.string().min(1, "Position is required"),
 });
 
@@ -45,6 +47,8 @@ const PersonalInformation = () => {
         phoneNumber: personal.phoneNumber || "",
         gender: personal.gender || "other",
         birthDate: personal.birthDate?.split("T")[0] || "",
+        identityDocNumber: personal.identityDocNumber || "",
+        taxIdNumber: personal.taxIdNumber || "",
         positionHeld: personal.positionHeld || "",
       };
 

@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@edgestore/react": "^0.3.3",
+    "@edgestore/server": "^0.3.3",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^4.1.0",
     "@radix-ui/react-avatar": "^1.1.3",

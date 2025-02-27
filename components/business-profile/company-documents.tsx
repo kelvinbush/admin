@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { userApiSlice } from "@/lib/redux/services/user";
 import { BusinessDocument, DocType } from "@/lib/types/user";
 import { Icons } from "@/components/icons";
-import { useParams } from "next/navigation";
 
 const documentTypeNames: Record<DocType, string> = {
   [DocType.BusinessRegistration]: "Business Registration",

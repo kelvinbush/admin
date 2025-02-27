@@ -18,7 +18,7 @@ import {
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { format } from "date-fns";
-import { TProfileForm } from "@/app/(dashboard)/entrepreneurs/[userId]/personal-information/page";
+import { TProfileForm } from "@/app/(dashboard)/loan-applications/[loanId]/personal-information/page";
 
 interface ProfileFormProps {
   form: UseFormReturn<TProfileForm>;
@@ -167,6 +167,34 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                       }
                       placeholder="DD/MM/YYYY"
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="identityDocNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Identification Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} readOnly />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="taxIdNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Tax Identification Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

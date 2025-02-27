@@ -1,7 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import CompanyInformation from "@/components/business-profile/company-details/company-information";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function CompanyInformationPage() {
   const searchParams = useSearchParams();

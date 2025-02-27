@@ -15,16 +15,16 @@ const sidenavLinks = [
     href: "/",
     icon: <Icons.dashboard />,
   },
-  {
-    title: "Admin Management",
-    href: "/#",
-    icon: <Icons.adminIcon />,
-  },
-  {
-    title: "Entrepreneurs",
-    href: "/entrepreneurs",
-    icon: <Icons.entreIcon />,
-  },
+  // {
+  //   title: "Admin Management",
+  //   href: "/#",
+  //   icon: <Icons.adminIcon />,
+  // },
+  // {
+  //   title: "Entrepreneurs",
+  //   href: "/entrepreneurs",
+  //   icon: <Icons.entreIcon />,
+  // },
   {
     title: "Loan Applications",
     href: "/loan-applications",

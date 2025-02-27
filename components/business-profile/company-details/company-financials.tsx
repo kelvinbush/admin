@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -26,7 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   userApiSlice,
@@ -78,18 +76,14 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
       { guid: userId as string },
       { skip: !userId },
     );
-  const [updateBusinessProfile, { isLoading: isUpdating }] =
-    useUpdateBusinessProfileMutation();
+  const [updateBusinessProfile] = useUpdateBusinessProfileMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
   });
 
-  const {
-    watch,
-    formState: { isValid: formIsValid, isDirty },
-  } = form;
+  const { watch } = form;
   const showDefaultReason = watch("loanStatus") === "defaulted";
   const hasBorrowingHistory = watch("hasBorrowingHistory") === "yes";
 
