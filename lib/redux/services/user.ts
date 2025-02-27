@@ -147,15 +147,16 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: USER, id: "BUSINESS" }],
     }),
-    getLoanApplications: build.query<
-      { loanApplications: LoanApplication[] },
-      { adminguid: string }
-    >({
+    getLoanApplications: build.query<LoanApplication[], { adminguid: string }>({
       query: (credentials) => ({
-        url: "/GetAllLoanApplications",
+        url: "/Admin/GetAllLoanApplications",
         method: "POST",
         body: credentials,
       }),
+      transformResponse: (response) =>
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        response?.loanApplications,
       providesTags: [{ type: USER, id: "LOAN_APPLICATIONS" }],
     }),
     getLoanApplication: build.query<
@@ -163,10 +164,14 @@ export const userApiSlice = apiSlice.injectEndpoints({
       { guid: string }
     >({
       query: (credentials) => ({
-        url: "/GetLoanApplication",
+        url: "/Admin/GetLoanApplication",
         method: "POST",
         body: credentials,
       }),
+      transformResponse: (response) =>
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        response?.loanApplication,
       providesTags: [{ type: USER, id: "LOAN_APPLICATION" }],
     }),
   }),

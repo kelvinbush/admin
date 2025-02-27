@@ -5,7 +5,6 @@ import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -25,6 +24,7 @@ import {
 import { useGetLoanApplicationsQuery } from "@/lib/redux/services/user";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { useAppSelector } from "@/lib/redux/hooks";
+import { LoanApplication } from "@/lib/types/user";
 
 interface StatCardProps {
   title: string;
@@ -82,335 +82,21 @@ const StatCard = ({
   );
 };
 
-// Define interfaces for the backend data structure
-interface BusinessProfile {
-  businessName: string;
-  businessDescription: string;
-  typeOfIncorporation: string;
-  sector: string;
-  location: string;
-  city: string;
-  country: string;
-  street1: string;
-  street2: string;
-  postalCode: string;
-  currency: string;
-  averageAnnualTurnover: number;
-  averageMonthlyTurnover: number;
-  previousLoans: boolean;
-  loanAmount: number;
-  defaultCurrency: string;
-  recentLoanStatus: string;
-  defaultReason: string;
-  businessLogo: string;
-  yearOfRegistration: string;
-  isBeneficalOwner: boolean;
-  personalGuid: string;
-  businessGuid: string;
-  personalProfile: PersonalProfile | null;
+interface FiltersState {
+  loanType: string;
+  ecobankInterest: string;
+  applicationDate: string;
 }
 
-interface PersonalProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  gender: string;
-  phoneNumber: string;
-  address: string;
-  city: string;
-  county: string;
-  birthDate: string;
-  guid: string;
-  verifiedEmail: number;
-  verifiedPhoneNumber: number;
-  business: number;
-  positionHeld: string;
-  profilePhoto: string;
-  identityDocType: string;
-  identityDocNumber: string;
-  taxIdNumber: string;
-  program: string;
-}
-
-interface LoanApplication {
-  loanApplicationGuid: string;
-  loanProductName: string;
-  loanAmount: number;
-  defaultCurrency: string;
-  repaymentPeriod: string;
-  loanPurpose: string;
-  interestRate: number;
-  ecobankSubscription: boolean;
-  loanStatus: number;
-  businessGuid: string;
-  personalGuid: string;
-  businessProfile: BusinessProfile;
-  personalProfile: PersonalProfile;
-}
-
-// Mock data for the loan applications table based on the backend structure
-const tableData: LoanApplication[] = [
-  {
-    loanApplicationGuid: "c0ae1ea1-f144-465c-a6e2-c8f331756922",
-    loanProductName: "Working Capital Financing",
-    loanAmount: 5000.0,
-    defaultCurrency: "USD",
-    repaymentPeriod: "3 months",
-    loanPurpose: "Cooling stuff",
-    interestRate: 10.0,
-    ecobankSubscription: true,
-    loanStatus: 0, // Pending
-    businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938b",
-    personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02b",
-    businessProfile: {
-      businessName: "EcoTech",
-      businessDescription: "Business description",
-      typeOfIncorporation: "sole-proprietorship",
-      sector: "technology",
-      location: "kenya",
-      city: "Nairobi",
-      country: "kenya",
-      street1: "Ngong ROad",
-      street2: "",
-      postalCode: "00100",
-      currency: "UGX",
-      averageAnnualTurnover: 202020.0,
-      averageMonthlyTurnover: 10000.0,
-      previousLoans: false,
-      loanAmount: 0.0,
-      defaultCurrency: "KES",
-      recentLoanStatus: "NONE",
-      defaultReason: "",
-      businessLogo:
-        "https://files.edgestore.dev/bqiq1ldogyqmeec4/publicFiles/_public/40ab6873-667e-4de2-9d71-61f6a2a6d779.jpg",
-      yearOfRegistration: "2025",
-      isBeneficalOwner: false,
-      personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02b",
-      businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938b",
-      personalProfile: null,
-    },
-    personalProfile: {
-      firstName: "Kelvin",
-      lastName: "Wachiye",
-      email: "kelybush@gmail.com",
-      gender: "other",
-      phoneNumber: "+254795778730",
-      address: "",
-      city: "",
-      county: "",
-      birthDate: "1999-08-20T00:00:00Z",
-      guid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02b",
-      verifiedEmail: 1,
-      verifiedPhoneNumber: 1,
-      business: 0,
-      positionHeld: "cofounder",
-      profilePhoto:
-        "https://files.edgestore.dev/bqiq1ldogyqmeec4/publicFiles/_public/9b20486a-81df-4c09-a521-ec63f320a0ce.jpg",
-      identityDocType: "identity_card",
-      identityDocNumber: "848487",
-      taxIdNumber: "9484848",
-      program: "",
-    },
-  },
-  // Add more mock data with different statuses
-  {
-    loanApplicationGuid: "c0ae1ea1-f144-465c-a6e2-c8f331756923",
-    loanProductName: "Working Capital Financing",
-    loanAmount: 10000.0,
-    defaultCurrency: "EUR",
-    repaymentPeriod: "6 months",
-    loanPurpose: "Inventory purchase",
-    interestRate: 12.0,
-    ecobankSubscription: true,
-    loanStatus: 1, // Approved
-    businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938c",
-    personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02c",
-    businessProfile: {
-      businessName: "DMA Limited",
-      businessDescription: "Business description",
-      typeOfIncorporation: "limited-company",
-      sector: "agriculture",
-      location: "tanzania",
-      city: "Dar es Salaam",
-      country: "tanzania",
-      street1: "Main Street",
-      street2: "",
-      postalCode: "00200",
-      currency: "TZS",
-      averageAnnualTurnover: 350000.0,
-      averageMonthlyTurnover: 29000.0,
-      previousLoans: false,
-      loanAmount: 0.0,
-      defaultCurrency: "TZS",
-      recentLoanStatus: "NONE",
-      defaultReason: "",
-      businessLogo: "https://randomuser.me/api/portraits/men/1.jpg",
-      yearOfRegistration: "2020",
-      isBeneficalOwner: true,
-      personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02c",
-      businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938c",
-      personalProfile: null,
-    },
-    personalProfile: {
-      firstName: "Robert",
-      lastName: "Mugabe",
-      email: "robert.mugabe@gmail.com",
-      gender: "male",
-      phoneNumber: "+255712345678",
-      address: "",
-      city: "",
-      county: "",
-      birthDate: "1988-05-15T00:00:00Z",
-      guid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02c",
-      verifiedEmail: 1,
-      verifiedPhoneNumber: 1,
-      business: 0,
-      positionHeld: "ceo",
-      profilePhoto: "https://randomuser.me/api/portraits/men/1.jpg",
-      identityDocType: "passport",
-      identityDocNumber: "AB123456",
-      taxIdNumber: "123456789",
-      program: "",
-    },
-  },
-  {
-    loanApplicationGuid: "c0ae1ea1-f144-465c-a6e2-c8f331756924",
-    loanProductName: "Invoice Financing",
-    loanAmount: 24000.0,
-    defaultCurrency: "EUR",
-    repaymentPeriod: "6 months",
-    loanPurpose: "Operations",
-    interestRate: 8.0,
-    ecobankSubscription: false,
-    loanStatus: 2, // Rejected
-    businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938d",
-    personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02d",
-    businessProfile: {
-      businessName: "Funke Science",
-      businessDescription: "Business description",
-      typeOfIncorporation: "limited-company",
-      sector: "financial-services",
-      location: "kenya",
-      city: "Nairobi",
-      country: "kenya",
-      street1: "Financial Street",
-      street2: "",
-      postalCode: "00100",
-      currency: "KES",
-      averageAnnualTurnover: 500000.0,
-      averageMonthlyTurnover: 42000.0,
-      previousLoans: true,
-      loanAmount: 15000.0,
-      defaultCurrency: "KES",
-      recentLoanStatus: "PAID",
-      defaultReason: "",
-      businessLogo: "https://randomuser.me/api/portraits/men/4.jpg",
-      yearOfRegistration: "2019",
-      isBeneficalOwner: false,
-      personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02d",
-      businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938d",
-      personalProfile: null,
-    },
-    personalProfile: {
-      firstName: "Shem",
-      lastName: "Minjire",
-      email: "shem.minjire@gmail.com",
-      gender: "male",
-      phoneNumber: "+254712445678",
-      address: "",
-      city: "",
-      county: "",
-      birthDate: "1991-02-20T00:00:00Z",
-      guid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02d",
-      verifiedEmail: 1,
-      verifiedPhoneNumber: 1,
-      business: 0,
-      positionHeld: "cfo",
-      profilePhoto: "https://randomuser.me/api/portraits/men/4.jpg",
-      identityDocType: "identity_card",
-      identityDocNumber: "29384756",
-      taxIdNumber: "938475612",
-      program: "",
-    },
-  },
-  {
-    loanApplicationGuid: "c0ae1ea1-f144-465c-a6e2-c8f331756925",
-    loanProductName: "Invoice Financing",
-    loanAmount: 5000.0,
-    defaultCurrency: "EUR",
-    repaymentPeriod: "3 months",
-    loanPurpose: "Expansion",
-    interestRate: 9.5,
-    ecobankSubscription: true,
-    loanStatus: 3, // Disbursed
-    businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938e",
-    personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02e",
-    businessProfile: {
-      businessName: "Farm2Feed",
-      businessDescription: "Business description",
-      typeOfIncorporation: "limited-company",
-      sector: "agriculture",
-      location: "kenya",
-      city: "Nakuru",
-      country: "kenya",
-      street1: "Farm Street",
-      street2: "",
-      postalCode: "20100",
-      currency: "KES",
-      averageAnnualTurnover: 120000.0,
-      averageMonthlyTurnover: 10000.0,
-      previousLoans: false,
-      loanAmount: 0.0,
-      defaultCurrency: "KES",
-      recentLoanStatus: "NONE",
-      defaultReason: "",
-      businessLogo: "https://randomuser.me/api/portraits/women/6.jpg",
-      yearOfRegistration: "2023",
-      isBeneficalOwner: true,
-      personalGuid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02e",
-      businessGuid: "3e8f9b45-db54-44e4-adb7-0e1dc42f938e",
-      personalProfile: null,
-    },
-    personalProfile: {
-      firstName: "Soraya",
-      lastName: "Ngure",
-      email: "soraya.ngure@gmail.com",
-      gender: "female",
-      phoneNumber: "+254712448878",
-      address: "",
-      city: "",
-      county: "",
-      birthDate: "1993-08-12T00:00:00Z",
-      guid: "59a9716b-c3a5-4b9d-b490-bf5df90cc02e",
-      verifiedEmail: 1,
-      verifiedPhoneNumber: 1,
-      business: 0,
-      positionHeld: "ceo",
-      profilePhoto: "https://randomuser.me/api/portraits/women/6.jpg",
-      identityDocType: "identity_card",
-      identityDocNumber: "29874563",
-      taxIdNumber: "987654321",
-      program: "",
-    },
-  },
-];
-
-// Define tabs
-const tabs = [
-  { id: "all", label: "All Applications" },
-  { id: "approved", label: "Approved Loans" },
-  { id: "rejected", label: "Rejected Loans" },
-  { id: "disbursed", label: "Disbursed Loans" },
-  { id: "pending", label: "Pending Loans" },
-];
-
-const LoanDetailsPage = () => {
+const LoanApplicationsPage = () => {
   const guid = useAppSelector(selectCurrentToken);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FiltersState>({
     loanType: "all",
     ecobankInterest: "all",
     applicationDate: "all",
@@ -418,13 +104,21 @@ const LoanDetailsPage = () => {
   const router = useRouter();
   const itemsPerPage = 10;
 
-  const { data: loanApplications, isLoading } = useGetLoanApplicationsQuery({
-    adminguid: guid as string,
-  });
+  const { data: loanApplicationsResponse, isLoading } =
+    useGetLoanApplicationsQuery({
+      adminguid: guid as string,
+    });
 
-  console.log(loanApplications);
+  console.log("API response:", loanApplicationsResponse);
 
-  const loanTypes = [...new Set(tableData.map((item) => item.loanProductName))];
+  const realData = loanApplicationsResponse || [];
+
+  console.log("Extracted loan applications:", realData);
+
+  // Get unique values for filters based on real data
+  const loanTypes = [
+    ...new Set(realData.map((item: LoanApplication) => item.loanProductName)),
+  ];
 
   const getLoanStatusText = (status: number): string => {
     switch (status) {
@@ -441,7 +135,21 @@ const LoanDetailsPage = () => {
     }
   };
 
-  const filteredData = tableData.filter((item) => {
+  const getLoanStatusBadgeColor = (status: number): string => {
+    switch (status) {
+      case 1:
+        return "bg-[#B0EFDF] text-[#007054]";
+      case 2:
+        return "bg-[#FECACA] text-[#B91C1C]";
+      case 3:
+        return "bg-[#DBEAFE] text-[#1E40AF]";
+      default:
+        return "bg-[#B1EFFE] text-[#1E429F]";
+    }
+  };
+
+  // Filter and search data using real data
+  const filteredData = realData.filter((item: LoanApplication) => {
     const matchesSearch =
       searchQuery === "" ||
       item.businessProfile.businessName
@@ -458,36 +166,36 @@ const LoanDetailsPage = () => {
     const matchesLoanType =
       filters.loanType === "all" || item.loanProductName === filters.loanType;
 
-    // Tab filtering
-    const statusText = getLoanStatusText(item.loanStatus);
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "approved" && statusText === "approved") ||
-      (activeTab === "rejected" && statusText === "rejected") ||
-      (activeTab === "disbursed" && statusText === "disbursed") ||
-      (activeTab === "pending" && statusText === "pending");
+      (activeTab === "approved" && item.loanStatus === 1) ||
+      (activeTab === "rejected" && item.loanStatus === 2) ||
+      (activeTab === "disbursed" && item.loanStatus === 3) ||
+      (activeTab === "pending" && item.loanStatus === 0);
 
     return matchesSearch && matchesLoanType && matchesTab;
   });
 
-  const sortedData = [...filteredData].sort((a, b) => {
-    switch (sortBy) {
-      case "newest":
-        return b.loanApplicationGuid.localeCompare(a.loanApplicationGuid);
-      case "oldest":
-        return a.loanApplicationGuid.localeCompare(b.loanApplicationGuid);
-      case "ascending":
-        return a.businessProfile.businessName.localeCompare(
-          b.businessProfile.businessName,
-        );
-      case "descending":
-        return b.businessProfile.businessName.localeCompare(
-          a.businessProfile.businessName,
-        );
-      default:
-        return 0;
-    }
-  });
+  const sortedData = [...filteredData].sort(
+    (a: LoanApplication, b: LoanApplication) => {
+      switch (sortBy) {
+        case "newest":
+          return b.loanApplicationGuid.localeCompare(a.loanApplicationGuid);
+        case "oldest":
+          return a.loanApplicationGuid.localeCompare(b.loanApplicationGuid);
+        case "ascending":
+          return a.businessProfile.businessName.localeCompare(
+            b.businessProfile.businessName,
+          );
+        case "descending":
+          return b.businessProfile.businessName.localeCompare(
+            a.businessProfile.businessName,
+          );
+        default:
+          return 0;
+      }
+    },
+  );
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const paginatedData = sortedData.slice(
@@ -518,38 +226,68 @@ const LoanDetailsPage = () => {
     setCurrentPage(1);
   };
 
+  // Stat cards data based on the real data
   const stats = [
     {
       title: "Total Applications",
-      value: "30",
+      value: realData.length.toString(),
       change: 10.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Approved Loans",
-      value: "10",
+      value: realData
+        .filter((item: LoanApplication) => item.loanStatus === 1)
+        .length.toString(),
       change: -0.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Rejected Loans",
-      value: "2",
+      value: realData
+        .filter((item: LoanApplication) => item.loanStatus === 2)
+        .length.toString(),
       change: 0.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Disbursed Loans",
-      value: "5",
+      value: realData
+        .filter((item: LoanApplication) => item.loanStatus === 3)
+        .length.toString(),
       change: -0.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Pending Review",
-      value: "13",
+      value: realData
+        .filter((item: LoanApplication) => item.loanStatus === 0)
+        .length.toString(),
       change: 0.7,
       bgColor: "bg-midnight-blue",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          Loan Applications
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[...Array(4)].map((_, index) => (
+            <Card key={index} className="bg-midnight-blue animate-pulse">
+              <CardContent className="p-4 h-[100px]"></CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -625,7 +363,9 @@ const LoanDetailsPage = () => {
           {/* Loan Type Filter */}
           <Select
             value={filters.loanType}
-            onValueChange={(value) => handleFilterChange("loanType", value)}
+            onValueChange={(value: string) =>
+              handleFilterChange("loanType", value)
+            }
           >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="LOAN TYPE" />
@@ -643,7 +383,7 @@ const LoanDetailsPage = () => {
           {/* Status Filter */}
           <Select
             value={filters.ecobankInterest}
-            onValueChange={(value) =>
+            onValueChange={(value: string) =>
               handleFilterChange("ecobankInterest", value)
             }
           >
@@ -660,7 +400,7 @@ const LoanDetailsPage = () => {
           {/* Application Date Filter */}
           <Select
             value={filters.applicationDate}
-            onValueChange={(value) =>
+            onValueChange={(value: string) =>
               handleFilterChange("applicationDate", value)
             }
           >
@@ -699,7 +439,16 @@ const LoanDetailsPage = () => {
         {/* Tabs */}
         <div className="border-b">
           <nav className="flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
+            {[
+              { id: "all", label: "All Applications" },
+              { id: "approved", label: "Approved Loans" },
+              {
+                id: "rejected",
+                label: "Rejected Loans",
+              },
+              { id: "disbursed", label: "Disbursed Loans" },
+              { id: "pending", label: "Pending Loans" },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -754,7 +503,7 @@ const LoanDetailsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.map((item) => (
+                {paginatedData.map((item: LoanApplication) => (
                   <tr
                     key={item.loanApplicationGuid}
                     className={
@@ -802,27 +551,13 @@ const LoanDetailsPage = () => {
                       {item.repaymentPeriod}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "font-medium shadow-none hover:shadow-none",
-                          item.loanStatus === 1
-                            ? "bg-[#B0EFDF] text-[#007054]"
-                            : item.loanStatus === 2
-                              ? "bg-[#FECACA] text-[#B91C1C]"
-                              : item.loanStatus === 3
-                                ? "bg-[#DBEAFE] text-[#1E40AF]"
-                                : "bg-[#B1EFFE] text-[#1E429F]",
-                        )}
-                      >
-                        {item.loanStatus === 1
-                          ? "Approved"
-                          : item.loanStatus === 2
-                            ? "Rejected"
-                            : item.loanStatus === 3
-                              ? "Disbursed"
-                              : "Pending"}
-                      </Badge>
+                      <div className="flex items-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLoanStatusBadgeColor(item.loanStatus)}`}
+                        >
+                          {getLoanStatusText(item.loanStatus)}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -832,33 +567,47 @@ const LoanDetailsPage = () => {
         )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
-          <div className="flex items-center text-sm text-gray-700">
-            Showing 1 to {paginatedData.length} of {filteredData.length} results
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-700">
+            Showing{" "}
+            <span className="font-medium">
+              {(currentPage - 1) * itemsPerPage + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium">
+              {Math.min(currentPage * itemsPerPage, filteredData.length)}
+            </span>{" "}
+            of <span className="font-medium">{filteredData.length}</span>{" "}
+            results
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex gap-1">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               Previous
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </Button>
-            ))}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = i + 1;
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               Next
@@ -870,4 +619,4 @@ const LoanDetailsPage = () => {
   );
 };
 
-export default LoanDetailsPage;
+export default LoanApplicationsPage;
