@@ -61,7 +61,10 @@ export function withAuth<P extends object>(
       data: userResponse,
       error,
       isLoading,
-    } = useGetUserQuery({ guid: fallbackToken! }, { skip: !fallbackToken });
+    } = useGetUserQuery(
+      { adminguid: fallbackToken! },
+      { skip: !fallbackToken },
+    );
 
     // If no token, redirect to sign in immediately
     if (!fallbackToken) {

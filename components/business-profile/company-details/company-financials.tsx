@@ -32,7 +32,6 @@ import {
   userApiSlice,
   useUpdateBusinessProfileMutation,
 } from "@/lib/redux/services/user";
-import { useParams } from "next/navigation";
 
 const formSchema = z
   .object({
@@ -72,10 +71,7 @@ const formSchema = z
     },
   );
 
-type IProps = React.HTMLAttributes<HTMLDivElement>;
-
-export default function CompanyFinancials({ className, ...props }: IProps) {
-  const { userId } = useParams();
+export default function CompanyFinancials({ userId }: { userId: string }) {
   const [wordCount, setWordCount] = useState(0);
   const { data: response, isLoading } =
     userApiSlice.useGetBusinessProfileByPersonalGuidQuery(
@@ -164,7 +160,7 @@ export default function CompanyFinancials({ className, ...props }: IProps) {
   }
 
   return (
-    <div className={cn("relative space-y-4", className)} {...props}>
+    <div className={cn("relative space-y-4")}>
       <div className="mb-8 flex items-center gap-8">
         <h2 className="shrink-0 text-2xl font-medium">Financial Details</h2>
         <div className="h-[1.5px] w-full bg-gray-200" />

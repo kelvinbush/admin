@@ -169,9 +169,7 @@ const EmptyState = ({
   return null;
 };
 
-export default function CompanyDocuments() {
-  const { userId } = useParams();
-
+export default function CompanyDocuments({ userId }: { userId: string }) {
   const { data: businessProfile, isLoading } =
     userApiSlice.useGetBusinessProfileByPersonalGuidQuery(
       { guid: userId as string },

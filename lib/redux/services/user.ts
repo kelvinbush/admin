@@ -3,6 +3,7 @@ import { USER } from "@/lib/constants/tags";
 import type {
   BusinessDocument,
   BusinessProfile,
+  LoanApplication,
   PersonalDocument,
   UserResponse,
 } from "@/lib/types/user";
@@ -146,6 +147,28 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: USER, id: "BUSINESS" }],
     }),
+    getLoanApplications: build.query<
+      { loanApplications: LoanApplication[] },
+      { adminguid: string }
+    >({
+      query: (credentials) => ({
+        url: "/GetAllLoanApplications",
+        method: "POST",
+        body: credentials,
+      }),
+      providesTags: [{ type: USER, id: "LOAN_APPLICATIONS" }],
+    }),
+    getLoanApplication: build.query<
+      { loanApplication: LoanApplication },
+      { guid: string }
+    >({
+      query: (credentials) => ({
+        url: "/GetLoanApplication",
+        method: "POST",
+        body: credentials,
+      }),
+      providesTags: [{ type: USER, id: "LOAN_APPLICATION" }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -164,4 +187,6 @@ export const {
   useGetPersonalDocumentsQuery,
   useUploadPersonalDocumentMutation,
   useUpdateBusinessProfileMutation,
+  useGetLoanApplicationQuery,
+  useGetLoanApplicationsQuery,
 } = userApiSlice;

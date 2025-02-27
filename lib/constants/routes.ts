@@ -18,4 +18,6 @@ export const PageRoutes = {
   FUNDING_INVESTOR_OPPORTUNITIES: "/funding/investor-opportunities",
   FUNDING_MELANINKAPITAL_LOANS: "/funding/melaninkapital-loans",
   FUNDING_PARTNER_LOANS: "/funding/partner-loans",
+  LOAN_APPLICATIONS: "/loan-applications",
+  LOAN_APPLICATION_DETAILS: "/loan-applications/:loanId",
 } as const;

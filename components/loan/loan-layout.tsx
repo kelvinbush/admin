@@ -8,29 +8,39 @@ import { setTitle } from "@/lib/redux/features/top-bar.slice";
 import { cn } from "@/lib/utils";
 import { useGetBusinessProfileByPersonalGuidQuery } from "@/lib/redux/services/user";
 import { Loader2 } from "lucide-react";
-import BusinessProfileHeader from "@/components/business-profile/business-profile.header";
+import LoanProfileHeader from "@/components/loan/loan-profile.header";
 
 interface BusinessProfileProps {
+  loanId: string;
   personalGuid: string;
   children: React.ReactNode;
 }
 
-const BusinessProfile = ({ personalGuid, children }: BusinessProfileProps) => {
+const LoanProfile = ({
+  loanId,
+  personalGuid,
+  children,
+}: BusinessProfileProps) => {
   const tabs = [
+    {
+      label: "Loan Summary",
+      value: "loan-summary",
+      path: `/loan-applications/${loanId}/loan?userId=${personalGuid}`,
+    },
     {
       label: "Personal Information",
       value: "personal-information",
-      path: `/entrepreneurs/${personalGuid}/personal-information`,
+      path: `/loan-applications/${loanId}/personal-information?userId=${personalGuid}`,
     },
     {
       label: "Company Details",
       value: "company-details",
-      path: `/entrepreneurs/${personalGuid}/company-details`,
+      path: `/loan-applications/${loanId}/company-details?userId=${personalGuid}`,
     },
     {
       label: "Attachments",
       value: "documents",
-      path: `/entrepreneurs/${personalGuid}/documents`,
+      path: `/loan-applications/${loanId}/documents?userId=${personalGuid}`,
     }, // TODO: Uncomment when team members page is ready
     // {
     //   label: "Team Members",
@@ -40,7 +50,7 @@ const BusinessProfile = ({ personalGuid, children }: BusinessProfileProps) => {
     {
       label: "Billing",
       value: "billing",
-      path: `/entrepreneurs/${personalGuid}/billing`,
+      path: `/loan-applications/${loanId}/billing?userId=${personalGuid}`,
     },
   ];
 
@@ -54,8 +64,7 @@ const BusinessProfile = ({ personalGuid, children }: BusinessProfileProps) => {
 
   dispatch(setTitle("Business Profile"));
 
-  // Get the first part of the path after /business-profile/
-  const currentMainTab = pathname.split("/").slice(3)[0] ?? "company-details";
+  const currentMainTab = pathname.split("/").slice(3, 4)[0] ?? "loan-summary";
 
   if (isLoading) {
     return (
@@ -87,7 +96,7 @@ const BusinessProfile = ({ personalGuid, children }: BusinessProfileProps) => {
 
   return (
     <div className="space-y-6">
-      <BusinessProfileHeader
+      <LoanProfileHeader
         onImageUpload={() => console.log("Image Uploaded")}
         {...business}
       />
@@ -117,4 +126,4 @@ const BusinessProfile = ({ personalGuid, children }: BusinessProfileProps) => {
   );
 };
 
-export default BusinessProfile;
+export default LoanProfile;

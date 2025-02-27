@@ -1,10 +1,11 @@
 "use client";
 import { Suspense } from "react";
 import CompanyFinancials from "@/components/business-profile/company-details/company-financials";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function CompanyFinancialsPage() {
-  const { userId } = useParams();
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId");
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <CompanyFinancials userId={userId as string} />

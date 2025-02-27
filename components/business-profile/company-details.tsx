@@ -11,31 +11,33 @@ import { Icons } from "@/components/icons";
 interface CompanyDetailsProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   userId: string;
+  loanId: string;
 }
 
 const CompanyDetails = ({
   className,
   children,
   userId,
+  loanId,
   ...props
 }: CompanyDetailsProps) => {
   const navItems = [
     {
       label: "Company Information",
       value: "information",
-      path: `/entrepreneurs/${userId}/company-details/information`,
+      path: `/loan-applications/${loanId}/company-details/information?userId=${userId}`,
       icon: Icons.businessProfileIcon,
     },
     {
       label: "Company Address",
       value: "address",
-      path: `/entrepreneurs/${userId}/company-details/address`,
+      path: `/loan-applications/${loanId}/company-details/address?userId=${userId}`,
       icon: MapPin,
     },
     {
       label: "Financial Details",
       value: "financials",
-      path: `/entrepreneurs/${userId}/company-details/financials`,
+      path: `/loan-applications/${loanId}/company-details/financials?userId=${userId}`,
       icon: Icons.funding,
     }, // TODO: Uncomment when ownership details page is ready
     // {
@@ -47,7 +49,8 @@ const CompanyDetails = ({
   ];
 
   const pathname = usePathname();
-  const currentTab = pathname.split("/").pop() ?? "information";
+  // get the current tab from the pathname which is the part before the question mark
+  const currentTab = pathname.split("/").pop()?.split("?")[0] ?? "information";
 
   return (
     <div

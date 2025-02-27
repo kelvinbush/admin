@@ -96,3 +96,61 @@ export interface BusinessProfile {
   isBeneficalOwner: boolean;
   defaultCurrency: string;
 }
+
+export interface LoanApplication {
+  loanApplicationGuid: string;
+  loanProductName: string;
+  loanAmount: number;
+  defaultCurrency: string;
+  repaymentPeriod: string;
+  loanPurpose: string;
+  interestRate: number;
+  ecobankSubscription: boolean;
+  loanStatus: number; // 0=Pending, 1=Approved, 2=Rejected, 3=Disbursed
+  businessGuid: string;
+  personalGuid: string;
+  businessProfile: LoanBusinessProfile;
+  personalProfile: PersonalProfile;
+}
+
+export interface LoanBusinessProfile {
+  businessName: string;
+  businessEmail: string;
+  businessPhoneNumber: string;
+  country: string;
+  city: string;
+  street1: string;
+  street2: string;
+  postalCode: string;
+  currency: string;
+  averageAnnualTurnover: number;
+  averageMonthlyTurnover: number;
+  previousLoans: boolean;
+  loanAmount: number;
+  defaultCurrency: string;
+  recentLoanStatus: string;
+  defaultReason: string;
+  businessLogo: string;
+  yearOfRegistration: string;
+  isBeneficalOwner: boolean;
+  personalGuid: string;
+  businessGuid: string;
+  personalProfile: null;
+}
+
+export interface PersonalProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  country: string;
+  verifiedEmail: number;
+  verifiedPhoneNumber: number;
+  business: number;
+  positionHeld: string;
+  profilePhoto: string;
+  identityDocType: string;
+  identityDocNumber: string;
+  taxIdNumber: string;
+  program: string;
+}

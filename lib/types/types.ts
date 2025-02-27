@@ -58,44 +58,6 @@ export const sampleSectors = [
   },
 ];
 
-export const detailedPositionOptions = [
-  {
-    label: "Founder, Co-founder",
-    value: "founder",
-  },
-  { label: "CEO, COO, CFO, CTO, CPO etc", value: "executive-management" },
-  {
-    label: "VP, Director, General Manager etc",
-    value: "senior-management",
-  },
-  { label: "Manager, Department Head etc", value: "middle-management" },
-  {
-    label: "Supervisor, Coordinator etc",
-    value: "supervisory",
-  },
-  {
-    label: "Engineer, Analyst, Consultant etc",
-    value: "professional-technical",
-  },
-  {
-    label: "Sales Executive, Marketing Manager etc",
-    value: "sales-marketing",
-  },
-  {
-    label: "Operations Manager, Admin, HR etc",
-    value: "operations-support",
-  },
-  {
-    label: "Junior roles, Officers, Specialists etc",
-    value: "associate-officer",
-  },
-  {
-    label: "Assistant, Intern",
-    value: "assistant-intern",
-  },
-  { label: "Other", value: "other" },
-];
-
 export const incorporationTypeOptions: SelectFieldOption[] = [
   {
     value: "sole-proprietorship",
@@ -190,7 +152,10 @@ export const locationOptions: SelectFieldOption[] = [
   { label: "China", value: "china" },
   { label: "Colombia", value: "colombia" },
   { label: "Comoros", value: "comoros" },
-  { label: "Congo, Democratic Republic of the", value: "congo_democratic_republic_of_the" },
+  {
+    label: "Congo, Democratic Republic of the",
+    value: "congo_democratic_republic_of_the",
+  },
   { label: "Congo, Republic of the", value: "congo_republic_of_the" },
   { label: "Costa Rica", value: "costa_rica" },
   { label: "Croatia", value: "croatia" },
@@ -297,7 +262,10 @@ export const locationOptions: SelectFieldOption[] = [
   { label: "Rwanda", value: "rwanda" },
   { label: "Saint Kitts and Nevis", value: "saint_kitts_and_nevis" },
   { label: "Saint Lucia", value: "saint_lucia" },
-  { label: "Saint Vincent and the Grenadines", value: "saint_vincent_and_the_grenadines" },
+  {
+    label: "Saint Vincent and the Grenadines",
+    value: "saint_vincent_and_the_grenadines",
+  },
   { label: "Samoa", value: "samoa" },
   { label: "San Marino", value: "san_marino" },
   { label: "Sao Tome and Principe", value: "sao_tome_and_principe" },
@@ -347,40 +315,4 @@ export const locationOptions: SelectFieldOption[] = [
   { label: "Yemen", value: "yemen" },
   { label: "Zambia", value: "zambia" },
   { label: "Zimbabwe", value: "zimbabwe" },
-];
-
-export const sectorOptions: SelectFieldOption[] = [
-  {
-    value: "agriculture",
-    label: "Agriculture",
-  },
-  { value: "automotive", label: "Automotive" },
-  { value: "construction", label: "Construction" },
-  {
-    value: "education",
-    label: "Education",
-  },
-  { value: "finance", label: "Finance" },
-  { value: "healthcare", label: "Healthcare" },
-  {
-    value: "hospitality",
-    label: "Hospitality",
-  },
-  { value: "information technology", label: "Information Technology" },
-  {
-    value: "manufacturing",
-    label: "Manufacturing",
-  },
-  { value: "media", label: "Media" },
-  { value: "real estate", label: "Real Estate" },
-  {
-    value: "retail",
-    label: "Retail",
-  },
-  { value: "telecommunications", label: "Telecommunications" },
-  {
-    value: "transportation",
-    label: "Transportation",
-  },
-  { value: "utilities", label: "Utilities" },
 ];

@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { locationOptions } from "@/lib/types/types";
-import { useParams } from "next/navigation";
 
 const formSchema = z.object({
   streetAddress: z.string().min(1, "Street address is required"),
@@ -32,10 +31,7 @@ const formSchema = z.object({
   zipCode: z.string().min(1, "Zip code is required"),
 });
 
-type IProps = React.HTMLAttributes<HTMLDivElement>;
-
-const CompanyAddress = ({ className, ...props }: IProps) => {
-  const { userId } = useParams();
+const CompanyAddress = ({ userId }: { userId: string }) => {
   const [isDirty, setIsDirty] = useState(false);
   const { data: response, isLoading } =
     userApiSlice.useGetBusinessProfileByPersonalGuidQuery({
@@ -122,7 +118,7 @@ const CompanyAddress = ({ className, ...props }: IProps) => {
   }
 
   return (
-    <div className={cn("space-y-6", className)} {...props}>
+    <div className={cn("space-y-6")}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
