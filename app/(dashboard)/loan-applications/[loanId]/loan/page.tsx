@@ -41,88 +41,90 @@ const LoanDetailsPage = () => {
     );
   }
 
-  const getLoanStatusText = (status: number): string => {
-    switch (status) {
-      case 1:
-        return "Approved";
-      case 2:
-        return "Rejected";
-      case 3:
-        return "Disbursed";
-      default:
-        return "Pending";
-    }
-  };
-
-  const getLoanStatusColor = (status: number): string => {
-    switch (status) {
-      case 1:
-        return "bg-[#B0EFDF] text-[#007054]";
-      case 2:
-        return "bg-[#FECACA] text-[#B91C1C]";
-      case 3:
-        return "bg-[#DBEAFE] text-[#1E40AF]";
-      default:
-        return "bg-[#B1EFFE] text-[#1E429F]";
-    }
-  };
-
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
+    <div className="space-y-6 p-6 rounded">
+      <div>
+        <h1 className="text-2xl font-bold">Loan application details</h1>
+        <p className="text-gray-600 mt-1">
+          Review the loan application details below to assess and process the
+          request.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-lg">
+        <div className="space-y-6">
           <div>
-            <CardTitle>
-              Loan Application - {loanApplication.loanProductName}
-            </CardTitle>
-            <CardDescription>
-              Loan application ID: {loanApplication.loanApplicationGuid}
-            </CardDescription>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Loan amount
+            </label>
+            <div className="flex">
+              <input
+                type="text"
+                readOnly
+                className="flex-1 rounded-l-md border border-gray-300 py-2 px-3 focus:outline-none"
+                value={loanApplication.loanAmount.toLocaleString()}
+              />
+              <div className="inline-flex items-center px-4 bg-gray-100 text-gray-700 border border-l-0 border-gray-300 rounded-r-md">
+                {loanApplication.defaultCurrency}
+              </div>
+            </div>
           </div>
-          <div
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getLoanStatusColor(loanApplication.loanStatus)}`}
-          >
-            {getLoanStatusText(loanApplication.loanStatus)}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Loan tenure
+            </label>
+            <div className="flex">
+              <input
+                type="text"
+                readOnly
+                className="flex-1 rounded-l-md border border-gray-300 py-2 px-3 focus:outline-none"
+                value={loanApplication.repaymentPeriod.replace(/[^0-9]/g, "")}
+              />
+              <div className="inline-flex items-center px-4 bg-gray-100 text-gray-700 border border-l-0 border-gray-300 rounded-r-md">
+                months
+              </div>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500">Loan Amount</p>
-            <p className="text-2xl font-semibold text-gray-900">
-              {loanApplication.defaultCurrency}{" "}
-              {loanApplication.loanAmount.toLocaleString()}
-            </p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Intended use of funds
+            </label>
+            <textarea
+              readOnly
+              className="w-full rounded-md border border-gray-300 py-2 px-3 min-h-[100px] focus:outline-none"
+              value={loanApplication.loanPurpose}
+            ></textarea>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500">
-              Repayment Period
-            </p>
-            <p className="text-lg font-medium text-gray-900">
-              {loanApplication.repaymentPeriod}
-            </p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Interested in Ecobank loans
+            </label>
+            <div className="flex space-x-4">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  className="h-4 w-4 text-teal-600 border-gray-300 focus:ring-teal-500"
+                  checked={loanApplication.ecobankSubscription}
+                  readOnly
+                />
+                <label className="ml-2 text-sm text-gray-700">Yes</label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  className="h-4 w-4 text-gray-600 border-gray-300 focus:ring-gray-500"
+                  checked={!loanApplication.ecobankSubscription}
+                  readOnly
+                />
+                <label className="ml-2 text-sm text-gray-700">No</label>
+              </div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500">Interest Rate</p>
-            <p className="text-lg font-medium text-gray-900">
-              {loanApplication.interestRate}%
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500">
-              Ecobank Subscription
-            </p>
-            <p className="text-lg font-medium text-gray-900">
-              {loanApplication.ecobankSubscription ? "Yes" : "No"}
-            </p>
-          </div>
-          <div className="space-y-1 md:col-span-2">
-            <p className="text-sm font-medium text-gray-500">Loan Purpose</p>
-            <p className="text-sm text-gray-900">
-              {loanApplication.loanPurpose}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

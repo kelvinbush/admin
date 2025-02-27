@@ -179,7 +179,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,7 +196,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -215,6 +215,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                 </FormLabel>
                 <FormControl>
                   <RadioGroup
+                    disabled
                     onValueChange={(value) => {
                       field.onChange(value);
                       if (value === "no") {
@@ -263,7 +264,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input {...field} />
+                        <Input {...field} readOnly />
                         <div className="absolute inset-y-0 right-0 flex items-center">
                           <span className="border-l px-4 text-sm text-gray-600">
                             <FormField
@@ -273,6 +274,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value || "KES"}
+                                  disabled
                                 >
                                   <SelectTrigger className="border-0 w-[80px]">
                                     <SelectValue />
@@ -319,7 +321,11 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                       What is the status of your most recent loan?{" "}
                       <span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select loan status" />
@@ -362,6 +368,7 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
                               setWordCount(words.length);
                             }
                           }}
+                          readOnly
                         />
                       </FormControl>
                       <div className="absolute bottom-6 right-2 text-sm text-gray-500">
@@ -379,23 +386,6 @@ export default function CompanyFinancials({ userId }: { userId: string }) {
               )}
             </>
           )}
-          <div className="flex justify-end mt-6 border-t pt-4">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={!formIsValid || isUpdating || !isDirty}
-              className="bg-midnight-blue hover:bg-midnight-blue/90"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving changes...
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </div>
         </form>
       </Form>
     </div>

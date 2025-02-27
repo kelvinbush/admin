@@ -13,7 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {ChevronDown} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   FormControl,
   FormItem,
@@ -32,6 +32,7 @@ interface SearchableSelectProps {
   required?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>;
+  disabled?: boolean;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -42,6 +43,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   placeholder,
   required = false,
   control,
+  disabled = false,
 }) => {
   const { field } = useController({ name, control });
 
@@ -49,14 +51,12 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     <FormItem className="flex flex-col w-full">
       <FormLabel required={required}>{label}</FormLabel>
       <Popover>
-        <PopoverTrigger asChild>
+        <PopoverTrigger asChild disabled={disabled}>
           <FormControl>
             <Button
               variant="outline"
               role="combobox"
-              className={cn(
-                "w-full justify-between pl-3 font-normal h-10"
-              )}
+              className={cn("w-full justify-between pl-3 font-normal h-10")}
             >
               {field.value
                 ? options.find((opt) => opt.value === field.value)?.label

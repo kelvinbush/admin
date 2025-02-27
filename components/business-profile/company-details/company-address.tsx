@@ -2,7 +2,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,12 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import {
-  userApiSlice,
-  useUpdateBusinessProfileMutation,
-} from "@/lib/redux/services/user";
+import { userApiSlice } from "@/lib/redux/services/user";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { locationOptions } from "@/lib/types/types";
 
@@ -32,13 +27,11 @@ const formSchema = z.object({
 });
 
 const CompanyAddress = ({ userId }: { userId: string }) => {
-  const [isDirty, setIsDirty] = useState(false);
+  const [, setIsDirty] = useState(false);
   const { data: response, isLoading } =
     userApiSlice.useGetBusinessProfileByPersonalGuidQuery({
       guid: userId as string,
     });
-  const [updateBusinessProfile, { isLoading: isUpdating }] =
-    useUpdateBusinessProfileMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,38 +68,7 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     if (!response?.business) return;
-
-    try {
-      await updateBusinessProfile({
-        businessName: response.business.businessName,
-        businessDescription: response.business.businessDescription,
-        typeOfIncorporation: response.business.typeOfIncorporation,
-        sector: response.business.sector,
-        location: response.business.location,
-        city: data.city,
-        country: data.country,
-        street1: data.streetAddress,
-        street2: data.additionalDetails || "",
-        postalCode: data.zipCode,
-        averageAnnualTurnover: response.business.averageAnnualTurnover,
-        averageMonthlyTurnover: response.business.averageMonthlyTurnover,
-        previousLoans: response.business.previousLoans,
-        loanAmount: response.business.loanAmount,
-        recentLoanStatus: response.business.recentLoanStatus,
-        defaultReason: response.business.defaultReason,
-        businessGuid: response.business.businessGuid,
-        businessLogo: response.business.businessLogo || "",
-        yearOfRegistration: response.business.yearOfRegistration,
-        isBeneficalOwner: false,
-        defaultCurrency: response.business.defaultCurrency,
-      }).unwrap();
-
-      toast.success("Company address updated successfully");
-      setIsDirty(false);
-    } catch (error) {
-      console.error("Error updating company address:", error);
-      toast.error("Failed to update company address. Please try again.");
-    }
+    console.log(data);
   };
 
   if (isLoading) {
@@ -129,7 +91,7 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
                 <FormItem className="col-span-2">
                   <FormLabel required>Street address</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +105,7 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
                 <FormItem>
                   <FormLabel>Additional details</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,6 +120,7 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
               placeholder="Select country"
               required={true}
               control={form.control}
+              disabled
             />
 
             <FormField
@@ -167,7 +130,7 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
                 <FormItem>
                   <FormLabel required>City</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -181,30 +144,12 @@ const CompanyAddress = ({ userId }: { userId: string }) => {
                 <FormItem>
                   <FormLabel required>Zip code</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="flex justify-end col-span-2">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isUpdating || !form.formState.isValid || !isDirty}
-              className="bg-midnight-blue hover:bg-midnight-blue/90"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
           </div>
         </form>
       </Form>

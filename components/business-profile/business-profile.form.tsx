@@ -10,13 +10,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import React, { useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import {
-  useGetBusinessProfileByPersonalGuidQuery,
-  useUpdateBusinessProfileMutation,
-} from "@/lib/redux/services/user";
+import { useGetBusinessProfileByPersonalGuidQuery } from "@/lib/redux/services/user";
 import {
   AddBusinessSchemaWithoutPosition,
   TAddBusinessExcludingPosition,
@@ -36,9 +32,6 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
       { guid: userId || "" },
       { skip: !userId },
     );
-
-  const [updateBusinessProfile, { isLoading: isUpdating }] =
-    useUpdateBusinessProfileMutation();
 
   const form = useForm<TAddBusinessExcludingPosition>({
     resolver: zodResolver(AddBusinessSchemaWithoutPosition),
@@ -69,37 +62,7 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
       toast.error("Business profile data not found");
       return;
     }
-
-    toast.promise(
-      updateBusinessProfile({
-        businessName: data.name,
-        businessDescription: data.description,
-        typeOfIncorporation: data.incorporation,
-        sector: data.sector,
-        location: response.business.country,
-        city: response.business.city,
-        country: response.business.country, // Use the selected location as country
-        street1: response.business.street1,
-        street2: response.business.street2,
-        postalCode: response.business.postalCode,
-        averageAnnualTurnover: response.business.averageAnnualTurnover,
-        averageMonthlyTurnover: response.business.averageMonthlyTurnover,
-        previousLoans: response.business.previousLoans,
-        loanAmount: response.business.loanAmount,
-        recentLoanStatus: response.business.recentLoanStatus,
-        defaultReason: response.business.defaultReason,
-        businessGuid: response.business.businessGuid,
-        businessLogo: response.business.businessLogo || "",
-        yearOfRegistration: data.year,
-        isBeneficalOwner: response.business.isBeneficalOwner,
-        defaultCurrency: response.business.defaultCurrency,
-      }).unwrap(),
-      {
-        loading: "Updating business profile...",
-        success: "Business profile updated successfully",
-        error: "Failed to update business profile",
-      },
-    );
+    console.log(data);
   };
 
   if (isLoading) {
@@ -122,7 +85,7 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
                 <FormItem>
                   <FormLabel required>Business name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,6 +100,7 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
               placeholder="Select business type"
               required={true}
               control={form.control}
+              disabled
             />
 
             <SearchableSelect
@@ -147,6 +111,7 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
               placeholder="Select year of incorporation"
               required={true}
               control={form.control}
+              disabled
             />
             <SearchableSelect
               name="sector"
@@ -156,6 +121,7 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
               placeholder="Select business sector"
               required={true}
               control={form.control}
+              disabled
             />
 
             <FormField
@@ -165,32 +131,12 @@ const BusinessProfileForm = ({ userId }: { userId: string }) => {
                 <FormItem className="col-span-2">
                   <FormLabel required>Business description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} />
+                    <Textarea {...field} rows={4} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={
-                isUpdating || !form.formState.isValid || !form.formState.isDirty
-              }
-              className="bg-midnight-blue hover:bg-midnight-blue/90"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
           </div>
         </form>
       </Form>

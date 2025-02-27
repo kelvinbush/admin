@@ -18,7 +18,7 @@ import {
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { format } from "date-fns";
-import { TProfileForm } from "@/components/business-profile/personal-information";
+import { TProfileForm } from "@/app/(dashboard)/entrepreneurs/[userId]/personal-information/page";
 
 interface ProfileFormProps {
   form: UseFormReturn<TProfileForm>;
@@ -43,7 +43,7 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                     First name <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -59,7 +59,7 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                     Last name <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -75,7 +75,7 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                     Email <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" />
+                    <Input {...field} type="email" readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -102,6 +102,7 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                       buttonClass="!h-10"
                       containerClass="!w-full"
                       enableSearch
+                      disabled
                     />
                   </FormControl>
                   <FormMessage />
@@ -117,7 +118,11 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                   <FormLabel>
                     Gender <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
@@ -145,6 +150,7 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                   <FormControl>
                     <Input
                       {...field}
+                      readOnly
                       type="date"
                       onFocus={(e) => (e.target.type = "date")}
                       onBlur={(e) => {
@@ -175,7 +181,11 @@ const ProfileForm = ({ form }: ProfileFormProps) => {
                   <FormLabel>
                     Position Held <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
