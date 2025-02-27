@@ -24,7 +24,7 @@ const LoanProfile = ({
   const tabs = [
     {
       label: "Loan Summary",
-      value: "loan-summary",
+      value: "loan",
       path: `/loan-applications/${loanId}/loan?userId=${personalGuid}`,
     },
     {
@@ -64,7 +64,9 @@ const LoanProfile = ({
 
   dispatch(setTitle("Business Profile"));
 
-  const currentMainTab = pathname.split("/").slice(3, 4)[0] ?? "loan-summary";
+  const currentMainTab = pathname.split("/").slice(3, 4)[0] ?? "loan";
+
+  console.log("Current main tab:", currentMainTab);
 
   if (isLoading) {
     return (
@@ -102,7 +104,7 @@ const LoanProfile = ({
       />
       <main className="space-y-6 bg-white">
         <Tabs value={currentMainTab} className="w-full">
-          <TabsList className="w-full bg-transparent grid grid-cols-4">
+          <TabsList className="w-full bg-transparent grid grid-cols-5">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}

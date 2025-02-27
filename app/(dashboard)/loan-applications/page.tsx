@@ -93,8 +93,6 @@ const LoanApplicationsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FiltersState>({
     loanType: "all",
@@ -109,13 +107,8 @@ const LoanApplicationsPage = () => {
       adminguid: guid as string,
     });
 
-  console.log("API response:", loanApplicationsResponse);
-
   const realData = loanApplicationsResponse || [];
 
-  console.log("Extracted loan applications:", realData);
-
-  // Get unique values for filters based on real data
   const loanTypes = [
     ...new Set(realData.map((item: LoanApplication) => item.loanProductName)),
   ];
@@ -511,7 +504,7 @@ const LoanApplicationsPage = () => {
                     }
                     onClick={() =>
                       router.push(
-                        `/loan-applications/${item.loanApplicationGuid}?userId=${item.personalGuid}&businessId=${item.businessGuid}`,
+                        `/loan-applications/${item.loanApplicationGuid}?userId=${item.personalGuid}`,
                       )
                     }
                   >
