@@ -21,35 +21,50 @@ const CompanyDetails = ({
   loanId,
   ...props
 }: CompanyDetailsProps) => {
-  const navItems = [
-    {
-      label: "Company Information",
-      value: "information",
-      path: `/loan-applications/${loanId}/company-details/information?userId=${userId}`,
-      icon: Icons.businessProfileIcon,
-    },
-    {
-      label: "Company Address",
-      value: "address",
-      path: `/loan-applications/${loanId}/company-details/address?userId=${userId}`,
-      icon: MapPin,
-    },
-    {
-      label: "Financial Details",
-      value: "financials",
-      path: `/loan-applications/${loanId}/company-details/financials?userId=${userId}`,
-      icon: Icons.funding,
-    }, // TODO: Uncomment when ownership details page is ready
-    // {
-    //   label: "Ownership Details",
-    //   value: "ownership",
-    //   path: PageRoutes.BUSINESS_PROFILE_COMPANY_DETAILS_OWNERSHIP,
-    //   icon: Icons.personIcon,
-    // },
-  ];
+  const navItems = () =>
+    loanId === ""
+      ? [
+          {
+            label: "Company Information",
+            value: "information",
+            path: `/entrepreneurs/${userId}/company-details/information`,
+            icon: Icons.businessProfileIcon,
+          },
+          {
+            label: "Company Address",
+            value: "address",
+            path: `/entrepreneurs/${userId}/company-details/address`,
+            icon: MapPin,
+          },
+          {
+            label: "Financial Details",
+            value: "financials",
+            path: `/entrepreneurs/${userId}/company-details/financials`,
+            icon: Icons.funding,
+          },
+        ]
+      : [
+          {
+            label: "Company Information",
+            value: "information",
+            path: `/loan-applications/${loanId}/company-details/information?userId=${userId}`,
+            icon: Icons.businessProfileIcon,
+          },
+          {
+            label: "Company Address",
+            value: "address",
+            path: `/loan-applications/${loanId}/company-details/address?userId=${userId}`,
+            icon: MapPin,
+          },
+          {
+            label: "Financial Details",
+            value: "financials",
+            path: `/loan-applications/${loanId}/company-details/financials?userId=${userId}`,
+            icon: Icons.funding,
+          },
+        ];
 
   const pathname = usePathname();
-  // get the current tab from the pathname which is the part before the question mark
   const currentTab = pathname.split("/").pop()?.split("?")[0] ?? "information";
 
   return (
@@ -59,7 +74,7 @@ const CompanyDetails = ({
     >
       <div className="w-64 border-r bg-zinc-50/50 pr-0 mt-5">
         <nav className="w-full pl-4">
-          {navItems.map((item) => {
+          {navItems().map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.value;
 
