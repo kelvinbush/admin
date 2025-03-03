@@ -171,6 +171,18 @@ export const userApiSlice = apiSlice.injectEndpoints({
         response?.loanApplication,
       providesTags: [{ type: USER, id: "LOAN_APPLICATION" }],
     }),
+    getAllBusinesses: build.query({
+      query: (adminId) => ({
+        url: "/Admin/GetAllBusinessProfiles",
+        method: "POST",
+        body: adminId,
+      }),
+      transformResponse: (response) =>
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        response.business,
+      providesTags: [{ type: USER, id: "BUSINESSES" }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -191,4 +203,5 @@ export const {
   useUpdateBusinessProfileMutation,
   useGetLoanApplicationQuery,
   useGetLoanApplicationsQuery,
+  useGetAllBusinessesQuery,
 } = userApiSlice;

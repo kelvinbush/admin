@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 "use client";
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +25,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Icons } from "@/components/icons";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { selectCurrentToken } from "@/lib/redux/features/authSlice";
+import { useGetAllBusinessesQuery } from "@/lib/redux/services/user";
+import { FileWarning } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -80,178 +86,6 @@ const StatCard = ({
   );
 };
 
-// Mock data for the table
-const tableData = [
-  {
-    id: 1,
-    businessName: "DMA Limited",
-    user: {
-      name: "Robert Mugabe",
-      email: "robert.mugabe@gmail.com",
-      phone: "+255712345678",
-      image: "https://randomuser.me/api/portraits/men/1.jpg",
-    },
-    affiliate: "Tuungane2XnaAbsa",
-    sector: "Agriculture, Technology",
-    progress: 100,
-    verificationStatus: "pending",
-  },
-  {
-    id: 2,
-    businessName: "Duhga",
-    user: {
-      name: "Linet Adani",
-      email: "linet.adani@gmail.com",
-      phone: "+254712345748",
-      image: "https://randomuser.me/api/portraits/women/2.jpg",
-    },
-    affiliate: "GIZ-SAIS",
-    sector: "Real estate, Infrastructure",
-    progress: 100,
-    verificationStatus: "pending",
-  },
-  {
-    id: 3,
-    businessName: "Lineter Enterprise Ltd",
-    user: {
-      name: "Tracey Marie",
-      email: "tracey.marie@gmail.com",
-      phone: "+256775445678",
-      image: "https://randomuser.me/api/portraits/women/3.jpg",
-    },
-    affiliate: "GIZ-CGIAR",
-    sector: "Energy, Technology",
-    progress: 100,
-    verificationStatus: "pending",
-  },
-  {
-    id: 4,
-    businessName: "Funke Science",
-    user: {
-      name: "Shem Minjire",
-      email: "shem.minjire@gmail.com",
-      phone: "+254712445678",
-      image: "https://randomuser.me/api/portraits/men/4.jpg",
-    },
-    affiliate: "Ecobank",
-    sector: "Financial Services",
-    progress: 100,
-    verificationStatus: "verified",
-  },
-  {
-    id: 5,
-    businessName: "Cesha Investments Ltd",
-    user: {
-      name: "Cecile Soul",
-      email: "cecile.soul@gmail.com",
-      phone: "+254712345678",
-      image: "https://randomuser.me/api/portraits/women/5.jpg",
-    },
-    affiliate: "Tuungane2XnaAbsa",
-    sector: "Healthcare",
-    progress: 100,
-    verificationStatus: "verified",
-  },
-  {
-    id: 6,
-    businessName: "Farm2Feed",
-    user: {
-      name: "Soraya Ngure",
-      email: "soraya.ngure@gmail.com",
-      phone: "+254712448878",
-      image: "https://randomuser.me/api/portraits/women/6.jpg",
-    },
-    affiliate: "GIZ-SAIS",
-    sector: "Agriculture, Technology",
-    progress: 100,
-    verificationStatus: "verified",
-  },
-  {
-    id: 7,
-    businessName: "Luxe by Mulanda",
-    user: {
-      name: "Paul Lari",
-      email: "paul.lari@gmail.com",
-      phone: "+254775441238",
-      image: "https://randomuser.me/api/portraits/men/7.jpg",
-    },
-    affiliate: "GIZ-CGIAR",
-    sector: "Real estate, Infrastructure",
-    progress: 100,
-    verificationStatus: "pending",
-  },
-  {
-    id: 8,
-    businessName: "TechVision Solutions",
-    user: {
-      name: "Sarah Kimani",
-      email: "sarah.kimani@gmail.com",
-      phone: "+254712987654",
-      image: "https://randomuser.me/api/portraits/women/8.jpg",
-    },
-    affiliate: "Ecobank",
-    sector: "Technology, Innovation",
-    progress: 85,
-    verificationStatus: "pending",
-  },
-  {
-    id: 9,
-    businessName: "Green Earth Farms",
-    user: {
-      name: "James Omondi",
-      email: "james.omondi@gmail.com",
-      phone: "+254723456789",
-      image: "https://randomuser.me/api/portraits/men/9.jpg",
-    },
-    affiliate: "GIZ-SAIS",
-    sector: "Agriculture, Sustainability",
-    progress: 75,
-    verificationStatus: "verified",
-  },
-  {
-    id: 10,
-    businessName: "HealthFirst Clinic",
-    user: {
-      name: "Grace Njeri",
-      email: "grace.njeri@gmail.com",
-      phone: "+254734567890",
-      image: "https://randomuser.me/api/portraits/women/10.jpg",
-    },
-    affiliate: "Tuungane2XnaAbsa",
-    sector: "Healthcare, Technology",
-    progress: 90,
-    verificationStatus: "pending",
-  },
-  {
-    id: 11,
-    businessName: "EduTech Kenya",
-    user: {
-      name: "Daniel Mwangi",
-      email: "daniel.mwangi@gmail.com",
-      phone: "+254745678901",
-      image: "https://randomuser.me/api/portraits/men/11.jpg",
-    },
-    affiliate: "GIZ-CGIAR",
-    sector: "Education, Technology",
-    progress: 65,
-    verificationStatus: "verified",
-  },
-  {
-    id: 12,
-    businessName: "CleanEnergy Solutions",
-    user: {
-      name: "Faith Wanjiku",
-      email: "faith.wanjiku@gmail.com",
-      phone: "+254756789012",
-      image: "https://randomuser.me/api/portraits/women/12.jpg",
-    },
-    affiliate: "GIZ-SAIS",
-    sector: "Energy, Sustainability",
-    progress: 95,
-    verificationStatus: "pending",
-  },
-];
-
 const tabs = [
   { id: "all", label: "All SMEs" },
   { id: "complete", label: "Complete SME Profiles" },
@@ -264,6 +98,13 @@ const tabs = [
 ];
 
 const Page = () => {
+  const guid = useAppSelector(selectCurrentToken);
+
+  const {
+    data: businesses,
+    isLoading: isLoadingBusinesses,
+    isError,
+  } = useGetAllBusinessesQuery({ adminguid: guid || "" }, { skip: !guid });
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -274,15 +115,45 @@ const Page = () => {
     verification: "all",
     progress: "all",
   });
+  const [entrepreneurs, setEntrepreneurs] = useState<[]>([]);
   const router = useRouter();
   const itemsPerPage = 10;
 
-  // Get unique values for filters
-  const affiliates = [...new Set(tableData.map((item) => item.affiliate))];
-  const sectors = [...new Set(tableData.map((item) => item.sector))];
+  console.log(businesses);
+
+  // Transform API data when businesses are available
+  useEffect(() => {
+    if (businesses && businesses.length > 0) {
+      const transformedData = businesses.map((item, index) => ({
+        id: item.businessGuid || (index + 1).toString(),
+        businessName: item.businessName,
+        user: {
+          name: `${item.personalProfile.firstName} ${item.personalProfile.lastName}`,
+          email: item.personalProfile.email,
+          phone: item.personalProfile.phoneNumber,
+          image: item.personalProfile.profilePhoto || "", // Fallback image
+        },
+        affiliate: item.personalProfile.program || "Not specified",
+        sector: item.sector,
+        progress: item.isBeneficalOwner ? 100 : 75, // Example calculation
+        verificationStatus:
+          item.personalProfile.verifiedEmail === 1 ? "verified" : "pending",
+        userId: item.personalGuid,
+      }));
+
+      setEntrepreneurs(transformedData);
+    } else if (!isLoadingBusinesses && !isError) {
+      // Reset entrepreneurs if no data and not loading/error
+      setEntrepreneurs([]);
+    }
+  }, [businesses, isLoadingBusinesses, isError]);
+
+  // Get unique values for filters from actual data
+  const affiliates = [...new Set(entrepreneurs.map((item) => item.affiliate))];
+  const sectors = [...new Set(entrepreneurs.map((item) => item.sector))];
 
   // Filter and search data
-  const filteredData = tableData.filter((item) => {
+  const filteredData = entrepreneurs.filter((item) => {
     const matchesSearch =
       searchQuery === "" ||
       item.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -303,7 +174,6 @@ const Page = () => {
       filters.verification === "all" ||
       item.verificationStatus === filters.verification;
 
-    // Tab filtering
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "complete" && item.progress === 100) ||
@@ -321,7 +191,6 @@ const Page = () => {
     );
   });
 
-  // Sort data
   const sortedData = [...filteredData].sort((a, b) => {
     switch (sortBy) {
       case "newest":
@@ -343,7 +212,6 @@ const Page = () => {
     currentPage * itemsPerPage,
   );
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortBy, filters, activeTab]);
@@ -353,8 +221,6 @@ const Page = () => {
   };
 
   const handleApplyFilters = () => {
-    // Filters are already applied through the state changes
-    // This function is here if you need to add any additional logic
     setCurrentPage(1);
   };
 
@@ -370,34 +236,49 @@ const Page = () => {
     setCurrentPage(1);
   };
 
+  // Calculate stats from actual data
+  const totalBusinesses = entrepreneurs.length;
+  const completeProfiles = entrepreneurs.filter(
+    (item) => item.progress === 100,
+  ).length;
+  const incompleteProfiles = entrepreneurs.filter(
+    (item) => item.progress < 100,
+  ).length;
+  const verifiedSMEs = entrepreneurs.filter(
+    (item) => item.verificationStatus === "verified",
+  ).length;
+  const pendingVerification = entrepreneurs.filter(
+    (item) => item.verificationStatus === "pending",
+  ).length;
+
   const stats = [
     {
       title: "Registered SMEs",
-      value: "300",
+      value: totalBusinesses.toString(),
       change: 10.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Complete Profiles",
-      value: "100",
+      value: completeProfiles.toString(),
       change: -10.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Incomplete Profiles",
-      value: "200",
+      value: incompleteProfiles.toString(),
       change: 10.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Verified SMEs",
-      value: "50",
+      value: verifiedSMEs.toString(),
       change: -10.7,
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Pending Verification",
-      value: "50",
+      value: pendingVerification.toString(),
       change: 10.7,
       bgColor: "bg-midnight-blue",
     },
@@ -405,18 +286,22 @@ const Page = () => {
 
   return (
     <div className="p-4 space-y-6">
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
 
-      {/* Table Section */}
       <div className="flex flex-col space-y-4 bg-white shadow p-4 rounded">
         <div className="flex flex-wrap items-center gap-4">
-          <h2 className="text-2xl font-medium mr-auto">Entrepreneurs (300)</h2>
-          {/* Search Input */}
+          <h2 className="text-2xl font-medium mr-auto">
+            Entrepreneurs ({totalBusinesses})
+            {isLoadingBusinesses && (
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                Loading...
+              </span>
+            )}
+          </h2>
           <div className="relative min-w-[160px]">
             <Input
               type="text"
@@ -436,7 +321,6 @@ const Page = () => {
             )}
           </div>
 
-          {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className={"w-max"}>
               <div className="flex items-center gap-2">Sort by</div>
@@ -449,7 +333,6 @@ const Page = () => {
             </SelectContent>
           </Select>
 
-          {/* Hide Filters Button */}
           <Button
             variant="secondary"
             className="flex items-center gap-2 bg-[#E8E9EA]"
@@ -458,7 +341,6 @@ const Page = () => {
             Hide Filters
           </Button>
 
-          {/* Download Button */}
           <Button
             variant="secondary"
             className="flex items-center gap-2 bg-[#E8E9EA]"
@@ -466,7 +348,6 @@ const Page = () => {
             <ArrowDownTrayIcon className="h-5 w-5" />
           </Button>
 
-          {/* New SME Button */}
           <Button className="bg-midnight-blue text-white hover:bg-midnight-blue/90 flex items-center gap-2">
             <PlusIcon className="h-5 w-5" />
             New SME
@@ -558,7 +439,6 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="border-b">
           <nav className="flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => (
@@ -578,19 +458,69 @@ const Page = () => {
           </nav>
         </div>
 
-        {/* Show "No results found" message when there's no data */}
-        {paginatedData.length === 0 && (
-          <div className={"grid place-items-center h-full py-16"}>
-            <Icons.entreIcon />
-            <div className="text-center py-8">
-              No entrepreneur records found; try refining your search or
-              adjusting your filters.
+        {/* Loading state */}
+        {isLoadingBusinesses && (
+          <div className="grid place-items-center h-40">
+            <div className="flex flex-col items-center">
+              <Icons.spinner className="h-8 w-8 animate-spin" />
+              <p className="mt-2 text-gray-500">
+                Loading entrepreneurs data...
+              </p>
             </div>
           </div>
         )}
 
+        {/* Error state */}
+        {isError && (
+          <div className="grid place-items-center h-40">
+            <div className="flex flex-col items-center">
+              <FileWarning className="h-8 w-8 text-red-500" />
+              <p className="mt-2 text-gray-700">
+                Error loading entrepreneurs data. Please try again later.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* No data from API */}
+        {!isLoadingBusinesses &&
+          !isError &&
+          businesses &&
+          businesses.length === 0 && (
+            <div className="grid place-items-center h-40">
+              <div className="flex flex-col items-center">
+                <Icons.entreIcon />
+                <p className="mt-2 text-gray-500">
+                  No entrepreneurs found in the database.
+                </p>
+              </div>
+            </div>
+          )}
+
+        {/* Show "No results found" message when there's no data after filtering */}
+        {!isLoadingBusinesses &&
+          !isError &&
+          entrepreneurs.length > 0 &&
+          paginatedData.length === 0 && (
+            <div className={"grid place-items-center h-full py-16"}>
+              <Icons.entreIcon />
+              <div className="text-center py-8">
+                No entrepreneur records found; try refining your search or
+                adjusting your filters.
+              </div>
+            </div>
+          )}
+
         {/* Table */}
-        {paginatedData.length > 0 && (
+        {!isLoadingBusinesses && !isError && paginatedData.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-[#E8E9EA] border-b border-b-[#B6BABC]">
@@ -622,7 +552,7 @@ const Page = () => {
                     className={
                       "hover:bg-[#E6FAF5] cursor-pointer transition duration-300"
                     }
-                    onClick={() => router.push(`/entrepreneurs/${item.id}`)}
+                    onClick={() => router.push(`/entrepreneurs/${item.userId}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {item.businessName}
@@ -680,39 +610,45 @@ const Page = () => {
         )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
-          <div className="flex items-center text-sm text-gray-700">
-            Showing 1 to {itemsPerPage} of {tableData.length} results
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        {!isLoadingBusinesses && !isError && paginatedData.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
+            <div className="flex items-center text-sm text-gray-700">
+              Showing 1 to {itemsPerPage} of {sortedData.length} results
+            </div>
+            <div className="flex items-center space-x-2">
               <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
+                variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(page)}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
               >
-                {page}
+                Previous
               </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                ),
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -20,11 +20,11 @@ const sidenavLinks = [
   //   href: "/#",
   //   icon: <Icons.adminIcon />,
   // },
-  // {
-  //   title: "Entrepreneurs",
-  //   href: "/entrepreneurs",
-  //   icon: <Icons.entreIcon />,
-  // },
+  {
+    title: "Entrepreneurs",
+    href: "/entrepreneurs",
+    icon: <Icons.entreIcon />,
+  },
   {
     title: "Loan Applications",
     href: "/loan-applications",
