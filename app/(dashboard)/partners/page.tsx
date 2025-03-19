@@ -20,6 +20,8 @@ import {
 import {
   useCreatePartnerMutation,
   useGetAllPartnersQuery,
+  useUpdatePartnerMutation,
+  useDeletePartnerMutation,
 } from "@/lib/redux/services/partner";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { useAppSelector } from "@/lib/redux/hooks";
@@ -53,12 +55,22 @@ const formSchema = z.object({
   }),
 });
 
+// Form schema for updating a partner
+const updateFormSchema = z.object({
+  companyName: z.string().min(2, {
+    message: "Company name must be at least 2 characters.",
+  }),
+});
+
 const PartnersPage = () => {
   const guid = useAppSelector(selectCurrentToken);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const router = useRouter();
   const itemsPerPage = 10;
 
@@ -67,11 +79,20 @@ const PartnersPage = () => {
   );
 
   const [createPartner, { isLoading: isCreating }] = useCreatePartnerMutation();
+  const [updatePartner, { isLoading: isUpdating }] = useUpdatePartnerMutation();
+  const [deletePartner, { isLoading: isDeleting }] = useDeletePartnerMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       companyname: "",
+    },
+  });
+
+  const updateForm = useForm<z.infer<typeof updateFormSchema>>({
+    resolver: zodResolver(updateFormSchema),
+    defaultValues: {
+      companyName: "",
     },
   });
 
@@ -88,6 +109,55 @@ const PartnersPage = () => {
     } catch (error) {
       toast.error("Failed to create partner");
       console.error("Error creating partner:", error);
+    }
+  };
+
+  const onUpdateSubmit = async (values: z.infer<typeof updateFormSchema>) => {
+    if (!selectedPartner) return;
+    
+    try {
+      await updatePartner({
+        companyName: values.companyName,
+        companyReference: selectedPartner.companyReference,
+        adminReference: guid as string,
+      }).unwrap();
+      
+      toast.success("Partner updated successfully");
+      updateForm.reset();
+      setIsEditDialogOpen(false);
+      setSelectedPartner(null);
+    } catch (error) {
+      toast.error("Failed to update partner");
+      console.error("Error updating partner:", error);
+    }
+  };
+
+  const handleEditPartner = (partner: Partner) => {
+    setSelectedPartner(partner);
+    updateForm.setValue("companyName", partner.companyName);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeletePartner = (partner: Partner) => {
+    setSelectedPartner(partner);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePartner = async () => {
+    if (!selectedPartner) return;
+    
+    try {
+      await deletePartner({
+        companyReference: selectedPartner.companyReference,
+        adminReference: guid as string,
+      }).unwrap();
+      
+      toast.success("Partner deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setSelectedPartner(null);
+    } catch (error) {
+      toast.error("Failed to delete partner");
+      console.error("Error deleting partner:", error);
     }
   };
 
@@ -301,11 +371,16 @@ const PartnersPage = () => {
                         variant="outline"
                         size="sm"
                         className="mr-2"
-                        onClick={() => {
-                          // Handle edit action
-                        }}
+                        onClick={() => handleEditPartner(partner)}
                       >
                         Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeletePartner(partner)}
+                      >
+                        Delete
                       </Button>
                     </td>
                   </tr>
@@ -366,6 +441,97 @@ const PartnersPage = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Partner Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Partner</DialogTitle>
+            <DialogDescription>
+              Update the details of the partner company.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...updateForm}>
+            <form
+              onSubmit={updateForm.handleSubmit(onUpdateSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={updateForm.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required>Company Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter company name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedPartner(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="bg-midnight-blue text-white hover:bg-midnight-blue/90"
+                >
+                  {isUpdating ? "Updating..." : "Update Partner"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Partner Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Partner</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this partner? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedPartner && (
+              <div className="p-4 border rounded mb-4">
+                <p className="font-medium">Company Name: {selectedPartner.companyName}</p>
+                <p className="text-sm text-gray-500">Reference: {selectedPartner.companyReference}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setSelectedPartner(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={confirmDeletePartner}
+            >
+              {isDeleting ? "Deleting..." : "Delete Partner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

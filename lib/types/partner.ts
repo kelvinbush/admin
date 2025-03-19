@@ -14,3 +14,8 @@ export interface UpdatePartnerRequest {
   companyReference: string;
   adminReference: string;
 }
+
+export interface DeletePartnerRequest {
+  companyReference: string;
+  adminReference: string;
+}

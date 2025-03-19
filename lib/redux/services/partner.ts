@@ -1,8 +1,9 @@
 import { apiSlice } from "./apiSlice";
 import { PARTNER } from "@/lib/constants/tags";
 import type {
-  Partner,
   CreatePartnerRequest,
+  DeletePartnerRequest,
+  Partner,
   UpdatePartnerRequest,
 } from "@/lib/types/partner";
 
@@ -26,7 +27,16 @@ export const partnerApiSlice = apiSlice.injectEndpoints({
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         response?.partners,
-      providesTags: [{ type: PARTNER, id: "LIST" }],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ companyReference }) => ({
+                type: PARTNER,
+                id: companyReference,
+              })),
+              { type: PARTNER, id: "LIST" },
+            ]
+          : [{ type: PARTNER, id: "LIST" }],
     }),
     updatePartner: build.mutation<void, UpdatePartnerRequest>({
       query: (payload) => ({
@@ -34,7 +44,17 @@ export const partnerApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: [{ type: PARTNER, id: "PARTNER" }],
+      invalidatesTags: (_result, _error, arg) => [
+        { type: PARTNER, id: arg.companyReference },
+      ],
+    }),
+    deletePartner: build.mutation<void, DeletePartnerRequest>({
+      query: (payload) => ({
+        url: "/Admin/DeletePartner",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: [{ type: PARTNER, id: "LIST" }],
     }),
   }),
 });
@@ -43,4 +63,5 @@ export const {
   useCreatePartnerMutation,
   useGetAllPartnersQuery,
   useUpdatePartnerMutation,
+  useDeletePartnerMutation,
 } = partnerApiSlice;
