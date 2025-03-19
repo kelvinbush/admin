@@ -30,6 +30,11 @@ const sidenavLinks = [
     href: "/loan-applications",
     icon: <Icons.moneyBag className={"h-5 w-5"} />,
   },
+  {
+    title: "Partners",
+    href: "/partners",
+    icon: <Icons.entreIcon className={"h-5 w-5"} />,
+  },
 ];
 
 const otherLinks = [

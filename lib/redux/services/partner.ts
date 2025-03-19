@@ -1,23 +1,12 @@
 import { apiSlice } from "./apiSlice";
 import { PARTNER } from "@/lib/constants/tags";
+import type {
+  Partner,
+  CreatePartnerRequest,
+  UpdatePartnerRequest,
+} from "@/lib/types/partner";
 
-export interface CreatePartnerRequest {
-  adminguid: string;
-  companyname: string;
-}
-
-export interface UpdatePartnerRequest {
-  companyName: string;
-  companyReference: string;
-  adminReference: string;
-}
-
-export interface Partner {
-  companyName: string;
-  companyReference: string;
-}
-
-export const userApiSlice = apiSlice.injectEndpoints({
+export const partnerApiSlice = apiSlice.injectEndpoints({
   endpoints: (build) => ({
     createPartner: build.mutation<void, CreatePartnerRequest>({
       query: (payload) => ({
@@ -25,7 +14,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: [{ type: PARTNER, id: "PARTNER" }],
+      invalidatesTags: [{ type: PARTNER, id: "LIST" }],
     }),
     getAllPartners: build.query<Partner[], string>({
       query: (adminguid) => ({
@@ -33,6 +22,10 @@ export const userApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: { adminguid },
       }),
+      transformResponse: (response) =>
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        response?.partners,
       providesTags: [{ type: PARTNER, id: "LIST" }],
     }),
     updatePartner: build.mutation<void, UpdatePartnerRequest>({
@@ -50,4 +43,4 @@ export const {
   useCreatePartnerMutation,
   useGetAllPartnersQuery,
   useUpdatePartnerMutation,
-} = userApiSlice;
+} = partnerApiSlice;
