@@ -5,7 +5,7 @@ import {
   fetchBaseQuery,
 } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
-import { AUTH, FUNDING, USER } from "@/lib/constants/tags";
+import { AUTH, FUNDING, PARTNER, USER } from "@/lib/constants/tags";
 import { logOut, setAccessToken } from "@/lib/redux/features/authSlice";
 
 const BASE_URL =
@@ -78,5 +78,5 @@ const baseQueryWithReAuth = async (
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
   endpoints: () => ({}),
-  tagTypes: [USER, AUTH, FUNDING],
+  tagTypes: [USER, AUTH, FUNDING, PARTNER],
 });
