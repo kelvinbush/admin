@@ -44,7 +44,6 @@ export const userApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: PARTNER, id: "PARTNER" }],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {
