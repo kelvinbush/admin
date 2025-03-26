@@ -1,3 +1,24 @@
+export type SupportedCurrency =
+  | "KES"
+  | "USD"
+  | "EUR"
+  | "GBP"
+  | "CAD"
+  | "AUD"
+  | "JPY"
+  | "CHF"
+  | "CNY"
+  | "HKD"
+  | "SGD"
+  | "NGN"
+  | "ZAR"
+  | "GHS"
+  | "UGX"
+  | "TZS"
+  | "RWF"
+  | "EGP"
+  | "MAD";
+
 export interface LoanProduct {
   loanName: string;
   description: string;
@@ -10,6 +31,7 @@ export interface LoanProduct {
   loanInterest: number;
   status: number;
   loanProductReference?: string;
+  currency?: SupportedCurrency;
 }
 
 export interface CreateLoanProductRequest {
@@ -20,6 +42,7 @@ export interface CreateLoanProductRequest {
   loanProductType: number;
   loanPriceMax: number;
   loanInterest: number;
+  currency: SupportedCurrency;
 }
 
 export interface GetAllLoanProductsResponse {

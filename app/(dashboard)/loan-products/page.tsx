@@ -43,7 +43,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { LoanProduct } from "@/lib/types/loan-product";
+import { LoanProduct, SupportedCurrency } from "@/lib/types/loan-product";
 import { Partner } from "@/lib/types/partner";
 
 // Form schema for creating a new loan product
@@ -69,6 +69,9 @@ const formSchema = z.object({
   loanInterest: z.coerce.number().min(0, {
     message: "Loan interest must be a positive number.",
   }),
+  currency: z.string().min(1, {
+    message: "Please select a currency.",
+  }) as z.ZodType<SupportedCurrency>,
 });
 
 const integrationTypes = [
@@ -82,6 +85,28 @@ const loanProductTypes = [
   { label: "Mortgage", value: "2" },
   { label: "Auto Loan", value: "3" },
   { label: "Student Loan", value: "4" },
+];
+
+const currencyOptions = [
+  { label: "KES - Kenyan Shilling", value: "KES" },
+  { label: "USD - US Dollar", value: "USD" },
+  { label: "EUR - Euro", value: "EUR" },
+  { label: "GBP - British Pound", value: "GBP" },
+  { label: "CAD - Canadian Dollar", value: "CAD" },
+  { label: "AUD - Australian Dollar", value: "AUD" },
+  { label: "JPY - Japanese Yen", value: "JPY" },
+  { label: "CHF - Swiss Franc", value: "CHF" },
+  { label: "CNY - Chinese Yuan", value: "CNY" },
+  { label: "HKD - Hong Kong Dollar", value: "HKD" },
+  { label: "SGD - Singapore Dollar", value: "SGD" },
+  { label: "NGN - Nigerian Naira", value: "NGN" },
+  { label: "ZAR - South African Rand", value: "ZAR" },
+  { label: "GHS - Ghanaian Cedi", value: "GHS" },
+  { label: "UGX - Ugandan Shilling", value: "UGX" },
+  { label: "TZS - Tanzanian Shilling", value: "TZS" },
+  { label: "RWF - Rwandan Franc", value: "RWF" },
+  { label: "EGP - Egyptian Pound", value: "EGP" },
+  { label: "MAD - Moroccan Dirham", value: "MAD" },
 ];
 
 const statusTypes = [
@@ -118,6 +143,7 @@ const LoanProductsPage = () => {
       loanProductType: 0,
       loanPriceMax: 0,
       loanInterest: 0,
+      currency: "KES",
     },
   });
 
@@ -131,10 +157,20 @@ const LoanProductsPage = () => {
         loanProductType: values.loanProductType,
         loanPriceMax: values.loanPriceMax,
         loanInterest: values.loanInterest,
+        currency: values.currency,
       }).unwrap();
 
       toast.success("Loan product created successfully");
-      form.reset();
+      form.reset({
+        loanName: "",
+        description: "",
+        partnerReference: "",
+        integrationType: 0,
+        loanProductType: 0,
+        loanPriceMax: 0,
+        loanInterest: 0,
+        currency: "KES",
+      });
       setIsDialogOpen(false);
     } catch (error) {
       toast.error("Failed to create loan product");
@@ -440,6 +476,46 @@ const LoanProductsPage = () => {
                     />
                   </div>
 
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Currency</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <span>
+                                {field.value
+                                  ? currencyOptions.find(
+                                      (c) => c.value === field.value
+                                    )?.label || "Select currency"
+                                  : "Select currency"}
+                              </span>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {currencyOptions.map((currency) => (
+                              <SelectItem
+                                key={currency.value}
+                                value={currency.value}
+                              >
+                                {currency.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          The currency for the loan amount
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <DialogFooter>
                     <Button
                       type="button"
@@ -506,7 +582,7 @@ const LoanProductsPage = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Max Amount
+                    Max Amount (Currency)
                   </th>
                   <th
                     scope="col"
@@ -558,7 +634,7 @@ const LoanProductsPage = () => {
                       <div className="text-sm text-gray-500">
                         {product.loanPriceMax.toLocaleString("en-US", {
                           style: "currency",
-                          currency: "USD",
+                          currency: product.currency || "USD",
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
                         })}
