@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useGetEntrepreneurQuery } from "@/lib/redux/services/user";
 import ProfileForm from "@/components/business-profile/profile-form";
 import { useSearchParams } from "next/navigation";
+import PersonalDocuments from "@/components/pesonal-documents";
 
 // Profile Form Schema
 const profileFormSchema = z.object({
@@ -75,8 +76,9 @@ const PersonalInformation = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-8">
       <ProfileForm form={profileForm} />
+      <PersonalDocuments userId={userId as string} />
     </div>
   );
 };
