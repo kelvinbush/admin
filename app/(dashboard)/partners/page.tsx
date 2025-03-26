@@ -10,7 +10,6 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Icons } from "@/components/icons";
-import { useRouter } from "next/navigation";
 import {
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
@@ -71,7 +70,6 @@ const PartnersPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
-  const router = useRouter();
   const itemsPerPage = 10;
 
   const { data: partnersResponse, isLoading } = useGetAllPartnersQuery(
@@ -114,14 +112,14 @@ const PartnersPage = () => {
 
   const onUpdateSubmit = async (values: z.infer<typeof updateFormSchema>) => {
     if (!selectedPartner) return;
-    
+
     try {
       await updatePartner({
         companyName: values.companyName,
         companyReference: selectedPartner.companyReference,
         adminReference: guid as string,
       }).unwrap();
-      
+
       toast.success("Partner updated successfully");
       updateForm.reset();
       setIsEditDialogOpen(false);
@@ -145,13 +143,13 @@ const PartnersPage = () => {
 
   const confirmDeletePartner = async () => {
     if (!selectedPartner) return;
-    
+
     try {
       await deletePartner({
         companyReference: selectedPartner.companyReference,
         adminReference: guid as string,
       }).unwrap();
-      
+
       toast.success("Partner deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedPartner(null);
@@ -499,14 +497,19 @@ const PartnersPage = () => {
           <DialogHeader>
             <DialogTitle>Delete Partner</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this partner? This action cannot be undone.
+              Are you sure you want to delete this partner? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             {selectedPartner && (
               <div className="p-4 border rounded mb-4">
-                <p className="font-medium">Company Name: {selectedPartner.companyName}</p>
-                <p className="text-sm text-gray-500">Reference: {selectedPartner.companyReference}</p>
+                <p className="font-medium">
+                  Company Name: {selectedPartner.companyName}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Reference: {selectedPartner.companyReference}
+                </p>
               </div>
             )}
           </div>
