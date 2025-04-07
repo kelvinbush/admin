@@ -100,15 +100,15 @@ const Sidenav = () => {
             ))}
           </div>
         </div>
-        <div className="space-y-1.5 px-4 py-2 my-4 gradient-border-card">
-          {otherLinks.map((link) => (
-            <SidenavItem
-              key={link.title}
-              onSetTitle={setTitleOnBar}
-              {...link}
-            />
-          ))}
-        </div>
+        {/*<div className="space-y-1.5 px-4 py-2 my-4 gradient-border-card">*/}
+        {/*  {otherLinks.map((link) => (*/}
+        {/*    <SidenavItem*/}
+        {/*      key={link.title}*/}
+        {/*      onSetTitle={setTitleOnBar}*/}
+        {/*      {...link}*/}
+        {/*    />*/}
+        {/*  ))}*/}
+        {/*</div>*/}
         <div className="mt-auto px-4">
           <Button
             variant="ghost"

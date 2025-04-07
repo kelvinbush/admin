@@ -5,7 +5,13 @@ import {
   fetchBaseQuery,
 } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
-import { AUTH, FUNDING, PARTNER, USER, LOAN_PRODUCT } from "@/lib/constants/tags";
+import {
+  AUTH,
+  FUNDING,
+  PARTNER,
+  USER,
+  LOAN_PRODUCT,
+} from "@/lib/constants/tags";
 import { logOut, setAccessToken } from "@/lib/redux/features/authSlice";
 
 const BASE_URL =
@@ -44,7 +50,7 @@ const baseQueryWithReAuth = async (
 
     if (!isLoginRequest) {
       // If it wasn't a login request, log out
-      api.dispatch(logOut());
+      // api.dispatch(logOut());
       return result;
     }
 
