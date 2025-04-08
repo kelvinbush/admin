@@ -18,7 +18,6 @@ const StatCard = ({
   change,
   bgColor = "bg-midnight-blue",
   textColor = "text-white",
-  icon,
 }: StatCardProps) => {
   const isPositive = change >= 0;
 
@@ -28,9 +27,7 @@ const StatCard = ({
         <h3 className="text-lg">{title}</h3>
         <div className="mt-2">
           <span className="text-2xl font-bold">{value}</span>
-          <span
-            className={`flex mt-2 items-center text-sm`}
-          >
+          <span className={`flex mt-2 items-center text-sm`}>
             {isPositive ? (
               <div
                 className={cn(

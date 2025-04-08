@@ -42,19 +42,6 @@ const sidenavLinks = [
   },
 ];
 
-const otherLinks = [
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: <Icons.notifications />,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: <Icons.settings />,
-  },
-];
-
 const Sidenav = () => {
   const dispatch = useAppDispatch();
 

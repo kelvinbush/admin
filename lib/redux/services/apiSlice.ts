@@ -50,7 +50,7 @@ const baseQueryWithReAuth = async (
 
     if (!isLoginRequest) {
       // If it wasn't a login request, log out
-      // api.dispatch(logOut());
+      api.dispatch(logOut());
       return result;
     }
 
