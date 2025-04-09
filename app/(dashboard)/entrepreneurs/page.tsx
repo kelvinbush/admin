@@ -29,6 +29,7 @@ import { useAppSelector } from "@/lib/redux/hooks";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { useGetAllBusinessesQuery } from "@/lib/redux/services/user";
 import { FileWarning } from "lucide-react";
+import { calculateProfileVerification } from "../hooks/useProfileVerification";
 
 interface StatCardProps {
   title: string;
@@ -124,22 +125,25 @@ const Page = () => {
   // Transform API data when businesses are available
   useEffect(() => {
     if (businesses && businesses.length > 0) {
-      const transformedData = businesses.map((item, index) => ({
-        id: item.businessGuid || (index + 1).toString(),
-        businessName: item.businessName,
-        user: {
-          name: `${item.personalProfile.firstName} ${item.personalProfile.lastName}`,
-          email: item.personalProfile.email,
-          phone: item.personalProfile.phoneNumber,
-          image: item.personalProfile.profilePhoto || "", // Fallback image
-        },
-        affiliate: item.personalProfile.program || "Not specified",
-        sector: item.sector,
-        progress: item.isBeneficalOwner ? 100 : 75, // Example calculation
-        verificationStatus:
-          item.personalProfile.verifiedEmail === 1 ? "verified" : "pending",
-        userId: item.personalGuid,
-      }));
+      const transformedData = businesses.map((item, index) => {
+        const { completionPercentage } = calculateProfileVerification(item);
+        
+        return {
+          id: item.businessGuid || (index + 1).toString(),
+          businessName: item.businessName,
+          user: {
+            name: `${item.personalProfile.firstName} ${item.personalProfile.lastName}`,
+            email: item.personalProfile.email,
+            phone: item.personalProfile.phoneNumber,
+            image: item.personalProfile.profilePhoto || "", // Fallback image
+          },
+          affiliate: item.personalProfile.program || "Not specified",
+          sector: item.sector,
+          progress: completionPercentage,
+          verificationStatus: "pending", // Set all to pending
+          userId: item.personalGuid,
+        };
+      });
 
       setEntrepreneurs(transformedData);
     } else if (!isLoadingBusinesses && !isError) {
@@ -581,11 +585,16 @@ const Page = () => {
                       {item.sector}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Progress
-                        value={item.progress}
-                        className="w-24 bg-[#E8E9EA]"
-                        indicatorClassName="bg-primary-green"
-                      />
+                      <div className="relative">
+                        <div className="text-xs text-right mb-1 text-gray-600">
+                          {item.progress}%
+                        </div>
+                        <Progress
+                          value={item.progress}
+                          className="w-24 bg-[#E8E9EA]"
+                          indicatorClassName="bg-primary-green"
+                        />
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge
