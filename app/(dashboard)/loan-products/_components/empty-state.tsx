@@ -24,7 +24,7 @@ const EmptyState = ({ onCreateClick }: EmptyStateProps) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              className="flex items-center gap-2 rounded-[4px] bg-gradient-to-r from-[#0C9] to-[#F0459C] text-white hover:from-[#0C9] hover:to-[#F0459C]"
+              className="flex items-center gap-2 rounded-[4px] bg-gradient-to-r from-[#0C9] to-[#F0459C] text-white transition-all duration-300 hover:bg-gradient-to-l hover:from-[#F0459C] hover:to-[#0C9] hover:shadow-lg"
               size="lg"
             >
               <span>New Loan Product</span>
