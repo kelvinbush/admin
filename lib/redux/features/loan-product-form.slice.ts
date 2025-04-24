@@ -27,11 +27,20 @@ export interface LoanProductFormState {
     currency: SupportedCurrency;
     interestRate: string;
     
-    // Step 2: Additional settings
-    // Will be added as needed
+    // Step 2: Loan repayment terms
+    repaymentCycle?: string;
+    specificRepaymentDay?: string;
+    minDaysBeforeFirstPayment?: string;
+    gracePeriod?: string;
+    gracePeriodUnit?: string;
+    interestRatePeriod?: string;
+    interestCalculationMethod?: string;
+    interestCollectionMethod?: string;
+    interestRecognitionCriteria?: string;
     
-    // Step 3: Final review
-    // Will be added as needed
+    // Step 3: Payment allocation and loan closure
+    paymentsAllocationSequence?: string;
+    paymentAllocationStrategy?: string;
   };
 }
 

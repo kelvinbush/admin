@@ -9,6 +9,8 @@ import { RootState } from "@/lib/redux/store";
 import { resetForm } from "@/lib/redux/features/loan-product-form.slice";
 import StepIndicator from "../_components/step-indicator";
 import StepOneForm from "../_components/step-one-form";
+import StepTwoForm from "@/app/(dashboard)/loan-products/_components/step-two-form";
+import StepThreeForm from "@/app/(dashboard)/loan-products/_components/step-three-form";
 
 const AddLoanProductPage = () => {
   const dispatch = useDispatch();
@@ -30,10 +32,9 @@ const AddLoanProductPage = () => {
         return <StepOneForm initialData={formData} />;
       case 2:
         // Will be implemented in the future
-        return <div>Step 2: Additional Settings</div>;
+        return <StepTwoForm initialData={formData} />;
       case 3:
-        // Will be implemented in the future
-        return <div>Step 3: Review & Submit</div>;
+        return <StepThreeForm initialData={formData} />;
       default:
         return <StepOneForm initialData={formData} />;
     }

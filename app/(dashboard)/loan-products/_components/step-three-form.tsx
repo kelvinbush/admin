@@ -26,17 +26,22 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  requiresApproval: z.boolean().default(true),
-  enableNotifications: z.boolean().default(true),
-  termsAndConditions: z.string().min(10, {
-    message: "Terms and conditions must be at least 10 characters.",
+  paymentsAllocationSequence: z.string({
+    required_error: "Please select a payment allocation sequence.",
   }),
-  acceptTerms: z.boolean().refine(val => val === true, {
-    message: "You must accept the terms and conditions.",
+  paymentAllocationStrategy: z.string({
+    required_error: "Please select a payment allocation strategy.",
   }),
 });
 
@@ -51,25 +56,46 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
   const router = useRouter();
   const [createLoanProduct, { isLoading }] = useCreateLoanProductMutation();
   const formData = useSelector((state: RootState) => state.loanProductForm.formData);
+  const { toast } = useToast();
   
+  // State to track loan fees
+  const [loanFees, setLoanFees] = useState<{id: string; name: string; amount: string; type: string}[]>([]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      requiresApproval: initialData?.requiresApproval ?? true,
-      enableNotifications: initialData?.enableNotifications ?? true,
-      termsAndConditions: initialData?.termsAndConditions || "",
-      acceptTerms: initialData?.acceptTerms || false,
+      paymentsAllocationSequence: initialData?.paymentsAllocationSequence || "FEES_INTEREST_PRINCIPAL_PENALTIES",
+      paymentAllocationStrategy: initialData?.paymentAllocationStrategy || "",
     },
   });
 
+  // Handle adding a new loan fee
+  const handleAddLoanFee = () => {
+    // This would typically open a modal or form to add a new fee
+    // For now, we'll just add a placeholder fee
+    const newFee = {
+      id: `fee-${loanFees.length + 1}`,
+      name: `Fee ${loanFees.length + 1}`,
+      amount: "0",
+      type: "fixed"
+    };
+    setLoanFees([...loanFees, newFee]);
+  };
+
   const onSubmit = async (data: FormValues) => {
     try {
+      // Update form data in Redux
+      dispatch(updateFormData({
+        ...formData,
+        paymentsAllocationSequence: data.paymentsAllocationSequence,
+        paymentAllocationStrategy: data.paymentAllocationStrategy,
+      }));
+      
       // Combine all form data
       const finalFormData = {
         ...formData,
-        requiresApproval: data.requiresApproval,
-        enableNotifications: data.enableNotifications,
-        termsAndConditions: data.termsAndConditions,
+        paymentsAllocationSequence: data.paymentsAllocationSequence,
+        paymentAllocationStrategy: data.paymentAllocationStrategy,
       };
       
       // Transform data to match API requirements
@@ -112,170 +138,151 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-semibold">Additional Settings & Review</h2>
-        <p className="text-gray-500">Configure additional settings and review your loan product details</p>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Loan Product Summary</CardTitle>
-            <CardDescription>Review the details of your loan product</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-medium">Basic Details</h3>
-              <Separator className="my-2" />
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="text-gray-500">Product Name:</div>
-                <div>{formData.loanName}</div>
-                
-                <div className="text-gray-500">Loan Type:</div>
-                <div>{formData.loanType}</div>
-                
-                <div className="text-gray-500">Provider:</div>
-                <div>{formData.loanProvider}</div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div>
+          <h2 className="text-xl font-medium mb-4">Loan fees</h2>
+          
+          <div className="border border-dashed border-gray-300 rounded-md p-8 mb-4 relative">
+            {loanFees.length === 0 ? (
+              <div className="text-center text-gray-500">
+                <p>No loan fees have been added yet!</p>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {loanFees.map((fee) => (
+                  <div key={fee.id} className="flex justify-between items-center p-3 border rounded-md">
+                    <div>
+                      <p className="font-medium">{fee.name}</p>
+                      <p className="text-sm text-gray-500">{fee.amount} ({fee.type})</p>
+                    </div>
+                    <Button variant="outline" size="sm" type="button">
+                      Edit
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             
-            <div>
-              <h3 className="font-medium">Loan Terms</h3>
-              <Separator className="my-2" />
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="text-gray-500">Min Amount:</div>
-                <div>{formData.minimumLoanAmount} {formData.currency}</div>
-                
-                <div className="text-gray-500">Max Amount:</div>
-                <div>{formData.maximumLoanAmount} {formData.currency}</div>
-                
-                <div className="text-gray-500">Min Duration:</div>
-                <div>{formData.minimumLoanDuration}</div>
-                
-                <div className="text-gray-500">Max Duration:</div>
-                <div>{formData.maximumLoanDuration}</div>
-                
-                <div className="text-gray-500">Interest Rate:</div>
-                <div>{formData.interestRate}%</div>
-              </div>
+            <div className="absolute top-4 right-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={handleAddLoanFee}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Loan Fee
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Settings</CardTitle>
-                <CardDescription>Configure additional settings for your loan product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="requiresApproval"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel>Requires Approval</FormLabel>
-                        <FormDescription>
-                          Loan requests will require manual approval
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="enableNotifications"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel>Enable Notifications</FormLabel>
-                        <FormDescription>
-                          Send notifications for loan status updates
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="termsAndConditions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Terms and Conditions <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter terms and conditions for this loan product" 
-                          className="min-h-[120px]" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="acceptTerms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          I confirm that all the information provided is correct
-                        </FormLabel>
-                        <FormDescription>
-                          By checking this box, you agree to create this loan product
-                        </FormDescription>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+        <div>
+          <h2 className="text-xl font-medium mb-4">Payment allocation & loan closure</h2>
+          
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="paymentsAllocationSequence"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Loan payments allocation sequence <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select allocation sequence" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="FEES_INTEREST_PRINCIPAL_PENALTIES">FEES, INTEREST, PRINCIPAL, PENALTIES</SelectItem>
+                      <SelectItem value="PRINCIPAL_INTEREST_PENALTIES_FEES">PRINCIPAL, INTEREST, PENALTIES, FEES</SelectItem>
+                      <SelectItem value="INTEREST_PRINCIPAL_PENALTIES_FEES">INTEREST, PRINCIPAL, PENALTIES, FEES</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={handleBack}>
+            <FormField
+              control={form.control}
+              name="paymentAllocationStrategy"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Loan payment allocation strategy <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select allocation strategy" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="oldest_first">Oldest First</SelectItem>
+                      <SelectItem value="newest_first">Newest First</SelectItem>
+                      <SelectItem value="highest_interest_first">Highest Interest First</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="flex flex-col space-y-4 mt-8">
+          <Button
+            type="submit"
+            size={"lg"}
+            className="w-full bg-[#B6BABC] hover:bg-gray-500"
+            disabled={isLoading}
+          >
+            {isLoading ? "Submitting..." : "Submit"}
+          </Button>
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant="link"
+              className="px-0 text-black"
+              onClick={handleBack}
+              disabled={isLoading}
+            >
+              <span className="flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
                 Back
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Loan Product"
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </div>
+              </span>
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Form>
   );
 };
 
