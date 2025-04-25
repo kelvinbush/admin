@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trash2, Edit, Plus } from "lucide-react";
-import { ValueBandModal } from "./value-band-modal";
+import { DeleteBandModal } from "./delete-band-modal";
 
 export type ValueBand = {
   id?: string;
@@ -26,6 +26,8 @@ interface ValueBandTableProps {
   feeLabel?: string;
 }
 
+import { ValueBandModal } from "./value-band-modal";
+
 export function ValueBandTable({
   bands,
   onChange,
@@ -36,6 +38,7 @@ export function ValueBandTable({
     index: number;
     band: ValueBand;
   } | null>(null);
+  const [deletingBandIndex, setDeletingBandIndex] = useState<number | null>(null);
 
   // Determine if we're using rate or fixed amount based on the fee label
   const isRate =
@@ -59,10 +62,17 @@ export function ValueBandTable({
       setEditingBand(null);
     }
   };
+  
+  const confirmDeleteBand = (index: number) => {
+    setDeletingBandIndex(index);
+  };
 
-  const handleDeleteBand = (index: number) => {
-    const updatedBands = bands.filter((_, i) => i !== index);
-    onChange(updatedBands);
+  const handleDeleteBand = () => {
+    if (deletingBandIndex !== null) {
+      const updatedBands = bands.filter((_, i) => i !== deletingBandIndex);
+      onChange(updatedBands);
+      setDeletingBandIndex(null);
+    }
   };
 
   return (
@@ -110,7 +120,7 @@ export function ValueBandTable({
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={() => handleDeleteBand(index)}
+                    onClick={() => confirmDeleteBand(index)}
                     className={"text-red-500 flex gap-1 items-center"}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -144,6 +154,14 @@ export function ValueBandTable({
           isRate={isRate}
         />
       )}
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteBandModal
+        open={deletingBandIndex !== null}
+        onClose={() => setDeletingBandIndex(null)}
+        onConfirm={handleDeleteBand}
+        bandType="value"
+      />
     </div>
   );
 }
