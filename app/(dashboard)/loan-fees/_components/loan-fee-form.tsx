@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,23 +10,25 @@ import {
 } from "@/components/ui/select";
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 import { loanFeeFormValidation } from "@/app/(dashboard)/loan-fees/_components/loan-fee-form.validation";
 import { useZodForm } from "@/lib/hooks/use-zod-form";
 import { z } from "zod";
-import { ValueBandTable, type ValueBand } from "./value-band-table";
-import { PeriodBandTable, type PeriodBand } from "./period-band-table";
+import { ValueBandTable } from "./value-band-table";
+import { PeriodBandTable } from "./period-band-table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GradientButton } from "./gradient-button";
+import { cn } from "@/lib/utils";
+import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
 
 const calculationMethods = [
-  { label: "Fixed Amount", value: "Fixed Amount" },
   { label: "Rate", value: "Rate" },
+  { label: "Fixed Amount", value: "Fixed Amount" },
   {
     label: "Fixed Amount Per Installment",
     value: "Fixed Amount Per Installment",
@@ -35,15 +36,41 @@ const calculationMethods = [
 ];
 const applicationRules = [
   { label: "Fixed value", value: "Fixed value" },
-  { label: "Graduated by value", value: "Graduated by value" },
+  {
+    label: "Graduated by value",
+    value: "Graduated by value",
+  },
   {
     label: "Graduated by period (months)",
     value: "Graduated by period (months)",
   },
 ];
-const collectionRules = [
-  { label: "Paid with loan", value: "Paid with loan" },
-  { label: "Other", value: "Other" },
+const collectionRules: SelectOption[] = [
+  { 
+    label: "Upfront", 
+    value: "Upfront",
+    description: "Fee is charged and paid before the loan is disbursed."
+  },
+  { 
+    label: "Capitalized", 
+    value: "Capitalized",
+    description: "Fee is added to the total loan balance and repaid over time."
+  },
+  { 
+    label: "Deducted", 
+    value: "Deducted",
+    description: "Fee is subtracted from the disbursed loan amount before funds are sent to the borrower."
+  },
+  { 
+    label: "Paid with loan", 
+    value: "Paid with loan",
+    description: "Fee is paid in installments along with the regular loan payments."
+  },
+  { 
+    label: "Security Deposit (BNPL or IPF loans)", 
+    value: "Security Deposit",
+    description: "Fee is held as a deposit and may be refunded depending on terms."
+  },
 ];
 const allocationMethods = [
   {
@@ -54,7 +81,10 @@ const allocationMethods = [
 ];
 const calculationBases = [
   { label: "Principal", value: "Principal" },
-  { label: "Outstanding Principal", value: "Outstanding Principal" },
+  {
+    label: "Outstanding Principal",
+    value: "Outstanding Principal",
+  },
 ];
 const receivableAccounts = [
   { label: "10601600 - Credit related fees", value: "10601600" },
@@ -161,7 +191,12 @@ export default function LoanFeeForm() {
             )}
           />
         </div>
-        <div className="mt-4 flex gap-6">
+        <div
+          className={cn(
+            "mt-4 flex gap-6",
+            showValueBands || showPeriodBands ? "" : "mb-6",
+          )}
+        >
           <FormField
             control={form.control}
             name="applicationRule"
@@ -228,7 +263,7 @@ export default function LoanFeeForm() {
             />
           </div>
         )}
-        
+
         {showPeriodBands && (
           <div className="mt-6 mb-6">
             <FormField
@@ -263,21 +298,12 @@ export default function LoanFeeForm() {
                 <FormItem>
                   <FormLabel required>Fee collection rule</FormLabel>
                   <FormControl>
-                    <Select
+                    <SelectWithDescription
+                      options={collectionRules}
+                      value={field.value}
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select fee collection rule" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {collectionRules.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select fee collection rule"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
