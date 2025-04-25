@@ -20,6 +20,9 @@ import {
 import { loanFeeFormValidation } from "@/app/(dashboard)/loan-fees/_components/loan-fee-form.validation";
 import { useZodForm } from "@/lib/hooks/use-zod-form";
 import { z } from "zod";
+import { ValueBandTable, type ValueBand } from "./value-band-table";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { GradientButton } from "./gradient-button";
 
 const calculationMethods = [
   { label: "Fixed Amount", value: "Fixed Amount" },
@@ -69,6 +72,7 @@ export default function LoanFeeForm() {
       name: "",
       calculationMethod: "Fixed Amount",
       applicationRule: "Fixed value",
+      valueBands: [],
       collectionRule: "",
       allocationMethod: "",
       calculationBasis: "",
@@ -80,6 +84,7 @@ export default function LoanFeeForm() {
   });
 
   const calculationMethod = form.watch("calculationMethod");
+  const applicationRule = form.watch("applicationRule");
   const collectionRule = form.watch("collectionRule");
 
   // Conditional rendering logic
@@ -88,8 +93,11 @@ export default function LoanFeeForm() {
   const showAllocationMethod =
     showCollectionRule && collectionRule === "Paid with loan";
   const showCalculationBasis = calculationMethod === "Rate";
-  const showAmount = calculationMethod !== "Fixed Amount Per Installment";
+  const showAmount =
+    calculationMethod !== "Fixed Amount Per Installment" &&
+    applicationRule !== "Graduated by value";
   const showRate = calculationMethod === "Rate";
+  const showValueBands = applicationRule === "Graduated by value";
 
   const onSubmit = (data: FormValues) => {
     // Submit logic here
@@ -150,208 +158,251 @@ export default function LoanFeeForm() {
           />
         </div>
         <div className="mt-4 flex gap-6">
-          {applicationRules.map((opt) => (
+          <FormField
+            control={form.control}
+            name="applicationRule"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel required>Fee application rule</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1"
+                  >
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="Fixed value" />
+                      </FormControl>
+                      <FormLabel className="font-normal">Fixed value</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="Graduated by value" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Graduated by value
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="Graduated by period (months)" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Graduated by period (months)
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {showValueBands && (
+          <div className="mt-6 mb-6">
             <FormField
-              key={opt.value}
               control={form.control}
-              name="applicationRule"
+              name="valueBands"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center gap-2">
+                <FormItem>
                   <FormControl>
-                    <input
-                      type="radio"
-                      id={`app-rule-${opt.value}`}
-                      value={opt.value}
-                      checked={field.value === opt.value}
-                      onChange={() => field.onChange(opt.value)}
+                    <ValueBandTable
+                      bands={field.value || []}
+                      onChange={field.onChange}
+                      feeLabel={
+                        calculationMethod === "Rate"
+                          ? "RATE (%)"
+                          : "AMOUNT (EUR)"
+                      }
                     />
                   </FormControl>
-                  <FormLabel
-                    htmlFor={`app-rule-${opt.value}`}
-                    className="font-normal cursor-pointer"
-                  >
-                    {opt.label}
-                  </FormLabel>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-          ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {showCollectionRule && (
+            <FormField
+              control={form.control}
+              name="collectionRule"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Fee collection rule</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select fee collection rule" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collectionRules.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {showAllocationMethod && (
+            <FormField
+              control={form.control}
+              name="allocationMethod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Fee allocation method</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select fee allocation method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allocationMethods.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {showCalculationBasis && (
+            <FormField
+              control={form.control}
+              name="calculationBasis"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Calculate fee on</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Calculate fee on" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {calculationBases.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          <FormField
+            control={form.control}
+            name="receivableAccount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Receivable account</FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select receivable account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {receivableAccounts.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="incomeAccount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Income account</FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select income account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {incomeAccounts.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {(showAmount || showRate) && (
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>
+                    {showRate ? "Rate (%)" : "Amount (EUR)"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder={showRate ? "Enter rate" : "Enter value"}
+                      onChange={(e) => {
+                        // Convert empty string to undefined, otherwise parse as float
+                        const value =
+                          e.target.value === ""
+                            ? undefined
+                            : parseFloat(e.target.value);
+                        field.onChange(value);
+                      }}
+                      // Handle undefined value for controlled input
+                      value={field.value === undefined ? "" : field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
-        {showCollectionRule && (
-          <FormField
-            control={form.control}
-            name="collectionRule"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Fee collection rule</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fee collection rule" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {collectionRules.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {showAllocationMethod && (
-          <FormField
-            control={form.control}
-            name="allocationMethod"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Fee allocation method</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fee allocation method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allocationMethods.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {showCalculationBasis && (
-          <FormField
-            control={form.control}
-            name="calculationBasis"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Calculate fee on</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Calculate fee on" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {calculationBases.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        <FormField
-          control={form.control}
-          name="receivableAccount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Receivable account</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select receivable account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {receivableAccounts.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="incomeAccount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Income account</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select income account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {incomeAccounts.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {(showAmount || showRate) && (
-          <FormField
-            control={form.control}
-            name="amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>
-                  {showRate ? "Rate (%)" : "Amount (EUR)"}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder={showRate ? "Enter rate" : "Enter value"}
-                    onChange={(e) => {
-                      // Convert empty string to undefined, otherwise parse as float
-                      const value =
-                        e.target.value === ""
-                          ? undefined
-                          : parseFloat(e.target.value);
-                      field.onChange(value);
-                    }}
-                    // Handle undefined value for controlled input
-                    value={field.value === undefined ? "" : field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+
         <div className="flex justify-between mt-8">
-          <Button type="submit" className="w-full">
+          <GradientButton type="submit" className="w-full">
             Submit
-          </Button>
+          </GradientButton>
         </div>
         <div className="flex justify-center mt-4">
           <a href="#" className="text-center underline">

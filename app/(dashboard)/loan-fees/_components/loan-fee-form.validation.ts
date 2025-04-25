@@ -12,6 +12,27 @@ const applicationRuleEnum = [
   "Graduated by value",
   "Graduated by period (months)",
 ] as const;
+
+// Define the value band schema
+const valueBandSchema = z.object({
+  id: z.string().optional(), // Optional ID for existing bands
+  minAmount: z.number({
+    required_error: "Minimum amount is required",
+    invalid_type_error: "Minimum amount must be a number",
+  }),
+  maxAmount: z.number({
+    required_error: "Maximum amount is required",
+    invalid_type_error: "Maximum amount must be a number",
+  }),
+  fee: z.number({
+    required_error: "Fee value is required",
+    invalid_type_error: "Fee value must be a number",
+  }),
+}).refine(data => data.maxAmount > data.minAmount, {
+  message: "Maximum amount must be greater than minimum amount",
+  path: ["maxAmount"],
+});
+
 // First define the base schema without conditional validations
 const baseSchema = z.object({
   name: z
@@ -28,6 +49,7 @@ const baseSchema = z.object({
     required_error: "Fee application rule is required",
   }),
 
+  valueBands: z.array(valueBandSchema).optional(),
   collectionRule: z.string().optional(),
   allocationMethod: z.string().optional(),
   calculationBasis: z.string().optional(),
@@ -100,6 +122,17 @@ export const loanFeeFormValidation = baseSchema
     },
   )
   .superRefine((data, ctx) => {
+    // Value bands validation for Graduated by value
+    if (data.applicationRule === "Graduated by value") {
+      if (!data.valueBands || data.valueBands.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "At least one value band is required",
+          path: ["valueBands"],
+        });
+      }
+    }
+    
     // Collection rule validation with specific error message
     if (
       data.calculationMethod !== "Fixed Amount Per Installment" &&
