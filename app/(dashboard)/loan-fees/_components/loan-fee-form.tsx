@@ -204,7 +204,7 @@ export default function LoanFeeForm() {
           <FormField
             control={form.control}
             name="calculationMethod"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel required>Calculation method</FormLabel>
                 <FormControl>
@@ -213,6 +213,7 @@ export default function LoanFeeForm() {
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Select calculation method"
+                    error={!!fieldState.error}
                   />
                 </FormControl>
                 <FormMessage />
@@ -318,12 +319,12 @@ export default function LoanFeeForm() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {showCollectionRule && (
             <FormField
               control={form.control}
               name="collectionRule"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel required>Fee collection rule</FormLabel>
                   <FormControl>
@@ -332,6 +333,7 @@ export default function LoanFeeForm() {
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Select fee collection rule"
+                      error={!!fieldState.error}
                     />
                   </FormControl>
                   <FormMessage />
@@ -343,7 +345,7 @@ export default function LoanFeeForm() {
             <FormField
               control={form.control}
               name="allocationMethod"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel required>Fee allocation method</FormLabel>
                   <FormControl>
@@ -352,6 +354,7 @@ export default function LoanFeeForm() {
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Select allocation method"
+                      error={!!fieldState.error}
                     />
                   </FormControl>
                   <FormMessage />
@@ -363,7 +366,7 @@ export default function LoanFeeForm() {
             <FormField
               control={form.control}
               name="calculationBasis"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel required>Calculate fee on</FormLabel>
                   <FormControl>
@@ -372,6 +375,7 @@ export default function LoanFeeForm() {
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Select calculation base"
+                      error={!!fieldState.error}
                     />
                   </FormControl>
                   <FormMessage />
@@ -382,7 +386,7 @@ export default function LoanFeeForm() {
           <FormField
             control={form.control}
             name="receivableAccount"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <div className="flex items-center gap-1.5">
                   <FormLabel required>Receivable account</FormLabel>
@@ -392,7 +396,10 @@ export default function LoanFeeForm() {
                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs bg-gray-800 text-white">
-                        <p>Account to be debited as per the Presta Chart of Accounts</p>
+                        <p>
+                          Account to be debited as per the Presta Chart of
+                          Accounts
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -403,6 +410,7 @@ export default function LoanFeeForm() {
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Select receivable account"
+                    error={!!fieldState.error}
                   />
                 </FormControl>
                 <FormMessage />
@@ -412,7 +420,7 @@ export default function LoanFeeForm() {
           <FormField
             control={form.control}
             name="incomeAccount"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <div className="flex items-center gap-1.5">
                   <FormLabel required>Income account</FormLabel>
@@ -422,7 +430,10 @@ export default function LoanFeeForm() {
                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs bg-gray-800 text-white">
-                        <p>Account to be credited as per the Presta Chart of Accounts</p>
+                        <p>
+                          Account to be credited as per the Presta Chart of
+                          Accounts
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -433,6 +444,7 @@ export default function LoanFeeForm() {
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Select income account"
+                    error={!!fieldState.error}
                   />
                 </FormControl>
                 <FormMessage />
