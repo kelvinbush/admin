@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// Define the base schema objects first without refinements
 const stepOneBaseSchema = z.object({
-  // Basic loan details
   loanName: z.string().min(2, {
     message: "Loan product name must be at least 2 characters.",
   }),
@@ -75,44 +73,49 @@ function convertToDays(value: number, period: string): number {
 }
 
 // Add refinements to the base schema
-export const stepOneSchema = stepOneBaseSchema.refine(
-  (data) => {
-    if (data.availabilityWindowStart && data.availabilityWindowEnd) {
-      return data.availabilityWindowStart <= data.availabilityWindowEnd;
-    }
-    return true;
-  },
-  {
-    message: "Start date must be before or equal to end date",
-    path: ["availabilityWindowStart"],
-  }
-).refine(
-  (data) => {
-    const minAmount = parseFloat(data.minimumLoanAmount);
-    const maxAmount = parseFloat(data.maximumLoanAmount);
-    if (isNaN(minAmount) || isNaN(maxAmount)) return true;
-    return minAmount <= maxAmount;
-  },
-  {
-    message: "Minimum loan amount must be less than or equal to maximum loan amount",
-    path: ["minimumLoanAmount"],
-  }
-).refine(
-  (data) => {
-    // Convert both durations to days for comparison
-    const minDuration = parseFloat(data.minimumLoanDuration);
-    const maxDuration = parseFloat(data.maximumLoanDuration);
-    if (isNaN(minDuration) || isNaN(maxDuration)) return true;
-    
-    const minDays = convertToDays(minDuration, data.minimumLoanPeriod);
-    const maxDays = convertToDays(maxDuration, data.maximumLoanPeriod);
-    return minDays <= maxDays;
-  },
-  {
-    message: "Minimum loan duration must be less than or equal to maximum loan duration",
-    path: ["minimumLoanDuration"],
-  }
-);
+export const stepOneSchema = stepOneBaseSchema
+  .refine(
+    (data) => {
+      if (data.availabilityWindowStart && data.availabilityWindowEnd) {
+        return data.availabilityWindowStart <= data.availabilityWindowEnd;
+      }
+      return true;
+    },
+    {
+      message: "Start date must be before or equal to end date",
+      path: ["availabilityWindowStart"],
+    },
+  )
+  .refine(
+    (data) => {
+      const minAmount = parseFloat(data.minimumLoanAmount);
+      const maxAmount = parseFloat(data.maximumLoanAmount);
+      if (isNaN(minAmount) || isNaN(maxAmount)) return true;
+      return minAmount <= maxAmount;
+    },
+    {
+      message:
+        "Minimum loan amount must be less than or equal to maximum loan amount",
+      path: ["minimumLoanAmount"],
+    },
+  )
+  .refine(
+    (data) => {
+      // Convert both durations to days for comparison
+      const minDuration = parseFloat(data.minimumLoanDuration);
+      const maxDuration = parseFloat(data.maximumLoanDuration);
+      if (isNaN(minDuration) || isNaN(maxDuration)) return true;
+
+      const minDays = convertToDays(minDuration, data.minimumLoanPeriod);
+      const maxDays = convertToDays(maxDuration, data.maximumLoanPeriod);
+      return minDays <= maxDays;
+    },
+    {
+      message:
+        "Minimum loan duration must be less than or equal to maximum loan duration",
+      path: ["minimumLoanDuration"],
+    },
+  );
 
 // Step Two Schema - Loan fees and interest
 export const stepTwoSchema = z.object({
@@ -129,7 +132,7 @@ export const stepThreeSchema = z.object({
 export const loanProductSchema = z.object({
   ...stepOneBaseSchema.shape,
   ...stepTwoSchema.shape,
-  ...stepThreeSchema.shape
+  ...stepThreeSchema.shape,
 });
 
 // Types
