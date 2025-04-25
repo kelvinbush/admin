@@ -10,8 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { DeleteBandModal } from "./delete-band-modal";
+import { ValueBandModal } from "./value-band-modal";
 
 export type ValueBand = {
   id?: string;
@@ -26,8 +27,6 @@ interface ValueBandTableProps {
   feeLabel?: string;
 }
 
-import { ValueBandModal } from "./value-band-modal";
-
 export function ValueBandTable({
   bands,
   onChange,
@@ -38,7 +37,9 @@ export function ValueBandTable({
     index: number;
     band: ValueBand;
   } | null>(null);
-  const [deletingBandIndex, setDeletingBandIndex] = useState<number | null>(null);
+  const [deletingBandIndex, setDeletingBandIndex] = useState<number | null>(
+    null,
+  );
 
   // Determine if we're using rate or fixed amount based on the fee label
   const isRate =
@@ -62,7 +63,7 @@ export function ValueBandTable({
       setEditingBand(null);
     }
   };
-  
+
   const confirmDeleteBand = (index: number) => {
     setDeletingBandIndex(index);
   };
@@ -80,8 +81,6 @@ export function ValueBandTable({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Value bands configuration</h3>
         <Button
-          variant="outline"
-          size="sm"
           onClick={() => setIsAddModalOpen(true)}
           className="flex items-center gap-1"
         >
@@ -95,12 +94,20 @@ export function ValueBandTable({
         </div>
       ) : (
         <Table>
-          <TableHeader>
+          <TableHeader className={"bg-primaryGrey-50 text-primaryGrey-500"}>
             <TableRow>
-              <TableHead>MIN AMOUNT (EUR)</TableHead>
-              <TableHead>MAX AMOUNT (EUR)</TableHead>
-              <TableHead>{feeLabel}</TableHead>
-              <TableHead className="text-right">ACTIONS</TableHead>
+              <TableHead className={"text-primaryGrey-500 text-sm"}>
+                MIN AMOUNT (EUR)
+              </TableHead>
+              <TableHead className={"text-primaryGrey-500 text-sm"}>
+                MAX AMOUNT (EUR)
+              </TableHead>
+              <TableHead className={"text-primaryGrey-500 text-sm"}>
+                {feeLabel}
+              </TableHead>
+              <TableHead className="text-right text-primaryGrey-500 text-sm">
+                ACTIONS
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,7 +161,7 @@ export function ValueBandTable({
           isRate={isRate}
         />
       )}
-      
+
       {/* Delete Confirmation Modal */}
       <DeleteBandModal
         open={deletingBandIndex !== null}

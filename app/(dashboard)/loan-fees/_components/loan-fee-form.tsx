@@ -21,6 +21,13 @@ import {
   type SelectOption,
   SelectWithDescription,
 } from "@/components/ui/select-with-description";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 const calculationMethods: SelectOption[] = [
   {
@@ -377,7 +384,19 @@ export default function LoanFeeForm() {
             name="receivableAccount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Receivable account</FormLabel>
+                <div className="flex items-center gap-1.5">
+                  <FormLabel required>Receivable account</FormLabel>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs bg-gray-800 text-white">
+                        <p>Account to be debited as per the Presta Chart of Accounts</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <FormControl>
                   <SelectWithDescription
                     options={receivableAccounts}
@@ -395,7 +414,19 @@ export default function LoanFeeForm() {
             name="incomeAccount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Income account</FormLabel>
+                <div className="flex items-center gap-1.5">
+                  <FormLabel required>Income account</FormLabel>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs bg-gray-800 text-white">
+                        <p>Account to be credited as per the Presta Chart of Accounts</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <FormControl>
                   <SelectWithDescription
                     options={incomeAccounts}

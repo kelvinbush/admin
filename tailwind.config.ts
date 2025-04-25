@@ -11,11 +11,13 @@ export default {
     extend: {
       colors: {
         primaryGrey: {
+          50: "#E8E9EA",
           100: "#B6BABC",
           200: "#93989C",
           800: "#0C1116",
           900: "#090D11",
           400: "#444C53",
+          500: "#151F28",
         },
         green: {
           500: "#0C9",

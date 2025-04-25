@@ -23,8 +23,6 @@ export type PeriodBand = {
 // Import the actual component after defining the PeriodBand type
 import { PeriodBandModal } from "./period-band-modal";
 
-
-
 interface PeriodBandTableProps {
   bands: PeriodBand[];
   onChange: (bands: PeriodBand[]) => void;
@@ -41,7 +39,9 @@ export function PeriodBandTable({
     index: number;
     band: PeriodBand;
   } | null>(null);
-  const [deletingBandIndex, setDeletingBandIndex] = useState<number | null>(null);
+  const [deletingBandIndex, setDeletingBandIndex] = useState<number | null>(
+    null,
+  );
 
   // Determine if we're using rate or fixed amount based on the fee label
   const isRate =
@@ -65,7 +65,7 @@ export function PeriodBandTable({
       setEditingBand(null);
     }
   };
-  
+
   const confirmDeleteBand = (index: number) => {
     setDeletingBandIndex(index);
   };
@@ -83,8 +83,6 @@ export function PeriodBandTable({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Period bands configuration</h3>
         <Button
-          variant="outline"
-          size="sm"
           onClick={() => setIsAddModalOpen(true)}
           className="flex items-center gap-1"
         >
@@ -157,7 +155,7 @@ export function PeriodBandTable({
           isRate={isRate}
         />
       )}
-      
+
       {/* Delete Confirmation Modal */}
       <DeleteBandModal
         open={deletingBandIndex !== null}
