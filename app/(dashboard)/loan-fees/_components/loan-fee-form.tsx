@@ -2,13 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Form,
   FormControl,
   FormField,
@@ -24,73 +17,111 @@ import { PeriodBandTable } from "./period-band-table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GradientButton } from "./gradient-button";
 import { cn } from "@/lib/utils";
-import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
+import {
+  type SelectOption,
+  SelectWithDescription,
+} from "@/components/ui/select-with-description";
 
-const calculationMethods = [
-  { label: "Rate", value: "Rate" },
-  { label: "Fixed Amount", value: "Fixed Amount" },
+const calculationMethods: SelectOption[] = [
+  {
+    label: "Rate",
+    value: "Rate",
+    description: "Fee calculated as a percentage of the loan amount",
+  },
+  {
+    label: "Fixed Amount",
+    value: "Fixed Amount",
+    description: "Fee is a fixed amount regardless of loan size",
+  },
   {
     label: "Fixed Amount Per Installment",
     value: "Fixed Amount Per Installment",
-  },
-];
-const applicationRules = [
-  { label: "Fixed value", value: "Fixed value" },
-  {
-    label: "Graduated by value",
-    value: "Graduated by value",
-  },
-  {
-    label: "Graduated by period (months)",
-    value: "Graduated by period (months)",
+    description: "A fixed fee is applied to each loan installment",
   },
 ];
 const collectionRules: SelectOption[] = [
-  { 
-    label: "Upfront", 
+  {
+    label: "Upfront",
     value: "Upfront",
-    description: "Fee is charged and paid before the loan is disbursed."
+    description: "Fee is charged and paid before the loan is disbursed.",
   },
-  { 
-    label: "Capitalized", 
+  {
+    label: "Capitalized",
     value: "Capitalized",
-    description: "Fee is added to the total loan balance and repaid over time."
+    description: "Fee is added to the total loan balance and repaid over time.",
   },
-  { 
-    label: "Deducted", 
+  {
+    label: "Deducted",
     value: "Deducted",
-    description: "Fee is subtracted from the disbursed loan amount before funds are sent to the borrower."
+    description:
+      "Fee is subtracted from the disbursed loan amount before funds are sent to the borrower.",
   },
-  { 
-    label: "Paid with loan", 
+  {
+    label: "Paid with loan",
     value: "Paid with loan",
-    description: "Fee is paid in installments along with the regular loan payments."
+    description:
+      "Fee is paid in installments along with the regular loan payments.",
   },
-  { 
-    label: "Security Deposit (BNPL or IPF loans)", 
+  {
+    label: "Security Deposit (BNPL or IPF loans)",
     value: "Security Deposit",
-    description: "Fee is held as a deposit and may be refunded depending on terms."
+    description:
+      "Fee is held as a deposit and may be refunded depending on terms.",
   },
 ];
-const allocationMethods = [
+const allocationMethods: SelectOption[] = [
   {
     label: "Cleared in the 1st installment",
     value: "Cleared in the 1st installment",
+    description: "The entire fee is paid with the first loan payment",
   },
-  { label: "Other", value: "Other" },
-];
-const calculationBases = [
-  { label: "Principal", value: "Principal" },
   {
-    label: "Outstanding Principal",
-    value: "Outstanding Principal",
+    label: "Spread across installments",
+    value: "Spread across installments",
+    description: "The fee is distributed evenly across all loan payments",
   },
 ];
-const receivableAccounts = [
-  { label: "10601600 - Credit related fees", value: "10601600" },
+const calculationBases: SelectOption[] = [
+  {
+    label: "Principal",
+    value: "Principal",
+    description: "Calculate fee based on the initial loan amount",
+  },
+  {
+    label: "Principal + Interest",
+    value: "Principal + Interest",
+    description: "Calculate fee based on the loan amount plus interest",
+  },
+  {
+    label: "Total Disbursed Amount",
+    value: "Total Disbursed Amount",
+    description:
+      "Calculate fee based on the total amount disbursed to the borrower",
+  },
 ];
-const incomeAccounts = [
-  { label: "40101200 - Credit related fees", value: "40101200" },
+const receivableAccounts: SelectOption[] = [
+  {
+    label: "10601600 - Credit related fees",
+    value: "10601600",
+    description: "Account for tracking credit-related fee receivables",
+  },
+  {
+    label: "10601700 - Penalties",
+    value: "10601700",
+    description: "Account for tracking penalty fee receivables",
+  },
+];
+const incomeAccounts: SelectOption[] = [
+  {
+    label: "40101200 - Credit related fees",
+    value: "40101200",
+    description: "Account for recording credit-related fee income",
+  },
+  {
+    label: "40101300 - Penalties",
+    value: "40101300",
+    description: "Account for recording penalty fee income",
+  },
 ];
 
 type FormValues = z.infer<typeof loanFeeFormValidation>;
@@ -168,23 +199,14 @@ export default function LoanFeeForm() {
             name="calculationMethod"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Fee calculation method</FormLabel>
+                <FormLabel required>Calculation method</FormLabel>
                 <FormControl>
-                  <Select
+                  <SelectWithDescription
+                    options={calculationMethods}
+                    value={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select calculation method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {calculationMethods.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select calculation method"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -318,21 +340,12 @@ export default function LoanFeeForm() {
                 <FormItem>
                   <FormLabel required>Fee allocation method</FormLabel>
                   <FormControl>
-                    <Select
+                    <SelectWithDescription
+                      options={allocationMethods}
+                      value={field.value}
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select fee allocation method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allocationMethods.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select allocation method"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -347,21 +360,12 @@ export default function LoanFeeForm() {
                 <FormItem>
                   <FormLabel required>Calculate fee on</FormLabel>
                   <FormControl>
-                    <Select
+                    <SelectWithDescription
+                      options={calculationBases}
+                      value={field.value}
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Calculate fee on" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {calculationBases.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select calculation base"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -375,21 +379,12 @@ export default function LoanFeeForm() {
               <FormItem>
                 <FormLabel required>Receivable account</FormLabel>
                 <FormControl>
-                  <Select
+                  <SelectWithDescription
+                    options={receivableAccounts}
+                    value={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select receivable account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {receivableAccounts.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select receivable account"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -402,21 +397,12 @@ export default function LoanFeeForm() {
               <FormItem>
                 <FormLabel required>Income account</FormLabel>
                 <FormControl>
-                  <Select
+                  <SelectWithDescription
+                    options={incomeAccounts}
+                    value={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select income account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {incomeAccounts.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select income account"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

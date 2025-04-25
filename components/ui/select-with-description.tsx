@@ -38,8 +38,8 @@ export function SelectWithDescription({
     >
       <SelectPrimitive.Trigger
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          "h-12 border-gray-300",
+          "flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "border-gray-300",
           triggerClassName
         )}
       >
@@ -66,19 +66,19 @@ export function SelectWithDescription({
                 key={option.value}
                 value={option.value}
                 className={cn(
-                  "relative flex flex-col cursor-default select-none items-start py-2.5 px-6 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                  "relative flex flex-col cursor-default select-none items-start py-2 px-6 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                   "focus:bg-gray-100 hover:bg-gray-50 data-[state=checked]:bg-gray-100",
                   "border-b last:border-b-0 border-gray-100"
                 )}
               >
                 <div className="flex items-center w-full">
-                  <span className="text-base">{option.label}</span>
+                  <span className="text-sm">{option.label}</span>
                   <SelectPrimitive.ItemIndicator className="ml-auto">
-                    <Check className="h-5 w-5" />
+                    <Check className="h-4 w-4" />
                   </SelectPrimitive.ItemIndicator>
                 </div>
                 {option.description && (
-                  <span className="text-sm text-gray-500 mt-0.5">
+                  <span className="text-xs text-gray-500 mt-0.5">
                     {option.description}
                   </span>
                 )}
