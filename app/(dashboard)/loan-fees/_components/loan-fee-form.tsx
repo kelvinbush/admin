@@ -158,18 +158,14 @@ export default function LoanFeeForm() {
   const collectionRule = form.watch("collectionRule");
 
   // Conditional rendering logic
-  const showCollectionRule =
-    calculationMethod !== "Fixed Amount Per Installment";
-  const showAllocationMethod =
-    showCollectionRule && collectionRule === "Paid with loan";
-  const showCalculationBasis = calculationMethod === "Rate";
-  const showAmount =
-    calculationMethod !== "Fixed Amount Per Installment" &&
-    applicationRule !== "Graduated by value" &&
-    applicationRule !== "Graduated by period (months)";
   const showRate = calculationMethod === "Rate";
+  const showAmount = calculationMethod === "Fixed Amount" || calculationMethod === "Fixed Amount Per Installment";
   const showValueBands = applicationRule === "Graduated by value";
   const showPeriodBands = applicationRule === "Graduated by period (months)";
+  const showCollectionRule = true;
+  const showAllocationMethod = calculationMethod === "Fixed Amount" || calculationMethod === "Fixed Amount Per Installment";
+  const showCalculationBase = calculationMethod === "Rate";
+  const isPerInstallment = calculationMethod === "Fixed Amount Per Installment" && applicationRule !== "Graduated by period (months)";
 
   const onSubmit = (data: FormValues) => {
     // Submit logic here
@@ -362,7 +358,7 @@ export default function LoanFeeForm() {
               )}
             />
           )}
-          {showCalculationBasis && (
+          {showCalculationBase && (
             <FormField
               control={form.control}
               name="calculationBasis"
@@ -458,12 +454,20 @@ export default function LoanFeeForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel required>
-                    {showRate ? "Rate (%)" : "Amount (EUR)"}
+                    {showRate 
+                      ? "Rate (%)" 
+                      : isPerInstallment 
+                        ? "Amount per installment (EUR)" 
+                        : "Amount (EUR)"}
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder={showRate ? "Enter rate" : "Enter value"}
+                      placeholder={showRate 
+                        ? "Enter rate" 
+                        : isPerInstallment 
+                          ? "Enter amount per installment" 
+                          : "Enter amount"}
                       onChange={(e) => {
                         // Convert empty string to undefined, otherwise parse as float
                         const value =
