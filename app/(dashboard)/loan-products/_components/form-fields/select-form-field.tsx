@@ -49,9 +49,21 @@ export function SelectFormField({
       name={name}
       render={({ field, fieldState }) => (
         <FormItem>
-          <FormLabel>
-            {label} {required && <span className="text-red-500">*</span>}
-          </FormLabel>
+          <div className="flex justify-between items-center">
+            <FormLabel>
+              {label} {required && <span className="text-red-500">*</span>}
+            </FormLabel>
+            {addNewOption && (
+              <Button
+                variant="link"
+                className="h-auto p-0 text-xs text-green-500 hover:text-green-600"
+                type="button"
+                onClick={addNewOption.onClick}
+              >
+                {addNewOption.label}
+              </Button>
+            )}
+          </div>
           <FormControl>
             <SelectWithDescription
               options={options}
@@ -63,19 +75,9 @@ export function SelectFormField({
             />
           </FormControl>
           <FormMessage />
-          {(description || addNewOption) && (
+          {description && (
             <FormDescription className="text-xs">
               {description}
-              {addNewOption && (
-                <Button
-                  variant="link"
-                  className="h-auto p-0 text-xs"
-                  type="button"
-                  onClick={addNewOption.onClick}
-                >
-                  {addNewOption.label}
-                </Button>
-              )}
             </FormDescription>
           )}
         </FormItem>

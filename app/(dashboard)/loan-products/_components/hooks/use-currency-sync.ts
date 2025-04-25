@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { UseFormReturn, UseFormWatch } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { StepOneFormValues } from "../../_schemas/loan-product-schemas";
 
 /**

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StepOneFormValues } from "../../_schemas/loan-product-schemas";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SelectFormField, SelectOption } from "../form-fields/select-form-field";
+import { UserGroupModal } from "../user-group-modal";
 
 // Define provider options
 const providerOptions: SelectOption[] = [
@@ -77,6 +79,23 @@ interface BasicDetailsSectionProps {
 }
 
 export function BasicDetailsSection({ form }: BasicDetailsSectionProps) {
+  const [isUserGroupModalOpen, setIsUserGroupModalOpen] = useState(false);
+
+  const handleAddUserGroup = (data: any) => {
+    // Add the new user group to the visibility options
+    const newOption: SelectOption = {
+      value: data.groupName.toLowerCase().replace(/\s+/g, '_'),
+      label: data.groupName,
+      description: data.description || `${data.groupName} user group`,
+    };
+    
+    // Update the visibilityOptions array (in a real app, this would likely be an API call)
+    visibilityOptions.push(newOption);
+    
+    // Set the form value to the new option
+    form.setValue("loanVisibility", newOption.value);
+  };
+
   return (
     <div>
       <h2 className="text-xl font-medium mb-4">Basic loan details</h2>
@@ -154,13 +173,17 @@ export function BasicDetailsSection({ form }: BasicDetailsSectionProps) {
           required={true}
           addNewOption={{
             label: "+ New user group",
-            onClick: () => {
-              // Handle adding new user group
-              console.log("Add new user group");
-            },
+            onClick: () => setIsUserGroupModalOpen(true),
           }}
         />
       </div>
+
+      {/* User Group Modal */}
+      <UserGroupModal
+        open={isUserGroupModalOpen}
+        onClose={() => setIsUserGroupModalOpen(false)}
+        onSave={handleAddUserGroup}
+      />
     </div>
   );
 }
