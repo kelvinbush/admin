@@ -33,6 +33,26 @@ const valueBandSchema = z.object({
   path: ["maxAmount"],
 });
 
+// Define the period band schema
+const periodBandSchema = z.object({
+  id: z.string().optional(), // Optional ID for existing bands
+  minPeriod: z.number({
+    required_error: "Minimum period is required",
+    invalid_type_error: "Minimum period must be a number",
+  }),
+  maxPeriod: z.number({
+    required_error: "Maximum period is required",
+    invalid_type_error: "Maximum period must be a number",
+  }),
+  fee: z.number({
+    required_error: "Fee value is required",
+    invalid_type_error: "Fee value must be a number",
+  }),
+}).refine(data => data.maxPeriod > data.minPeriod, {
+  message: "Maximum period must be greater than minimum period",
+  path: ["maxPeriod"],
+});
+
 // First define the base schema without conditional validations
 const baseSchema = z.object({
   name: z
@@ -50,6 +70,7 @@ const baseSchema = z.object({
   }),
 
   valueBands: z.array(valueBandSchema).optional(),
+  periodBands: z.array(periodBandSchema).optional(),
   collectionRule: z.string().optional(),
   allocationMethod: z.string().optional(),
   calculationBasis: z.string().optional(),
@@ -129,6 +150,17 @@ export const loanFeeFormValidation = baseSchema
           code: z.ZodIssueCode.custom,
           message: "At least one value band is required",
           path: ["valueBands"],
+        });
+      }
+    }
+    
+    // Period bands validation for Graduated by period
+    if (data.applicationRule === "Graduated by period (months)") {
+      if (!data.periodBands || data.periodBands.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "At least one period band is required",
+          path: ["periodBands"],
         });
       }
     }

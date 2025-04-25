@@ -21,6 +21,7 @@ import { loanFeeFormValidation } from "@/app/(dashboard)/loan-fees/_components/l
 import { useZodForm } from "@/lib/hooks/use-zod-form";
 import { z } from "zod";
 import { ValueBandTable, type ValueBand } from "./value-band-table";
+import { PeriodBandTable, type PeriodBand } from "./period-band-table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GradientButton } from "./gradient-button";
 
@@ -73,6 +74,7 @@ export default function LoanFeeForm() {
       calculationMethod: "Fixed Amount",
       applicationRule: "Fixed value",
       valueBands: [],
+      periodBands: [],
       collectionRule: "",
       allocationMethod: "",
       calculationBasis: "",
@@ -95,9 +97,11 @@ export default function LoanFeeForm() {
   const showCalculationBasis = calculationMethod === "Rate";
   const showAmount =
     calculationMethod !== "Fixed Amount Per Installment" &&
-    applicationRule !== "Graduated by value";
+    applicationRule !== "Graduated by value" &&
+    applicationRule !== "Graduated by period (months)";
   const showRate = calculationMethod === "Rate";
   const showValueBands = applicationRule === "Graduated by value";
+  const showPeriodBands = applicationRule === "Graduated by period (months)";
 
   const onSubmit = (data: FormValues) => {
     // Submit logic here
@@ -168,7 +172,7 @@ export default function LoanFeeForm() {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="flex flex-col space-y-1"
+                    className="grid grid-cols-3 gap-4"
                   >
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
@@ -209,6 +213,31 @@ export default function LoanFeeForm() {
                 <FormItem>
                   <FormControl>
                     <ValueBandTable
+                      bands={field.value || []}
+                      onChange={field.onChange}
+                      feeLabel={
+                        calculationMethod === "Rate"
+                          ? "RATE (%)"
+                          : "AMOUNT (EUR)"
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+        
+        {showPeriodBands && (
+          <div className="mt-6 mb-6">
+            <FormField
+              control={form.control}
+              name="periodBands"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <PeriodBandTable
                       bands={field.value || []}
                       onChange={field.onChange}
                       feeLabel={
