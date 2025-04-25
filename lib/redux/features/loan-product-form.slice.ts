@@ -12,6 +12,8 @@ export interface LoanProductFormState {
     disbursementMethod: string;
     loanVisibility: string;
     availabilityWindow?: Date;
+    availabilityWindowStart?: Date;
+    availabilityWindowEnd?: Date;
     loanDescription: string;
     processingMethod: string;
     

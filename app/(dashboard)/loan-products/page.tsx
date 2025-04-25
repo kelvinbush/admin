@@ -3,12 +3,9 @@
 import { useState } from "react";
 import EmptyState from "./_components/empty-state";
 import Header from "./_components/header";
-import ProductDropdown from "./_components/product-dropdown";
-import { useRouter } from "next/navigation";
 
 export default function LoanProductsPage() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
   // This will be replaced with actual data fetching
@@ -22,11 +19,6 @@ export default function LoanProductsPage() {
   const handleCreateClick = () => {
     setShowDropdown(!showDropdown);
   };
-
-  const navigateToCreate = (type: "mk" | "partner") => {
-    router.push(`/loan-productss/create?type=${type}`);
-  };
-
   return (
     <div className="container mx-auto p-6 bg-white min-h-[80svh] flex flex-col">
       <Header
