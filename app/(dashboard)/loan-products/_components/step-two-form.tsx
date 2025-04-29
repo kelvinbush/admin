@@ -118,7 +118,7 @@ const StepTwoForm = ({ initialData }: StepTwoFormProps) => {
               control={form.control}
               name="repaymentCycle"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-2">
                   <FormLabel>
                     Loan repayment cycle <span className="text-red-500">*</span>
                   </FormLabel>
@@ -148,8 +148,7 @@ const StepTwoForm = ({ initialData }: StepTwoFormProps) => {
               )}
             />
             
-            {showSpecificDayFields && (
-              <>
+        
                 <FormField
                   control={form.control}
                   name="specificRepaymentDay"
@@ -193,10 +192,10 @@ const StepTwoForm = ({ initialData }: StepTwoFormProps) => {
                     </FormItem>
                   )}
                 />
-              </>
-            )}
+              
+          
             
-            <div>
+            <div className="col-span-2">
               <FormLabel>
                 Grace period (optional)
               </FormLabel>
