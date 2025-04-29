@@ -26,13 +26,20 @@ import {
   FormData,
   defaultValues,
 } from "./_schemas/step-two-form-schema";
+import {
+  repaymentCycleOptions,
+  gracePeriodOptions,
+  interestRatePeriodOptions,
+  interestCalculationMethodOptions,
+  interestCollectionMethodOptions,
+  interestRecognitionCriteriaOptions,
+} from "./_options/loan-form-options";
 
 // Define the props for the form component
 interface StepTwoFormProps {
   initialData?: Partial<FormData>;
 }
 
-// Define the form component
 export default function StepTwoForm({ initialData }: StepTwoFormProps) {
   const dispatch = useDispatch();
 
@@ -47,64 +54,6 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
     dispatch(updateFormData(data));
     dispatch(nextStep());
   };
-
-  const repaymentCycleOptions = [
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-  ];
-
-  const gracePeriodOptions = [
-    { value: "days", label: "days" },
-    { value: "weeks", label: "weeks" },
-    { value: "months", label: "months" },
-  ];
-
-  const interestRatePeriodOptions = [
-    { value: "per_month", label: "per month" },
-    { value: "per_annum", label: "per annum" },
-  ];
-
-  const interestCalculationMethodOptions = [
-    {
-      value: "flat",
-      label: "Flat",
-      description:
-        "Interest is calculated on the initial loan amount throughout the loan term",
-    },
-    {
-      value: "declining_balance",
-      label: "Declining Balance",
-      description: "Interest is calculated on the remaining loan balance",
-    },
-  ];
-
-  const interestCollectionMethodOptions = [
-    {
-      value: "upfront",
-      label: "Upfront",
-      description: "Interest is collected at loan disbursement",
-    },
-    {
-      value: "with_repayment",
-      label: "With Repayment",
-      description: "Interest is collected with each repayment installment",
-    },
-  ];
-
-  const interestRecognitionCriteriaOptions = [
-    {
-      value: "cash_basis",
-      label: "Cash Basis",
-      description: "Interest is recognized only when payment is received",
-    },
-    {
-      value: "accrual_basis",
-      label: "Accrual Basis",
-      description:
-        "Interest is recognized as it is earned, regardless of when payment is received",
-    },
-  ];
 
   return (
     <Form {...form}>
