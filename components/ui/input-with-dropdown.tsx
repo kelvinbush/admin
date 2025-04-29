@@ -27,7 +27,7 @@ const InputWithDropdown = React.forwardRef<
       error,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -35,7 +35,10 @@ const InputWithDropdown = React.forwardRef<
     // Close dropdown when clicking outside
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
           setIsOpen(false);
         }
       };
@@ -47,17 +50,21 @@ const InputWithDropdown = React.forwardRef<
     }, []);
 
     // Find the selected option label
-    const selectedOption = options.find(option => option.value === dropdownValue);
-    const displayValue = selectedOption ? selectedOption.label : dropdownPlaceholder;
+    const selectedOption = options.find(
+      (option) => option.value === dropdownValue,
+    );
+    const displayValue = selectedOption
+      ? selectedOption.label
+      : dropdownPlaceholder;
 
     return (
       <div className={cn("flex w-full", className)}>
         <div className="relative flex-grow">
           <input
             className={cn(
-              "flex h-9 w-full px-3 py-1 border rounded-l-md focus:outline-none focus:ring-1 focus:ring-ring text-base shadow-sm transition-colors",
+              "flex h-9 w-full px-3 py-1 border rounded-l-md focus:outline-none focus:ring-1 focus:ring-ring text-sm shadow-sm transition-colors",
               error ? "border-red-500" : "border-input",
-              "rounded-r-none border-r-0"
+              "rounded-r-none border-r-0",
             )}
             ref={ref}
             {...props}
@@ -69,19 +76,27 @@ const InputWithDropdown = React.forwardRef<
             className={cn(
               "w-full h-9 flex items-center justify-between px-3 py-1 border rounded-r-md",
               error ? "border-red-500" : "border-input",
-              "rounded-l-none border-l-0 bg-primaryGrey-50 text-sm"
+              "rounded-l-none border-l-0 bg-primaryGrey-50 text-sm",
             )}
             onClick={() => setIsOpen(!isOpen)}
           >
             <span className="truncate">{displayValue}</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className={cn("h-4 w-4 transition-transform", isOpen ? "rotate-180" : "")}
+              className={cn(
+                "h-4 w-4 transition-transform",
+                isOpen ? "rotate-180" : "",
+              )}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           {isOpen && (
@@ -103,7 +118,7 @@ const InputWithDropdown = React.forwardRef<
         </div>
       </div>
     );
-  }
+  },
 );
 
 InputWithDropdown.displayName = "InputWithDropdown";

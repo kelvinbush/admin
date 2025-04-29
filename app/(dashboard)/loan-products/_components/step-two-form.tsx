@@ -3,7 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch } from "react-redux";
-import { updateFormData, nextStep, prevStep } from "@/lib/redux/features/loan-product-form.slice";
+import {
+  updateFormData,
+  nextStep,
+  prevStep,
+} from "@/lib/redux/features/loan-product-form.slice";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,7 +21,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
 import { InputWithDropdown } from "@/components/ui/input-with-dropdown";
-import { formSchema, FormData, defaultValues } from "./_schemas/step-two-form-schema";
+import {
+  formSchema,
+  FormData,
+  defaultValues,
+} from "./_schemas/step-two-form-schema";
 
 // Define the props for the form component
 interface StepTwoFormProps {
@@ -58,41 +66,43 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
   ];
 
   const interestCalculationMethodOptions = [
-    { 
-      value: "flat", 
+    {
+      value: "flat",
       label: "Flat",
-      description: "Interest is calculated on the initial loan amount throughout the loan term"
+      description:
+        "Interest is calculated on the initial loan amount throughout the loan term",
     },
-    { 
-      value: "declining_balance", 
+    {
+      value: "declining_balance",
       label: "Declining Balance",
-      description: "Interest is calculated on the remaining loan balance"
+      description: "Interest is calculated on the remaining loan balance",
     },
   ];
 
   const interestCollectionMethodOptions = [
-    { 
-      value: "upfront", 
+    {
+      value: "upfront",
       label: "Upfront",
-      description: "Interest is collected at loan disbursement"
+      description: "Interest is collected at loan disbursement",
     },
-    { 
-      value: "with_repayment", 
+    {
+      value: "with_repayment",
       label: "With Repayment",
-      description: "Interest is collected with each repayment installment"
+      description: "Interest is collected with each repayment installment",
     },
   ];
 
   const interestRecognitionCriteriaOptions = [
-    { 
-      value: "cash_basis", 
+    {
+      value: "cash_basis",
       label: "Cash Basis",
-      description: "Interest is recognized only when payment is received"
+      description: "Interest is recognized only when payment is received",
     },
-    { 
-      value: "accrual_basis", 
+    {
+      value: "accrual_basis",
       label: "Accrual Basis",
-      description: "Interest is recognized as it is earned, regardless of when payment is received"
+      description:
+        "Interest is recognized as it is earned, regardless of when payment is received",
     },
   ];
 
@@ -101,13 +111,15 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <h2 className="text-base font-medium mb-4">Loan repayment terms</h2>
-          
+
           <FormField
             control={form.control}
             name="repaymentCycle"
             render={({ field }) => (
               <FormItem className="mb-6">
-                <FormLabel className="text-sm font-normal">Loan repayment cycle <span className="text-red-500">*</span></FormLabel>
+                <FormLabel className="text-sm font-normal">
+                  Loan repayment cycle <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <SelectWithDescription
                     options={repaymentCycleOptions}
@@ -128,12 +140,15 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
               name="specificRepaymentDay"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-normal">Specific repayment day <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel className="text-sm font-normal">
+                    Specific repayment day{" "}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter the day of the month" 
-                      className="h-9 text-sm" 
-                      {...field} 
+                    <Input
+                      placeholder="Enter the day of the month"
+                      className="h-9 text-sm"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-gray-500 mt-1">
@@ -149,16 +164,21 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
               name="minDaysBeforeFirstPayment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-normal">Minimum days before first payment <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel className="text-sm font-normal">
+                    Minimum days before first payment{" "}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter value" 
-                      className="h-9 text-sm" 
-                      {...field} 
+                    <Input
+                      placeholder="Enter value"
+                      className="h-9 text-sm"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription className="text-xs text-gray-500 mt-1">
-                    If the loan is disbursed close to the repayment date, the first payment will be moved to the following month if the gap is shorter than this number of days.
+                    If the loan is disbursed close to the repayment date, the
+                    first payment will be moved to the following month if the
+                    gap is shorter than this number of days.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -167,53 +187,42 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
           </div>
 
           <div className="mb-8">
-            <FormLabel className="text-sm font-normal">Grace period (optional)</FormLabel>
-            <div className="flex gap-2 mt-1">
-              <div className="flex-1">
-                <FormField
-                  control={form.control}
-                  name="gracePeriod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter value" 
-                          className="h-9 text-sm" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="w-32">
-                <FormField
-                  control={form.control}
-                  name="gracePeriodUnit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <SelectWithDescription
-                        options={gracePeriodOptions}
-                        value={field.value || "days"}
-                        onValueChange={field.onChange}
-                        placeholder="Unit"
-                        className="w-full"
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            <FormLabel className="text-sm font-normal">
+              Grace period (optional)
+            </FormLabel>
+            <FormField
+              control={form.control}
+              name="gracePeriod"
+              render={({ field }) => (
+                <FormItem className="mt-1">
+                  <FormControl>
+                    <InputWithDropdown
+                      {...field}
+                      placeholder="Enter value"
+                      options={gracePeriodOptions}
+                      dropdownValue={form.watch("gracePeriodUnit") || "days"}
+                      onDropdownValueChange={(value) =>
+                        form.setValue("gracePeriodUnit", value)
+                      }
+                      className="h-9 text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           <div>
-            <h2 className="text-base font-medium mb-6">Loan interest details</h2>
-            
+            <h2 className="text-base font-medium mb-6">
+              Loan interest details
+            </h2>
+
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <FormLabel className="text-sm font-normal">Interest rate (%) <span className="text-red-500">*</span></FormLabel>
+                <FormLabel className="text-sm font-normal">
+                  Interest rate (%) <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormField
                   control={form.control}
                   name="interestRate"
@@ -224,10 +233,14 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
                           {...field}
                           placeholder="Enter percentage"
                           options={interestRatePeriodOptions}
-                          dropdownValue={form.watch("interestRatePeriod") || "per_month"}
-                          onDropdownValueChange={(value) => form.setValue("interestRatePeriod", value)}
+                          dropdownValue={
+                            form.watch("interestRatePeriod") || "per_month"
+                          }
+                          onDropdownValueChange={(value) =>
+                            form.setValue("interestRatePeriod", value)
+                          }
                           error={!!form.formState.errors.interestRate}
-                          className="h-9 text-sm"
+                          className=""
                         />
                       </FormControl>
                       <FormMessage />
@@ -241,14 +254,19 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
                 name="interestCalculationMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-normal">Interest calculation method <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel className="text-sm font-normal">
+                      Interest calculation method{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <SelectWithDescription
                         options={interestCalculationMethodOptions}
                         value={field.value}
                         onValueChange={field.onChange}
                         placeholder="Select interest calculation method"
-                        error={!!form.formState.errors.interestCalculationMethod}
+                        error={
+                          !!form.formState.errors.interestCalculationMethod
+                        }
                         className="mt-1"
                       />
                     </FormControl>
@@ -262,7 +280,10 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
                 name="interestCollectionMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-normal">Interest collection method <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel className="text-sm font-normal">
+                      Interest collection method{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <SelectWithDescription
                         options={interestCollectionMethodOptions}
@@ -283,14 +304,19 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
                 name="interestRecognitionCriteria"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-normal">Interest recognition criteria <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel className="text-sm font-normal">
+                      Interest recognition criteria{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <SelectWithDescription
                         options={interestRecognitionCriteriaOptions}
                         value={field.value}
                         onValueChange={field.onChange}
                         placeholder="Select interest recognition criteria"
-                        error={!!form.formState.errors.interestRecognitionCriteria}
+                        error={
+                          !!form.formState.errors.interestRecognitionCriteria
+                        }
                         className="mt-1"
                       />
                     </FormControl>
