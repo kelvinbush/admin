@@ -28,12 +28,12 @@ const AddLoanProductPage = () => {
 
   const renderStepContent = () => {
     switch (activeStep) {
-      case 2:
+      case 3:
         return <StepOneForm initialData={formData} />;
-      case 1:
+      case 2:
         // Will be implemented in the future
         return <StepTwoForm initialData={formData} />;
-      case 3:
+      case 1:
         return <StepThreeForm initialData={formData} />;
       default:
         return <StepOneForm initialData={formData} />;
