@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
 import { LoanFeeSelectionModal, LoanFee } from "./loan-fee-selection-modal";
+import { DeleteLoanFeeModal } from "./delete-loan-fee-modal";
 
 const formSchema = z.object({
   paymentsAllocationSequence: z.string({
@@ -65,6 +66,10 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
   
   // State to control the loan fee selection modal
   const [isLoanFeeModalOpen, setIsLoanFeeModalOpen] = useState(false);
+  
+  // State to control the delete loan fee confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [feeToDelete, setFeeToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -93,9 +98,18 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
     setLoanFees([...loanFees, newFee]);
   };
 
-  // Handle removing a loan fee
-  const handleRemoveLoanFee = (id: string) => {
-    setLoanFees(loanFees.filter(fee => fee.id !== id));
+  // Handle initiating loan fee removal (shows confirmation modal)
+  const handleInitiateRemoveLoanFee = (id: string, name: string) => {
+    setFeeToDelete({ id, name });
+    setIsDeleteModalOpen(true);
+  };
+  
+  // Handle confirming loan fee removal
+  const handleConfirmRemoveLoanFee = () => {
+    if (feeToDelete) {
+      setLoanFees(loanFees.filter(fee => fee.id !== feeToDelete.id));
+      setFeeToDelete(null);
+    }
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -223,7 +237,7 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
                       variant="ghost"
                       size="sm"
                       className="text-gray-500 hover:text-red-500"
-                      onClick={() => handleRemoveLoanFee(fee.id)}
+                      onClick={() => handleInitiateRemoveLoanFee(fee.id, fee.name)}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -373,6 +387,16 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
         onClose={() => setIsLoanFeeModalOpen(false)}
         onSelect={handleSelectLoanFee}
       />
+      
+      {/* Delete Loan Fee Confirmation Modal */}
+      {feeToDelete && (
+        <DeleteLoanFeeModal
+          open={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmRemoveLoanFee}
+          feeName={feeToDelete.name}
+        />
+      )}
     </Form>
   );
 };
