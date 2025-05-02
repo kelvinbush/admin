@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
+import { LoanFeeSelectionModal, LoanFee } from "./loan-fee-selection-modal";
 
 const formSchema = z.object({
   paymentsAllocationSequence: z.string({
@@ -59,8 +60,11 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
 
   // State to track loan fees
   const [loanFees, setLoanFees] = useState<
-    { id: string; name: string; amount: string; type: string }[]
+    { id: string; name: string; amount: string; type: string; description?: string }[]
   >([]);
+  
+  // State to control the loan fee selection modal
+  const [isLoanFeeModalOpen, setIsLoanFeeModalOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,17 +76,26 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
     },
   });
 
-  // Handle adding a new loan fee
+  // Handle opening the loan fee selection modal
   const handleAddLoanFee = () => {
-    // This would typically open a modal or form to add a new fee
-    // For now, we'll just add a placeholder fee
+    setIsLoanFeeModalOpen(true);
+  };
+
+  // Handle selecting a loan fee from the modal
+  const handleSelectLoanFee = (fee: LoanFee) => {
     const newFee = {
-      id: `fee-${loanFees.length + 1}`,
-      name: `Fee ${loanFees.length + 1}`,
-      amount: "0",
-      type: "fixed",
+      id: fee.id,
+      name: fee.name,
+      amount: fee.amount.toString(),
+      type: fee.calculationMethod.toLowerCase().includes('rate') ? 'percentage' : 'fixed',
+      description: fee.description
     };
     setLoanFees([...loanFees, newFee]);
+  };
+
+  // Handle removing a loan fee
+  const handleRemoveLoanFee = (id: string) => {
+    setLoanFees(loanFees.filter(fee => fee.id !== id));
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -178,24 +191,55 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
 
           <div className="border border-dashed border-gray-300 rounded-md p-8 mb-4 relative">
             {loanFees.length === 0 ? (
-              <div className="text-center text-gray-500">
-                <p>No loan fees have been added yet!</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">No loan fees added yet.</p>
+                <p className="text-gray-500 text-sm">
+                  Click the "Add Loan Fee" button to add a fee.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
                 {loanFees.map((fee) => (
                   <div
                     key={fee.id}
-                    className="flex justify-between items-center p-3 border rounded-md"
+                    className="py-2 px-3 border rounded-md flex justify-between items-center"
                   >
-                    <div>
-                      <p className="font-medium">{fee.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {fee.amount} ({fee.type})
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-sm">{fee.name}</h3>
+                          <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                            {fee.type === "fixed" ? `€${fee.amount}` : `${fee.amount}%`}
+                          </span>
+                        </div>
+                        {fee.description && (
+                          <p className="text-xs text-gray-400">{fee.description}</p>
+                        )}
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" type="button">
-                      Edit
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-500 hover:text-red-500"
+                      onClick={() => handleRemoveLoanFee(fee.id)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
                     </Button>
                   </div>
                 ))}
@@ -322,6 +366,13 @@ const StepThreeForm = ({ initialData }: StepThreeFormProps) => {
           </div>
         </div>
       </form>
+
+      {/* Loan Fee Selection Modal */}
+      <LoanFeeSelectionModal
+        open={isLoanFeeModalOpen}
+        onClose={() => setIsLoanFeeModalOpen(false)}
+        onSelect={handleSelectLoanFee}
+      />
     </Form>
   );
 };
