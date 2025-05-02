@@ -9,33 +9,35 @@ import { RootState } from "@/lib/redux/store";
 import { resetForm } from "@/lib/redux/features/loan-product-form.slice";
 import StepIndicator from "../_components/step-indicator";
 import StepOneForm from "../_components/step-one-form";
-import StepTwoForm from "@/app/(dashboard)/loan-products/_components/step-two-form";
-import StepThreeForm from "@/app/(dashboard)/loan-products/_components/step-three-form";
+import { StepTwoForm } from "../_components/step-two-form";
+import StepThreeForm from "../_components/step-three-form";
+import { FormData as StepTwoFormData } from "../_components/_schemas/step-two-form-schema";
+import { PartnerLoanForm } from "../_components/partner-loan-form";
+import { FormData as PartnerFormData } from "../_components/_schemas/partner-loan-form-schema";
 
-const AddLoanProductPage = () => {
+interface Props {
+  searchParams?: { [key: string]: string | undefined };
+}
+
+const AddLoanProductPage = ({ searchParams = {} }: Props) => {
   const dispatch = useDispatch();
-  const searchParams = useSearchParams();
   const { activeStep, formData } = useSelector(
     (state: RootState) => state.loanProductForm,
   );
 
-  const productType = searchParams.get("type") || "mk";
+  const productType = searchParams.type || "mk";
 
   useEffect(() => {
+    // Reset form when component mounts
     dispatch(resetForm());
   }, [dispatch]);
 
-  const renderStepContent = () => {
-    switch (activeStep) {
-      case 1:
-        return <StepOneForm initialData={formData} />;
-      case 2:
-        return <StepTwoForm initialData={formData} />;
-      case 3:
-        return <StepThreeForm initialData={formData} />;
-      default:
-        return <StepOneForm initialData={formData} />;
-    }
+  const handleStepTwoSubmit = async (data: StepTwoFormData) => {
+    console.log("Step Two Form Data:", data);
+  };
+
+  const handlePartnerLoanSubmit = async (data: PartnerFormData) => {
+    console.log("Partner Loan Form Data:", data);
   };
 
   return (
@@ -51,17 +53,42 @@ const AddLoanProductPage = () => {
       </div>
 
       <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <StepIndicator currentStep={activeStep} totalSteps={3} />
+        {productType === "partner" ? (
+          <PartnerLoanForm
+            onSubmit={handlePartnerLoanSubmit}
+          />
+        ) : (
+          <>
+            <StepIndicator currentStep={activeStep} totalSteps={3} />
 
-        <h1 className="mb-2 text-3xl font-bold">
-          Add {productType === "mk" ? "MK" : "Partner"} loan product
-        </h1>
+            <h1 className="mb-2 text-3xl font-bold">
+              Add {productType === "mk" ? "MK" : "Partner"} loan product
+            </h1>
 
-        <p className="mb-8 text-gray-600">
-          Fill in the details below to create a new loan product
-        </p>
+            <p className="mb-8 text-gray-600">
+              Fill in the details below to create a new loan product
+            </p>
 
-        <div className="mt-6">{renderStepContent()}</div>
+            <div className="mt-6">
+              {activeStep === 1 && (
+                <StepOneForm
+                  initialData={formData}
+                />
+              )}
+              {activeStep === 2 && (
+                <StepTwoForm
+                  onSubmit={handleStepTwoSubmit}
+                  initialData={formData}
+                />
+              )}
+              {activeStep === 3 && (
+                <StepThreeForm
+                  initialData={formData}
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
