@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
+import { NewOrganizationModal } from "./new-organization-modal";
+import { PlusCircle } from "lucide-react";
 import { InputWithDropdown } from "@/components/ui/input-with-dropdown";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,19 +21,41 @@ import {
   defaultValues,
 } from "./_schemas/partner-loan-form-schema";
 import {
-  loanProviderOptions,
   loanTypeOptions,
   userGroupOptions,
   processingMethodOptions,
   periodOptions,
   termUnitOptions,
 } from "./_options/partner-loan-options";
+import { useState } from "react";
 
 interface PartnerLoanFormProps {
   onSubmit: (data: FormData) => void;
 }
 
 export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
+  // State for new organization modal
+  const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
+  
+  // State for loan provider options
+  const [loanProviderOptions, setLoanProviderOptions] = useState([
+    {
+      value: "melanin-kapital",
+      label: "Melanin Kapital",
+      description: "Main lending partner",
+    },
+    {
+      value: "equity-bank",
+      label: "Equity Bank",
+      description: "Banking partner for loan disbursements",
+    },
+    {
+      value: "cooperative-bank",
+      label: "Cooperative Bank",
+      description: "Banking partner for SME loans",
+    },
+  ]);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -88,13 +112,24 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
               name="provider"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Loan provider/organization{" "}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <div className="flex justify-between items-center">
+                    <FormLabel className="text-sm font-normal">
+                      Loan provider/organization{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto p-0 text-xs text-green-500 hover:text-green-600"
+                      onClick={() => setIsNewOrgModalOpen(true)}
+                    >
+                      + New loan provider
+                    </Button>
+                  </div>
                   <FormControl>
                     <SelectWithDescription
-                      {...field}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       options={loanProviderOptions}
                       placeholder="Select loan provider"
                       error={!!form.formState.errors.provider}
@@ -115,7 +150,8 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                   </FormLabel>
                   <FormControl>
                     <SelectWithDescription
-                      {...field}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       options={loanTypeOptions}
                       placeholder="Select loan type"
                       error={!!form.formState.errors.type}
@@ -136,7 +172,8 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                   </FormLabel>
                   <FormControl>
                     <SelectWithDescription
-                      {...field}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       options={userGroupOptions}
                       placeholder="Select user group"
                       error={!!form.formState.errors.visibility}
@@ -158,7 +195,8 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                   </FormLabel>
                   <FormControl>
                     <SelectWithDescription
-                      {...field}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       options={processingMethodOptions}
                       placeholder="Select loan processing method"
                       error={!!form.formState.errors.processingMethod}
@@ -247,7 +285,7 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
             <FormField
               control={form.control}
               name="minTerm"
-              render={({ field: { onChange, ...field } }) => (
+              render={({ field: { ...field } }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Minimum loan term <span className="text-red-500">*</span>
@@ -259,7 +297,9 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                       type="number"
                       options={termUnitOptions}
                       dropdownValue={form.watch("minTermUnit") || "months"}
-                      onDropdownValueChange={(value) => form.setValue("minTermUnit", value)}
+                      onDropdownValueChange={(value) =>
+                        form.setValue("minTermUnit", value)
+                      }
                       error={!!form.formState.errors.minTerm}
                     />
                   </FormControl>
@@ -271,7 +311,7 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
             <FormField
               control={form.control}
               name="maxTerm"
-              render={({ field: { onChange, ...field } }) => (
+              render={({ field: { ...field } }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Maximum loan term <span className="text-red-500">*</span>
@@ -283,7 +323,9 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                       type="number"
                       options={termUnitOptions}
                       dropdownValue={form.watch("maxTermUnit") || "months"}
-                      onDropdownValueChange={(value) => form.setValue("maxTermUnit", value)}
+                      onDropdownValueChange={(value) =>
+                        form.setValue("maxTermUnit", value)
+                      }
                       error={!!form.formState.errors.maxTerm}
                     />
                   </FormControl>
@@ -295,7 +337,7 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
             <FormField
               control={form.control}
               name="interestRate"
-              render={({ field: { onChange, ...field } }) => (
+              render={({ field: { ...field } }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Interest rate (%) <span className="text-red-500">*</span>
@@ -306,8 +348,12 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                       placeholder="Enter percentage"
                       type="number"
                       options={periodOptions}
-                      dropdownValue={form.watch("interestRatePeriod") || "per_month"}
-                      onDropdownValueChange={(value) => form.setValue("interestRatePeriod", value)}
+                      dropdownValue={
+                        form.watch("interestRatePeriod") || "per_month"
+                      }
+                      onDropdownValueChange={(value) =>
+                        form.setValue("interestRatePeriod", value)
+                      }
                       error={!!form.formState.errors.interestRate}
                     />
                   </FormControl>
@@ -325,6 +371,29 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
           Submit
         </Button>
       </form>
+
+      {/* New Organization Modal */}
+      <NewOrganizationModal
+        open={isNewOrgModalOpen}
+        onClose={() => setIsNewOrgModalOpen(false)}
+        onSave={(org) => {
+          // Add the new organization to the loan provider options
+          const newOption = {
+            value: org.name.toLowerCase().replace(/\s+/g, '-'),
+            label: org.name,
+            description: org.description || `${org.name} (${org.type})`
+          };
+          
+          // Update the options
+          setLoanProviderOptions([...loanProviderOptions, newOption]);
+          
+          // Set the form value to the new organization
+          form.setValue('provider', newOption.value);
+          
+          // Close the modal
+          setIsNewOrgModalOpen(false);
+        }}
+      />
     </Form>
   );
 }
