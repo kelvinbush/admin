@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
 import { NewOrganizationModal } from "./new-organization-modal";
-import { PlusCircle } from "lucide-react";
+import { NewPartnerModal } from "./new-partner-modal";
+import { UserGroupModal } from "./user-group-modal";
 import { InputWithDropdown } from "@/components/ui/input-with-dropdown";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,23 +22,35 @@ import {
   defaultValues,
 } from "./_schemas/partner-loan-form-schema";
 import {
-  loanTypeOptions,
-  userGroupOptions,
+  loanTypeOptions as defaultLoanTypeOptions,
+  userGroupOptions as defaultUserGroupOptions,
   processingMethodOptions,
   periodOptions,
   termUnitOptions,
 } from "./_options/partner-loan-options";
-import { useState } from "react";
+import { currencyOptions } from "./_options/currency-options";
+import { useState, useEffect } from "react";
+import { useGetAllPartnersQuery } from "@/lib/redux/services/partner";
+import { selectCurrentToken } from "@/lib/redux/features/authSlice";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { PlusCircle } from "lucide-react";
+import { CurrencySelect } from "./currency-select";
 
 interface PartnerLoanFormProps {
   onSubmit: (data: FormData) => void;
 }
 
 export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
-  // State for new organization modal
+  // State for modals
   const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
-  
-  // State for loan provider options
+  const [isNewPartnerModalOpen, setIsNewPartnerModalOpen] = useState(false);
+  const [isUserGroupModalOpen, setIsUserGroupModalOpen] = useState(false);
+
+  const guid = useAppSelector(selectCurrentToken);
+  const { data: partners, isLoading: isLoadingPartners } =
+    useGetAllPartnersQuery(guid as string);
+
+  // State for form options
   const [loanProviderOptions, setLoanProviderOptions] = useState([
     {
       value: "melanin-kapital",
@@ -56,28 +69,75 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
     },
   ]);
 
+  const [partnerOptions, setPartnerOptions] = useState<
+    Array<{
+      value: string;
+      label: string;
+      description?: string;
+    }>
+  >([]);
+
+  // Update partner options when partners data is loaded
+  useEffect(() => {
+    if (partners) {
+      setPartnerOptions(
+        partners.map((partner) => ({
+          value: partner.companyReference,
+          label: partner.companyName,
+          description: `Partner organization`,
+        })),
+      );
+    }
+  }, [partners]);
+
+  const [loanTypeOptions] = useState(defaultLoanTypeOptions);
+  const [userGroupOptions, setUserGroupOptions] = useState(
+    defaultUserGroupOptions,
+  );
+
+  // Handle new partner creation
+  const handlePartnerCreated = (partnerId: string, partnerName: string) => {
+    setPartnerOptions((prev) => [
+      ...prev,
+      {
+        value: partnerId,
+        label: partnerName,
+        description: `Partner organization`,
+      },
+    ]);
+
+    // Set the newly created partner as the selected value
+    form.setValue("partnerReference", partnerId);
+  };
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
 
+  // Handle form submission with logging
+  const handleSubmit = (data: FormData) => {
+    console.log("Form submitted with data:", data);
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <div>
           <h2 className="text-base font-medium mb-4">Basic loan details</h2>
           <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
-              name="productName"
+              name="loanName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
-                    Loan product name <span className="text-red-500">*</span>
+                    Loan name <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter loan product name"
+                      placeholder="Enter loan name"
                       className="h-9 text-sm"
                       {...field}
                     />
@@ -89,50 +149,34 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Loan code/identifier <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter loan code"
-                      className="h-9 text-sm"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="provider"
+              name="partnerReference"
               render={({ field }) => (
                 <FormItem>
                   <div className="flex justify-between items-center">
                     <FormLabel className="text-sm font-normal">
-                      Loan provider/organization{" "}
-                      <span className="text-red-500">*</span>
+                      Partner
                     </FormLabel>
                     <Button
                       type="button"
                       variant="link"
-                      className="h-auto p-0 text-xs text-green-500 hover:text-green-600"
-                      onClick={() => setIsNewOrgModalOpen(true)}
+                      className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                      onClick={() => setIsNewPartnerModalOpen(true)}
                     >
-                      + New loan provider
+                      <PlusCircle className="h-3 w-3 mr-1" /> New partner
                     </Button>
                   </div>
                   <FormControl>
                     <SelectWithDescription
-                      value={field.value}
+                      value={field.value || ""}
                       onValueChange={field.onChange}
-                      options={loanProviderOptions}
-                      placeholder="Select loan provider"
-                      error={!!form.formState.errors.provider}
+                      options={partnerOptions}
+                      placeholder={
+                        isLoadingPartners
+                          ? "Loading partners..."
+                          : "Select partner"
+                      }
+                      error={!!form.formState.errors.partnerReference}
+                      disabled={isLoadingPartners}
                     />
                   </FormControl>
                   <FormMessage />
@@ -142,19 +186,17 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="type"
+              name="disbursementAccount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
-                    Loan type <span className="text-red-500">*</span>
+                    Disbursement account <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <SelectWithDescription
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={loanTypeOptions}
-                      placeholder="Select loan type"
-                      error={!!form.formState.errors.type}
+                    <Input
+                      placeholder="Enter disbursement account"
+                      className="h-9 text-sm"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -164,47 +206,94 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="visibility"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Loan visibility <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <SelectWithDescription
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={userGroupOptions}
-                      placeholder="Select user group"
-                      error={!!form.formState.errors.visibility}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="loanProductType"
+              render={({ field }) => {
+                // Convert the numeric value to string for the dropdown
+                const stringValue = field.value !== undefined ? field.value.toString() : "";
+                
+                return (
+                  <FormItem>
+                    <FormLabel className="text-sm font-normal">
+                      Loan product type <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <SelectWithDescription
+                        value={stringValue}
+                        onValueChange={(value) => {
+                          console.log("Selected loan type:", value);
+                          field.onChange(parseInt(value, 10));
+                        }}
+                        options={loanTypeOptions}
+                        placeholder="Select loan type"
+                        error={!!form.formState.errors.loanProductType}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
               control={form.control}
-              name="processingMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Loan processing method{" "}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <SelectWithDescription
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={processingMethodOptions}
-                      placeholder="Select loan processing method"
-                      error={!!form.formState.errors.processingMethod}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="status"
+              render={({ field }) => {
+                // Convert the numeric value to string for the dropdown
+                const stringValue = field.value !== undefined ? field.value.toString() : "";
+                
+                return (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                      <FormLabel className="text-sm font-normal">
+                        Loan status <span className="text-red-500">*</span>
+                      </FormLabel>
+                    </div>
+                    <FormControl>
+                      <SelectWithDescription
+                        value={stringValue}
+                        onValueChange={(value) => {
+                          console.log("Selected status:", value);
+                          field.onChange(parseInt(value, 10));
+                        }}
+                        options={userGroupOptions}
+                        placeholder="Select status"
+                        error={!!form.formState.errors.status}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
+            <FormField
+              control={form.control}
+              name="integrationType"
+              render={({ field }) => {
+                // Convert the numeric value to string for the dropdown
+                const stringValue = field.value !== undefined ? field.value.toString() : "";
+                
+                return (
+                  <FormItem>
+                    <FormLabel className="text-sm font-normal">
+                      Integration type <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <SelectWithDescription
+                        value={stringValue}
+                        onValueChange={(value) => {
+                          console.log("Selected integration type:", value);
+                          field.onChange(parseInt(value, 10));
+                        }}
+                        options={processingMethodOptions}
+                        placeholder="Select integration type"
+                        error={!!form.formState.errors.integrationType}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           </div>
 
@@ -227,6 +316,70 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+              <FormItem className="mt-6">
+                <FormLabel className="text-sm font-normal">
+                  Currency <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <CurrencySelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={currencyOptions}
+                    placeholder="Select currency"
+                    error={!!form.formState.errors.currency}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="interestCalculationMethod"
+            render={({ field }) => (
+              <FormItem className="mt-6">
+                <FormLabel className="text-sm font-normal">
+                  Interest calculation method{" "}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <SelectWithDescription
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={[
+                      {
+                        value: "simple",
+                        label: "Simple Interest",
+                        description:
+                          "Interest calculated on the principal only",
+                      },
+                      {
+                        value: "compound",
+                        label: "Compound Interest",
+                        description:
+                          "Interest calculated on principal and accumulated interest",
+                      },
+                      {
+                        value: "reducing_balance",
+                        label: "Reducing Balance",
+                        description:
+                          "Interest calculated on the remaining loan balance",
+                      },
+                    ]}
+                    placeholder="Select calculation method"
+                    error={!!form.formState.errors.interestCalculationMethod}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div>
@@ -236,21 +389,21 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
           <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
-              name="minAmount"
+              name="loanPriceMin"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Minimum loan amount <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <InputWithDropdown
-                      {...field}
-                      placeholder="Enter amount"
+                    <Input
                       type="number"
-                      options={[{ label: "KES", value: "KES" }]}
-                      dropdownValue="KES"
-                      onDropdownValueChange={() => {}}
-                      error={!!form.formState.errors.minAmount}
+                      value={field.value.toString()}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        field.onChange(parseFloat(e.target.value))
+                      }
+                      placeholder="Enter amount"
+                      className={`h-9 text-sm ${!!form.formState.errors.loanPriceMin ? "border-red-500" : ""}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -260,21 +413,21 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="maxAmount"
+              name="loanPriceMax"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Maximum loan amount <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <InputWithDropdown
-                      {...field}
+                    <Input
+                      type="number"
+                      value={field.value.toString()}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        field.onChange(parseFloat(e.target.value))
+                      }
                       placeholder="Enter amount"
-                      type="number"
-                      options={[{ label: "KES", value: "KES" }]}
-                      dropdownValue="KES"
-                      onDropdownValueChange={() => {}}
-                      error={!!form.formState.errors.maxAmount}
+                      className={`h-9 text-sm ${!!form.formState.errors.loanPriceMax ? "border-red-500" : ""}`}
                     />
                   </FormControl>
                   <FormMessage />
@@ -284,82 +437,113 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="minTerm"
-              render={({ field: { ...field } }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Minimum loan term <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <InputWithDropdown
-                      {...field}
-                      placeholder="Enter value"
-                      type="number"
-                      options={termUnitOptions}
-                      dropdownValue={form.watch("minTermUnit") || "months"}
-                      onDropdownValueChange={(value) =>
-                        form.setValue("minTermUnit", value)
-                      }
-                      error={!!form.formState.errors.minTerm}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="minimumTerm"
+              render={({ field }) => {
+                // Watch the termPeriod to make the dropdown reactive
+                const termPeriod = form.watch("termPeriod");
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-sm font-normal">
+                      Minimum term <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <InputWithDropdown
+                        value={field.value}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          field.onChange(e.target.value)
+                        }
+                        placeholder="Enter minimum term"
+                        type="text"
+                        options={termUnitOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                        dropdownValue={termPeriod}
+                        onDropdownValueChange={(value: string) => {
+                          form.setValue("termPeriod", value);
+                        }}
+                        error={!!form.formState.errors.minimumTerm}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
               control={form.control}
-              name="maxTerm"
-              render={({ field: { ...field } }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Maximum loan term <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <InputWithDropdown
-                      {...field}
-                      placeholder="Enter value"
-                      type="number"
-                      options={termUnitOptions}
-                      dropdownValue={form.watch("maxTermUnit") || "months"}
-                      onDropdownValueChange={(value) =>
-                        form.setValue("maxTermUnit", value)
-                      }
-                      error={!!form.formState.errors.maxTerm}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="maximumTerm"
+              render={({ field }) => {
+                // Watch the termPeriod to make the dropdown reactive
+                const termPeriod = form.watch("termPeriod");
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-sm font-normal">
+                      Maximum term <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <InputWithDropdown
+                        value={field.value}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          field.onChange(e.target.value)
+                        }
+                        placeholder="Enter maximum term"
+                        type="text"
+                        options={termUnitOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                        dropdownValue={termPeriod}
+                        onDropdownValueChange={(value: string) => {
+                          form.setValue("termPeriod", value);
+                        }}
+                        error={!!form.formState.errors.maximumTerm}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
               control={form.control}
-              name="interestRate"
-              render={({ field: { ...field } }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Interest rate (%) <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <InputWithDropdown
-                      {...field}
-                      placeholder="Enter percentage"
-                      type="number"
-                      options={periodOptions}
-                      dropdownValue={
-                        form.watch("interestRatePeriod") || "per_month"
-                      }
-                      onDropdownValueChange={(value) =>
-                        form.setValue("interestRatePeriod", value)
-                      }
-                      error={!!form.formState.errors.interestRate}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="loanInterest"
+              render={({ field }) => {
+                // Watch the interestPeriod to make the dropdown reactive
+                const interestPeriod = form.watch("interestPeriod");
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-sm font-normal">
+                      Interest rate <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <InputWithDropdown
+                        value={field.value.toString()}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
+                        placeholder="Enter interest rate"
+                        type="number"
+                        options={periodOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                        dropdownValue={interestPeriod}
+                        onDropdownValueChange={(value: string) => {
+                          form.setValue("interestPeriod", value);
+                        }}
+                        error={!!form.formState.errors.loanInterest}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           </div>
         </div>
@@ -372,28 +556,57 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
         </Button>
       </form>
 
-      {/* New Organization Modal */}
-      <NewOrganizationModal
-        open={isNewOrgModalOpen}
-        onClose={() => setIsNewOrgModalOpen(false)}
-        onSave={(org) => {
-          // Add the new organization to the loan provider options
-          const newOption = {
-            value: org.name.toLowerCase().replace(/\s+/g, '-'),
-            label: org.name,
-            description: org.description || `${org.name} (${org.type})`
-          };
-          
-          // Update the options
-          setLoanProviderOptions([...loanProviderOptions, newOption]);
-          
-          // Set the form value to the new organization
-          form.setValue('provider', newOption.value);
-          
-          // Close the modal
-          setIsNewOrgModalOpen(false);
-        }}
+      {/*/!* New Organization Modal *!/*/}
+      {/*<NewOrganizationModal*/}
+      {/*  open={isNewOrgModalOpen}*/}
+      {/*  onClose={() => setIsNewOrgModalOpen(false)}*/}
+      {/*  onSave={(org) => {*/}
+      {/*    // Add the new organization to the options*/}
+      {/*    const newOption = {*/}
+      {/*      value: org.name.toLowerCase().replace(/\s+/g, "-"),*/}
+      {/*      label: org.name,*/}
+      {/*      description: org.description || `${org.type} organization`,*/}
+      {/*    };*/}
+      {/*    setLoanProviderOptions((prev) => [...prev, newOption]);*/}
+      {/*    */}
+      {/*    // Set the newly created organization as the selected value*/}
+      {/*    form.setValue("disbursementAccount", newOption.value);*/}
+      {/*    */}
+      {/*    setIsNewOrgModalOpen(false);*/}
+      {/*  }}*/}
+      {/*/>*/}
+
+      <NewPartnerModal
+        open={isNewPartnerModalOpen}
+        onClose={() => setIsNewPartnerModalOpen(false)}
+        onSave={handlePartnerCreated}
       />
+
+      {/*/!* User Group Modal *!/*/}
+      {/*<UserGroupModal*/}
+      {/*  open={isUserGroupModalOpen}*/}
+      {/*  onClose={() => setIsUserGroupModalOpen(false)}*/}
+      {/*  onSave={(data) => {*/}
+      {/*    // Add the new user group to the options*/}
+      {/*    const newOption = {*/}
+      {/*      value: data.groupName.toLowerCase().replace(/\s+/g, "-"),*/}
+      {/*      label: data.groupName,*/}
+      {/*      description:*/}
+      {/*        data.description ||*/}
+      {/*        `${data.groupName} (${data.loanProductVisibility})`,*/}
+      {/*    };*/}
+
+      {/*    // Update the options*/}
+      {/*    const updatedOptions = [...userGroupOptions, newOption];*/}
+      {/*    setUserGroupOptions(updatedOptions);*/}
+
+      {/*    // Set the form value to the new user group*/}
+      {/*    form.setValue("status", parseInt(newOption.value, 10) || 0);*/}
+
+      {/*    // Close the modal*/}
+      {/*    setIsUserGroupModalOpen(false);*/}
+      {/*  }}*/}
+      {/*/>*/}
     </Form>
   );
 }

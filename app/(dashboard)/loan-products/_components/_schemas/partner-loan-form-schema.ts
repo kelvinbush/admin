@@ -1,28 +1,57 @@
 import * as z from "zod";
 
+/*
+* {
+  "loanName": "string",
+  "description": "string",
+  "partnerReference": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "integrationType": 0,
+  "loanProductType": 0,
+  "currency": "string",
+  "loanPriceMax": 0,
+  "loanInterest": 0,
+  "status": 0,
+  "loanPriceMin": 0,
+  "disbursementAccount": "string",
+  "interestCalculationMethod": "string",
+  "minimumTerm": "string",
+  "maximumTerm": "string",
+  "termPeriod": "string",
+  "interestPeriod": "string"
+}
+* */
+
 export const formSchema = z.object({
-  productName: z.string().min(1, "Loan product name is required"),
-  code: z.string().min(1, "Loan code/identifier is required"),
-  provider: z.string().min(1, "Loan provider is required"),
-  type: z.string().min(1, "Loan type is required"),
-  visibility: z.string().min(1, "Loan visibility is required"),
-  processingMethod: z.string().min(1, "Loan processing method is required"),
+  loanName: z.string().min(1, "Loan name is required"),
   description: z.string().optional(),
-  minAmount: z.string().min(1, "Minimum loan amount is required"),
-  maxAmount: z.string().min(1, "Maximum loan amount is required"),
-  minTerm: z.string().min(1, "Minimum loan term is required"),
-  minTermUnit: z.string().min(1, "Minimum term unit is required"),
-  maxTerm: z.string().min(1, "Maximum loan term is required"),
-  maxTermUnit: z.string().min(1, "Maximum term unit is required"),
-  interestRate: z.string().min(1, "Interest rate is required"),
-  interestRatePeriod: z.string().min(1, "Interest rate period is required"),
+  partnerReference: z.string().uuid().optional(),
+  integrationType: z.number().int().nonnegative(),
+  loanProductType: z.number().int().nonnegative(),
+  currency: z.string().min(1, "Currency is required"),
+  loanPriceMax: z.number().nonnegative("Maximum loan amount must be a positive number"),
+  loanInterest: z.number().nonnegative("Interest rate must be a positive number"),
+  status: z.number().int().nonnegative(),
+  loanPriceMin: z.number().nonnegative("Minimum loan amount must be a positive number"),
+  disbursementAccount: z.string().min(1, "Disbursement account is required"),
+  interestCalculationMethod: z.string().min(1, "Interest calculation method is required"),
+  minimumTerm: z.string().min(1, "Minimum term is required"),
+  maximumTerm: z.string().min(1, "Maximum term is required"),
+  termPeriod: z.string().min(1, "Term period is required"),
+  interestPeriod: z.string().min(1, "Interest period is required")
 });
 
 export type FormData = z.infer<typeof formSchema>;
 
 export const defaultValues: Partial<FormData> = {
   description: "",
-  interestRatePeriod: "per_month",
-  minTermUnit: "",
-  maxTermUnit: "",
+  integrationType: 0,
+  loanProductType: 0,
+  status: 0,
+  currency: "KES",
+  loanPriceMin: 0,
+  loanPriceMax: 0,
+  loanInterest: 0,
+  interestPeriod: "per_month",
+  termPeriod: "months",
+  interestCalculationMethod: "simple"
 };

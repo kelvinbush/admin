@@ -62,9 +62,9 @@ const AddLoanProductPage = ({ searchParams = {} }: Props) => {
             </p>
 
             <div className="mt-6">
-              {activeStep === 1 && <StepOneForm initialData={formData} />}
+              {activeStep === 3 && <StepOneForm initialData={formData} />}
               {activeStep === 2 && <StepTwoForm initialData={formData} />}
-              {activeStep === 3 && <StepThreeForm initialData={formData} />}
+              {activeStep === 1 && <StepThreeForm initialData={formData} />}
             </div>
           </>
         )}

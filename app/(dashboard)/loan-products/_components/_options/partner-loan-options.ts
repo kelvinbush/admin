@@ -23,22 +23,22 @@ export const loanProviderOptions = [
 
 export const loanTypeOptions = [
   {
-    value: "personal",
+    value: "0",
     label: "Personal Loan",
     description: "General purpose loan for individual borrowers",
   },
   {
-    value: "business",
+    value: "1",
     label: "Business Loan",
     description: "Loan for business purposes",
   },
   {
-    value: "asset_financing",
+    value: "2",
     label: "Asset Financing",
     description: "Loan for purchasing assets",
   },
   {
-    value: "emergency",
+    value: "3",
     label: "Emergency Loan",
     description: "Short-term loan for urgent needs",
   },
@@ -46,17 +46,17 @@ export const loanTypeOptions = [
 
 export const userGroupOptions = [
   {
-    value: "public",
+    value: "0",
     label: "Public",
     description: "Visible to all users",
   },
   {
-    value: "private",
+    value: "1",
     label: "Private",
     description: "Visible only to selected users",
   },
   {
-    value: "restricted",
+    value: "2",
     label: "Restricted",
     description: "Visible to specific user groups",
   },
@@ -64,14 +64,14 @@ export const userGroupOptions = [
 
 export const processingMethodOptions = [
   {
-    value: "automatic",
-    label: "Automatic",
-    description: "Loan is processed automatically",
+    value: "0",
+    label: "Normal",
+    description: "Standard loan integration type",
   },
   {
-    value: "manual",
-    label: "Manual",
-    description: "Loan requires manual approval",
+    value: "1",
+    label: "Presta",
+    description: "Presta loan integration type",
   },
 ];
 
