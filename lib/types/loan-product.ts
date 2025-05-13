@@ -35,14 +35,23 @@ export interface LoanProduct {
 }
 
 export interface CreateLoanProductRequest {
+  adminguid: string;
   loanName: string;
   description: string;
   partnerReference: string;
   integrationType: number;
   loanProductType: number;
+  currency: SupportedCurrency;
   loanPriceMax: number;
   loanInterest: number;
-  currency: SupportedCurrency;
+  status: number;
+  loanPriceMin: number;
+  disbursementAccount: string;
+  interestCalculationMethod: string;
+  minimumTerm: string;
+  maximumTerm: string;
+  termPeriod: string;
+  interestPeriod: string;
 }
 
 export interface GetAllLoanProductsResponse {

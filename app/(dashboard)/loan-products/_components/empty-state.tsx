@@ -34,7 +34,7 @@ const EmptyState = ({ onCreateClick }: EmptyStateProps) => {
           <DropdownMenuContent align="center" className="w-56">
             <DropdownMenuItem asChild>
               <Link
-                href="/loan-productss/create?type=mk"
+                href="/loan-products/create?type=mk"
                 className="flex w-full cursor-pointer"
               >
                 MK Loan Product
@@ -42,7 +42,7 @@ const EmptyState = ({ onCreateClick }: EmptyStateProps) => {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
-                href="/loan-productss/create?type=partner"
+                href="/loan-products/create?type=partner"
                 className="flex w-full cursor-pointer"
               >
                 Partner Loan Product

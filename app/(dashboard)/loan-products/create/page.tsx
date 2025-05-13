@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { RootState } from "@/lib/redux/store";
 import { resetForm } from "@/lib/redux/features/loan-product-form.slice";
+import { useCreateLoanProductMutation } from "@/lib/redux/services/loan-product";
+import { selectCurrentToken } from "@/lib/redux/features/authSlice";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { SupportedCurrency } from "@/lib/types/loan-product";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import StepIndicator from "../_components/step-indicator";
 import StepOneForm from "../_components/step-one-form";
 import StepThreeForm from "../_components/step-three-form";
@@ -19,9 +25,13 @@ interface Props {
 
 const AddLoanProductPage = ({ searchParams = {} }: Props) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { activeStep, formData } = useSelector(
     (state: RootState) => state.loanProductForm,
   );
+  const guid = useAppSelector(selectCurrentToken);
+  const [createLoanProduct, { isLoading }] = useCreateLoanProductMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const productType = searchParams.type || "mk";
 
@@ -32,6 +42,39 @@ const AddLoanProductPage = ({ searchParams = {} }: Props) => {
 
   const handlePartnerLoanSubmit = async (data: PartnerFormData) => {
     console.log("Partner Loan Form Data:", data);
+    setIsSubmitting(true);
+    
+    try {
+      // Add the adminguid to the form data and ensure all required fields are present
+      const apiRequest = {
+        adminguid: guid as string,
+        loanName: data.loanName,
+        description: data.description || "", // Provide default for optional fields
+        partnerReference: data.partnerReference || "",
+        integrationType: data.integrationType,
+        loanProductType: data.loanProductType,
+        currency: data.currency as SupportedCurrency, // Cast to SupportedCurrency type
+        loanPriceMax: data.loanPriceMax,
+        loanInterest: data.loanInterest,
+        status: data.status,
+        loanPriceMin: data.loanPriceMin,
+        disbursementAccount: data.disbursementAccount,
+        interestCalculationMethod: data.interestCalculationMethod,
+        minimumTerm: data.minimumTerm,
+        maximumTerm: data.maximumTerm,
+        termPeriod: data.termPeriod,
+        interestPeriod: data.interestPeriod
+      };
+      
+      await createLoanProduct(apiRequest).unwrap();
+      toast.success("Loan product created successfully");
+      router.push("/loan-products");
+    } catch (error) {
+      console.error("Failed to create loan product:", error);
+      toast.error("Failed to create loan product. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
