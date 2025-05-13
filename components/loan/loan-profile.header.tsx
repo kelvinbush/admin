@@ -62,7 +62,7 @@ const LoanProfileHeader = ({
   className,
   ...props
 }: BusinessProfileHeaderProps) => {
-  const [, setCompletionPercentage] = useState(0);
+  const [completionPercentage, setCompletionPercentage] = useState(80); // Default to 80% as shown in the image
   const guid = useAppSelector(selectCurrentToken);
   userApiSlice.useUploadBusinessDocumentMutation();
   const [logoUrl] = useState(imageUrl);
@@ -126,101 +126,114 @@ const LoanProfileHeader = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg border bg-gradient-to-r from-gray-900/90 to-gray-900/70",
+        "relative overflow-hidden rounded-lg border",
         className,
       )}
       {...props}
       style={backgroundStyle}
     >
-      <div
-        className="absolute inset-0 "
-        style={{
-          backgroundColor: "rgba(21, 31, 40, 0.5)",
-        }}
-      />
-      <div className="p-6">
-        <div className="relative flex items-start gap-6">
-          <div className="relative shrink-0">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <img
-                    src={
-                      logoUrl === ""
-                        ? "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png"
-                        : logoUrl
-                    }
-                    alt={`${name} Logo`}
-                    className="h-28 w-28 rounded-full border-4 border-white bg-white object-cover shadow-lg"
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Company Logo</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            {onImageUpload && (
-              <button className="absolute bottom-0 right-0 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-primary-green transition-colors hover:bg-primary-green/90">
-                <Camera className="h-5 w-5 text-white" />
-              </button>
-            )}
-          </div>
-          <div className="w-full space-y-1 relative">
-            <h1 className="text-3xl font-medium text-white">
-              {name}
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "ml-2 inline-flex h-6 gap-1.5 rounded-lg border-none font-medium shadow-lg absolute right-3",
-                  isVerified
-                    ? "bg-primary-green/20 text-primary-green"
-                    : "bg-zinc-500/20 text-zinc-300",
-                )}
-              >
-                {isVerified ? (
-                  <CheckCircle2 className="h-3 w-3" />
-                ) : (
-                  <Clock className="h-3 w-3" />
-                )}
-                {isVerified ? "Verified" : "Pending verification"}
-              </Badge>
-            </h1>
-            <div className="flex items-center gap-2 text-white">
-              <span className="capitalize">
-                {companyType.replace(/-/g, " ")}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-white">
-              <span>{location}</span>
-            </div>
-            <div className="flex items-center gap-4 pt-2">
-              {pitchDeck ? (
-                <a
-                  href={pitchDeck.docPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center"
-                >
-                  <Button
-                    variant="link"
-                    className="h-8 gap-1.5 p-0 text-primary-green underline transition-colors hover:text-primary-green/90"
-                  >
-                    Company pitch deck
-                    <ExternalLink className="h-3 w-3" />
-                  </Button>
-                </a>
-              ) : null}
-              {onShare && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onShare}
-                  className="h-8 gap-1.5 bg-transparent text-white transition-colors hover:bg-white/10"
-                >
-                  <Share2 className="h-3 w-3" />
-                  Share Profile
-                </Button>
+      {/* Main header container */}
+      <div className="flex flex-col">
+        {/* Top section with company info */}
+        <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 p-6">
+          <div className="relative flex items-start gap-6">
+            {/* Company logo */}
+            <div className="relative shrink-0">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <img
+                      src={
+                        logoUrl === ""
+                          ? "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png"
+                          : logoUrl
+                      }
+                      alt={`${name} Logo`}
+                      className="h-20 w-20 rounded-full border-2 border-white bg-white object-cover shadow-lg"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Company Logo</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {onImageUpload && (
+                <button className="absolute bottom-0 right-0 grid h-7 w-7 cursor-pointer place-items-center rounded-full border-2 border-white bg-primary-green transition-colors hover:bg-primary-green/90">
+                  <Camera className="h-4 w-4 text-white" />
+                </button>
               )}
+            </div>
+            
+            {/* Company details */}
+            <div className="w-full space-y-1 relative">
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-medium text-white">{name}</h1>
+                
+                {/* Loan Actions Button */}
+                <Button 
+                  variant="default" 
+                  className="text-white relative overflow-hidden group"
+                  style={{ background: "linear-gradient(90deg, #00CC99 0%, #F0459C 100%)" }}
+                >
+                  <span className="relative z-10">Loan Actions <span className="ml-1">▼</span></span>
+                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+                        style={{ background: "linear-gradient(90deg, #00BB88 0%, #E0358B 100%)" }}></span>
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2 text-gray-300 text-sm">
+                <span className="capitalize">{companyType.replace(/-/g, " ")} • {location}</span>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="mt-3 w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-teal-500 h-2 rounded-full" 
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
+              <div className="text-right text-xs text-gray-300">{completionPercentage}% profile completion</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom section with metadata */}
+        <div className="bg-gray-900 border-t border-gray-700 grid grid-cols-5 divide-x divide-gray-700 text-sm">
+          {/* Member since */}
+          <div className="p-4">
+            <div className="text-gray-400 text-xs">Member since</div>
+            <div className="text-white">08/April/2023</div>
+          </div>
+          
+          {/* Last login */}
+          <div className="p-4">
+            <div className="text-gray-400 text-xs">Last login</div>
+            <div className="text-white">08/Nov/2024</div>
+          </div>
+          
+          {/* Affiliate/Program */}
+          <div className="p-4">
+            <div className="text-gray-400 text-xs">Affiliate/Program</div>
+            <div className="text-white flex items-center">
+              <span className="bg-gray-700 rounded-full w-4 h-4 flex items-center justify-center mr-1 text-xs">→</span>
+              Tuungane2xna Absa
+            </div>
+          </div>
+          
+          {/* Sector(s) */}
+          <div className="p-4">
+            <div className="text-gray-400 text-xs">Sector(s)</div>
+            <div className="text-white">Agriculture, Technology</div>
+          </div>
+          
+          {/* Loan status */}
+          <div className="p-4">
+            <div className="text-gray-400 text-xs">Loan status</div>
+            <div className="text-white flex items-center">
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-300 border-blue-500/20 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Pending review
+              </Badge>
             </div>
           </div>
         </div>
