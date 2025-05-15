@@ -1,14 +1,14 @@
 "use client";
 import { Suspense } from "react";
-import CompanyDocuments from "@/components/business-profile/company-documents";
 import { useSearchParams } from "next/navigation";
+import DocumentAttachments from "@/app/(dashboard)/loan-applications/_components/document-attachments";
 
 function CompanyDocumentsPage() {
   const searchParams = useSearchParams();
-  const userId = searchParams.get("userId");
+  const loanId = searchParams.get("loanId");
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CompanyDocuments userId={userId as string} />
+      <DocumentAttachments loanId={loanId as string} />
     </Suspense>
   );
 }

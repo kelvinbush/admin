@@ -4,6 +4,8 @@ import type {
   LoanProduct,
   CreateLoanProductRequest,
   GetAllLoanProductsResponse,
+  DeleteLoanProductRequest,
+  UpdateLoanProductStatusRequest,
 } from "@/lib/types/loan-product";
 
 export const loanProductApiSlice = apiSlice.injectEndpoints({
@@ -35,8 +37,34 @@ export const loanProductApiSlice = apiSlice.injectEndpoints({
             ]
           : [{ type: LOAN_PRODUCT, id: "LIST" }],
     }),
+    deleteLoanProduct: build.mutation<void, DeleteLoanProductRequest>({
+      query: (payload) => ({
+        url: "/Admin/DeleteLoanProduct",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_, __, { productId }) => [
+        { type: LOAN_PRODUCT, id: productId.toString() },
+        { type: LOAN_PRODUCT, id: "LIST" },
+      ],
+    }),
+    updateLoanProductStatus: build.mutation<void, UpdateLoanProductStatusRequest>({
+      query: (payload) => ({
+        url: "/Admin/UpdateLoanProductStatus",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_, __, { productId }) => [
+        { type: LOAN_PRODUCT, id: productId.toString() },
+        { type: LOAN_PRODUCT, id: "LIST" },
+      ],
+    }),
   }),
 });
 
-export const { useCreateLoanProductMutation, useGetAllLoanProductsQuery } =
-  loanProductApiSlice;
+export const { 
+  useCreateLoanProductMutation, 
+  useGetAllLoanProductsQuery,
+  useDeleteLoanProductMutation,
+  useUpdateLoanProductStatusMutation,
+} = loanProductApiSlice;

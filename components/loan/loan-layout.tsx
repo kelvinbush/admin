@@ -62,11 +62,9 @@ const LoanProfile = ({
       { skip: !personalGuid },
     );
 
-  dispatch(setTitle("Business Profile"));
+  dispatch(setTitle("Loan Applications"));
 
   const currentMainTab = pathname.split("/").slice(3, 4)[0] ?? "loan";
-
-  console.log("Current main tab:", currentMainTab);
 
   if (isLoading) {
     return (

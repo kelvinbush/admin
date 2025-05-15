@@ -30,8 +30,8 @@ export interface LoanProduct {
   loanPriceMax: number;
   loanInterest: number;
   status: number;
-  loanProductReference?: string;
   currency?: SupportedCurrency;
+  reference?: string;
 }
 
 export interface CreateLoanProductRequest {
@@ -58,4 +58,15 @@ export interface GetAllLoanProductsResponse {
   loanProductList: LoanProduct[];
   status: string;
   message: string;
+}
+
+export interface DeleteLoanProductRequest {
+  guid: string;
+  productId: number;
+}
+
+export interface UpdateLoanProductStatusRequest {
+  guid: string;
+  productId: number;
+  status: number;
 }

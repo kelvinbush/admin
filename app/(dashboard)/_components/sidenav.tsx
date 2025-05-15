@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, Building2, Database, FileText, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 const sidenavLinks = [
@@ -15,30 +15,69 @@ const sidenavLinks = [
     href: "/",
     icon: <Icons.dashboard />,
   },
-  // {
-  //   title: "Admin Management",
-  //   href: "/#",
-  //   icon: <Icons.adminIcon />,
-  // },
+  {
+    title: "User Management",
+    href: "/#",
+    icon: <Users className="h-5 w-5" />,
+    children: [
+      {
+        title: "Organizations",
+        href: "/organizations",
+        icon: <Building2 className="h-4 w-4" />,
+      },
+      {
+        title: "System Users",
+        href: "/system-users",
+        icon: <Users className="h-4 w-4" />,
+      },
+      {
+        title: "User Groups",
+        href: "/partners",
+        icon: <Users className="h-4 w-4" />,
+      }
+    ],
+  },
   {
     title: "Entrepreneurs",
     href: "/entrepreneurs",
-    icon: <Icons.entreIcon />,
+    icon: <Icons.entreIcon className="h-5 w-5" />,
+  },
+  {
+    title: "Funding",
+    href: "/#",
+    icon: <Icons.funding className="h-5 w-5" />,
+    children: [
+      {
+        title: "Investor Opportunities",
+        href: "/investor-opportunities",
+        icon: <Database className="h-4 w-4" />,
+      },
+      {
+        title: "Loan Products",
+        href: "/loan-products",
+        icon: <Icons.moneyBag className="h-4 w-4" />,
+      },
+      {
+        title: "Loan Fees",
+        href: "/loan-fees",
+        icon: <CreditCard className="h-4 w-4" />,
+      },
+      {
+        title: "MK Loan Applications",
+        href: "/mk-loan-applications",
+        icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        title: "Partner Loan Applications",
+        href: "/partner-loan-applications",
+        icon: <FileText className="h-4 w-4" />,
+      }
+    ],
   },
   {
     title: "Loan Applications",
     href: "/loan-applications",
-    icon: <Icons.moneyBag className={"h-5 w-5"} />,
-  },
-  {
-    title: "Partners",
-    href: "/partners",
-    icon: <Icons.entreIcon className={"h-5 w-5"} />,
-  },
-  {
-    title: "Loan Products",
-    href: "/loan-products",
-    icon: <Icons.moneyBag className={"h-5 w-5"} />,
+    icon: <Icons.moneyBag className="h-5 w-5" />,
   },
 ];
 
@@ -69,7 +108,7 @@ const Sidenav = () => {
         <div className="px-4 pb-4 gradient-border">
           <Image
             src="/images/logo-white.svg"
-            alt="Melani Kapital Logo"
+            alt="Melanin Kapital Logo"
             className="w-max"
             width={200}
             height={36}
@@ -87,15 +126,6 @@ const Sidenav = () => {
             ))}
           </div>
         </div>
-        {/*<div className="space-y-1.5 px-4 py-2 my-4 gradient-border-card">*/}
-        {/*  {otherLinks.map((link) => (*/}
-        {/*    <SidenavItem*/}
-        {/*      key={link.title}*/}
-        {/*      onSetTitle={setTitleOnBar}*/}
-        {/*      {...link}*/}
-        {/*    />*/}
-        {/*  ))}*/}
-        {/*</div>*/}
         <div className="mt-auto px-4">
           <Button
             variant="ghost"
