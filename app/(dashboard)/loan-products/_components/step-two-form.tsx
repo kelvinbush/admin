@@ -45,6 +45,8 @@ export default function StepTwoForm({ initialData }: StepTwoFormProps) {
 
   // Initialize the form
   const form = useForm({
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     resolver: zodResolver(formSchema),
     defaultValues: initialData || defaultValues,
   });

@@ -11,25 +11,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SelectWithDescription } from "@/components/ui/select-with-description";
-import { NewOrganizationModal } from "./new-organization-modal";
 import { NewPartnerModal } from "./new-partner-modal";
-import { UserGroupModal } from "./user-group-modal";
 import { InputWithDropdown } from "@/components/ui/input-with-dropdown";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  formSchema,
-  FormData,
   defaultValues,
+  FormData,
+  formSchema,
 } from "./_schemas/partner-loan-form-schema";
 import {
   loanTypeOptions as defaultLoanTypeOptions,
-  userGroupOptions as defaultUserGroupOptions,
-  processingMethodOptions,
   periodOptions,
+  processingMethodOptions,
   termUnitOptions,
+  interestCalculationMethodOptions,
 } from "./_options/partner-loan-options";
 import { currencyOptions } from "./_options/currency-options";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGetAllPartnersQuery } from "@/lib/redux/services/partner";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { useAppSelector } from "@/lib/redux/hooks";
@@ -38,36 +36,20 @@ import { CurrencySelect } from "./currency-select";
 
 interface PartnerLoanFormProps {
   onSubmit: (data: FormData) => void;
+  initialData?: FormData;
+  isEditMode?: boolean;
 }
 
-export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
-  // State for modals
-  const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
+export function PartnerLoanForm({
+  onSubmit,
+  initialData,
+  isEditMode = false,
+}: PartnerLoanFormProps) {
   const [isNewPartnerModalOpen, setIsNewPartnerModalOpen] = useState(false);
-  const [isUserGroupModalOpen, setIsUserGroupModalOpen] = useState(false);
 
   const guid = useAppSelector(selectCurrentToken);
   const { data: partners, isLoading: isLoadingPartners } =
     useGetAllPartnersQuery(guid as string);
-
-  // State for form options
-  const [loanProviderOptions, setLoanProviderOptions] = useState([
-    {
-      value: "melanin-kapital",
-      label: "Melanin Kapital",
-      description: "Main lending partner",
-    },
-    {
-      value: "equity-bank",
-      label: "Equity Bank",
-      description: "Banking partner for loan disbursements",
-    },
-    {
-      value: "cooperative-bank",
-      label: "Cooperative Bank",
-      description: "Banking partner for SME loans",
-    },
-  ]);
 
   const [partnerOptions, setPartnerOptions] = useState<
     Array<{
@@ -91,9 +73,6 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
   }, [partners]);
 
   const [loanTypeOptions] = useState(defaultLoanTypeOptions);
-  const [userGroupOptions, setUserGroupOptions] = useState(
-    defaultUserGroupOptions,
-  );
 
   // Handle new partner creation
   const handlePartnerCreated = (partnerId: string, partnerName: string) => {
@@ -112,7 +91,7 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: initialData || defaultValues,
   });
 
   // Handle form submission with logging
@@ -125,7 +104,9 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <div>
-          <h2 className="text-base font-medium mb-4">Basic loan details</h2>
+          <h2 className="text-base font-medium mb-4">
+            {isEditMode ? "Edit" : "Basic"} loan details
+          </h2>
           <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
@@ -193,10 +174,25 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                     Disbursement account <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter disbursement account"
-                      className="h-9 text-sm"
-                      {...field}
+                    <SelectWithDescription
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                      options={[
+                        {
+                          value: "BANK",
+                          label: "Bank account",
+                          description:
+                            "Funds will be disbursed to a bank account",
+                        },
+                        {
+                          value: "CASH_WALLET",
+                          label: "Cash wallet",
+                          description:
+                            "Funds will be disbursed to a digital wallet",
+                        },
+                      ]}
+                      placeholder="Select disbursement method"
+                      error={!!form.formState.errors.disbursementAccount}
                     />
                   </FormControl>
                   <FormMessage />
@@ -208,9 +204,9 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
               control={form.control}
               name="loanProductType"
               render={({ field }) => {
-                // Convert the numeric value to string for the dropdown
-                const stringValue = field.value !== undefined ? field.value.toString() : "";
-                
+                const stringValue =
+                  field.value !== undefined ? field.value.toString() : "";
+
                 return (
                   <FormItem>
                     <FormLabel className="text-sm font-normal">
@@ -236,43 +232,11 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
             <FormField
               control={form.control}
-              name="status"
-              render={({ field }) => {
-                // Convert the numeric value to string for the dropdown
-                const stringValue = field.value !== undefined ? field.value.toString() : "";
-                
-                return (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel className="text-sm font-normal">
-                        Loan status <span className="text-red-500">*</span>
-                      </FormLabel>
-                    </div>
-                    <FormControl>
-                      <SelectWithDescription
-                        value={stringValue}
-                        onValueChange={(value) => {
-                          console.log("Selected status:", value);
-                          field.onChange(parseInt(value, 10));
-                        }}
-                        options={userGroupOptions}
-                        placeholder="Select status"
-                        error={!!form.formState.errors.status}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
-
-            <FormField
-              control={form.control}
               name="integrationType"
               render={({ field }) => {
-                // Convert the numeric value to string for the dropdown
-                const stringValue = field.value !== undefined ? field.value.toString() : "";
-                
+                const stringValue =
+                  field.value !== undefined ? field.value.toString() : "";
+
                 return (
                   <FormItem>
                     <FormLabel className="text-sm font-normal">
@@ -352,26 +316,7 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
                   <SelectWithDescription
                     value={field.value}
                     onValueChange={field.onChange}
-                    options={[
-                      {
-                        value: "simple",
-                        label: "Simple Interest",
-                        description:
-                          "Interest calculated on the principal only",
-                      },
-                      {
-                        value: "compound",
-                        label: "Compound Interest",
-                        description:
-                          "Interest calculated on principal and accumulated interest",
-                      },
-                      {
-                        value: "reducing_balance",
-                        label: "Reducing Balance",
-                        description:
-                          "Interest calculated on the remaining loan balance",
-                      },
-                    ]}
+                    options={interestCalculationMethodOptions}
                     placeholder="Select calculation method"
                     error={!!form.formState.errors.interestCalculationMethod}
                   />
@@ -439,7 +384,6 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
               control={form.control}
               name="minimumTerm"
               render={({ field }) => {
-                // Watch the termPeriod to make the dropdown reactive
                 const termPeriod = form.watch("termPeriod");
 
                 return (
@@ -476,7 +420,6 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
               control={form.control}
               name="maximumTerm"
               render={({ field }) => {
-                // Watch the termPeriod to make the dropdown reactive
                 const termPeriod = form.watch("termPeriod");
 
                 return (
@@ -550,63 +493,17 @@ export function PartnerLoanForm({ onSubmit }: PartnerLoanFormProps) {
 
         <Button
           type="submit"
-          className="w-full h-10 bg-[#B6BABC] hover:bg-gray-500"
+          className="w-full h-10 bg-primary-green hover:bg-primary-green/90 text-white"
         >
-          Submit
+          {isEditMode ? "Update" : "Create"} Loan Product
         </Button>
       </form>
-
-      {/*/!* New Organization Modal *!/*/}
-      {/*<NewOrganizationModal*/}
-      {/*  open={isNewOrgModalOpen}*/}
-      {/*  onClose={() => setIsNewOrgModalOpen(false)}*/}
-      {/*  onSave={(org) => {*/}
-      {/*    // Add the new organization to the options*/}
-      {/*    const newOption = {*/}
-      {/*      value: org.name.toLowerCase().replace(/\s+/g, "-"),*/}
-      {/*      label: org.name,*/}
-      {/*      description: org.description || `${org.type} organization`,*/}
-      {/*    };*/}
-      {/*    setLoanProviderOptions((prev) => [...prev, newOption]);*/}
-      {/*    */}
-      {/*    // Set the newly created organization as the selected value*/}
-      {/*    form.setValue("disbursementAccount", newOption.value);*/}
-      {/*    */}
-      {/*    setIsNewOrgModalOpen(false);*/}
-      {/*  }}*/}
-      {/*/>*/}
 
       <NewPartnerModal
         open={isNewPartnerModalOpen}
         onClose={() => setIsNewPartnerModalOpen(false)}
         onSave={handlePartnerCreated}
       />
-
-      {/*/!* User Group Modal *!/*/}
-      {/*<UserGroupModal*/}
-      {/*  open={isUserGroupModalOpen}*/}
-      {/*  onClose={() => setIsUserGroupModalOpen(false)}*/}
-      {/*  onSave={(data) => {*/}
-      {/*    // Add the new user group to the options*/}
-      {/*    const newOption = {*/}
-      {/*      value: data.groupName.toLowerCase().replace(/\s+/g, "-"),*/}
-      {/*      label: data.groupName,*/}
-      {/*      description:*/}
-      {/*        data.description ||*/}
-      {/*        `${data.groupName} (${data.loanProductVisibility})`,*/}
-      {/*    };*/}
-
-      {/*    // Update the options*/}
-      {/*    const updatedOptions = [...userGroupOptions, newOption];*/}
-      {/*    setUserGroupOptions(updatedOptions);*/}
-
-      {/*    // Set the form value to the new user group*/}
-      {/*    form.setValue("status", parseInt(newOption.value, 10) || 0);*/}
-
-      {/*    // Close the modal*/}
-      {/*    setIsUserGroupModalOpen(false);*/}
-      {/*  }}*/}
-      {/*/>*/}
     </Form>
   );
 }

@@ -3,11 +3,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-interface EmptyStateProps {
-  onCreateClick?: () => void;
-}
-
-const EmptyState = ({ onCreateClick }: EmptyStateProps) => {
+const EmptyState = () => {
   return (
     <div className="flex flex-col items-center justify-center py-12 flex-1">
       <Icons.noLoanProductIcon className="mb-6 h-44 w-auto" />

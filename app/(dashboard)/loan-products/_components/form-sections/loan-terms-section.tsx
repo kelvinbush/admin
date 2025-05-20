@@ -4,7 +4,6 @@ import { StepOneFormValues } from "../../_schemas/loan-product-schemas";
 import { DurationField } from "../form-fields/duration-field";
 import { AmountField } from "../form-fields/amount-field";
 import { usePeriodFields } from "../hooks/use-period-fields";
-import { useCurrencySync } from "../hooks/use-currency-sync";
 
 interface LoanTermsSectionProps {
   form: UseFormReturn<StepOneFormValues>;
@@ -12,7 +11,6 @@ interface LoanTermsSectionProps {
 
 export function LoanTermsSection({ form }: LoanTermsSectionProps) {
   const { updatePeriodFields } = usePeriodFields(form);
-  const { currency } = useCurrencySync(form);
   const { setValue, watch } = form;
 
   return (

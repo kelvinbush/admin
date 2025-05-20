@@ -17,7 +17,7 @@ interface HeaderProps {
   onCreateClick: () => void;
 }
 
-const Header = ({ totalProducts, onSearch, onCreateClick }: HeaderProps) => {
+const Header = ({ totalProducts, onSearch }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

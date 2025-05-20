@@ -116,13 +116,13 @@ const LoanApplicationsPage = () => {
   const getLoanStatusText = (status: number): string => {
     switch (status) {
       case 0:
-        return "pending";
+        return "applied";
       case 1:
-        return "approved";
+        return "review";
       case 2:
-        return "rejected";
+        return "approved";
       case 3:
-        return "disbursed";
+        return "rejected";
       default:
         return "pending";
     }
@@ -130,12 +130,14 @@ const LoanApplicationsPage = () => {
 
   const getLoanStatusBadgeColor = (status: number): string => {
     switch (status) {
-      case 1:
-        return "bg-[#B0EFDF] text-[#007054]";
       case 2:
+        return "bg-[#B0EFDF] text-[#007054]";
+      case 1:
         return "bg-[#FECACA] text-[#B91C1C]";
       case 3:
         return "bg-[#DBEAFE] text-[#1E40AF]";
+      case 0:
+        return "bg-[#B1EFFE] text-[#1E429F]";
       default:
         return "bg-[#B1EFFE] text-[#1E429F]";
     }
@@ -161,10 +163,10 @@ const LoanApplicationsPage = () => {
 
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "approved" && item.loanStatus === 1) ||
-      (activeTab === "rejected" && item.loanStatus === 2) ||
-      (activeTab === "disbursed" && item.loanStatus === 3) ||
-      (activeTab === "pending" && item.loanStatus === 0);
+      (activeTab === "approved" && item.loanStatus === 2) ||
+      (activeTab === "rejected" && item.loanStatus === 3) ||
+      (activeTab === "pending" && item.loanStatus === 0) ||
+      (activeTab === "review" && item.loanStatus === 1);
 
     return matchesSearch && matchesLoanType && matchesTab;
   });
@@ -230,7 +232,7 @@ const LoanApplicationsPage = () => {
     {
       title: "Approved Loans",
       value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 1)
+        .filter((item: LoanApplication) => item.loanStatus === 2)
         .length.toString(),
       change: -0.7,
       bgColor: "bg-midnight-blue",
@@ -238,7 +240,7 @@ const LoanApplicationsPage = () => {
     {
       title: "Rejected Loans",
       value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 2)
+        .filter((item: LoanApplication) => item.loanStatus === 3)
         .length.toString(),
       change: 0.7,
       bgColor: "bg-midnight-blue",
@@ -246,7 +248,7 @@ const LoanApplicationsPage = () => {
     {
       title: "Disbursed Loans",
       value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 3)
+        .filter((item: LoanApplication) => item.loanStatus === 4)
         .length.toString(),
       change: -0.7,
       bgColor: "bg-midnight-blue",
@@ -254,7 +256,10 @@ const LoanApplicationsPage = () => {
     {
       title: "Pending Review",
       value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 0)
+        .filter(
+          (item: LoanApplication) =>
+            item.loanStatus === 0 || item.loanStatus === 1,
+        )
         .length.toString(),
       change: 0.7,
       bgColor: "bg-midnight-blue",
@@ -513,11 +518,12 @@ const LoanApplicationsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <img
-                          src={item.personalProfile.profilePhoto}
-                          alt={`${item.personalProfile.firstName} ${item.personalProfile.lastName}`}
-                          className="h-8 w-8 rounded-full mr-3"
-                        />
+                        <div
+                          className="h-8 w-8 rounded-full mr-3 bg-gray-200 flex items-center justify-center text-gray-600"
+                        >
+                          {item.personalProfile.firstName.charAt(0)}
+                          {item.personalProfile.lastName.charAt(0)}
+                        </div>
                         <div>
                           <div className="text-sm font-medium">
                             {item.personalProfile.firstName}{" "}

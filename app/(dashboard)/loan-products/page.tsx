@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  useGetAllLoanProductsQuery, 
+import {
+  useGetAllLoanProductsQuery,
   useDeleteLoanProductMutation,
-  useUpdateLoanProductStatusMutation 
+  useUpdateLoanProductStatusMutation,
 } from "@/lib/redux/services/loan-product";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { useAppSelector } from "@/lib/redux/hooks";
@@ -42,15 +42,17 @@ export default function LoanProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState<LoanProduct | null>(
-    null,
-  );
+  const [selectedProduct] = useState<LoanProduct | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<LoanProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<LoanProduct | null>(
+    null,
+  );
   const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
   const [isEnableModalOpen, setIsEnableModalOpen] = useState(false);
-  const [productToToggle, setProductToToggle] = useState<LoanProduct | null>(null);
+  const [productToToggle, setProductToToggle] = useState<LoanProduct | null>(
+    null,
+  );
   const [showFilters, setShowFilters] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [activeFilterDropdown, setActiveFilterDropdown] = useState<string>("");
@@ -71,7 +73,7 @@ export default function LoanProductsPage() {
     guid as string,
     { skip: !guid },
   );
-  
+
   const [deleteLoanProduct] = useDeleteLoanProductMutation();
   const [updateLoanProductStatus] = useUpdateLoanProductStatusMutation();
 
@@ -179,25 +181,25 @@ export default function LoanProductsPage() {
   };
 
   const handleViewDetails = (product: LoanProduct) => {
-    setSelectedProduct(product);
-    setIsDetailsOpen(true);
+    // For edit functionality, navigate to the edit page
+    router.push(`/loan-products/edit?id=${product.id}`);
   };
-  
+
   const handleDeleteClick = (product: LoanProduct) => {
     setProductToDelete(product);
     setIsDeleteModalOpen(true);
   };
-  
+
   const handleConfirmDelete = async () => {
     if (productToDelete && guid) {
       try {
-        await deleteLoanProduct({ 
+        await deleteLoanProduct({
           productId: productToDelete.id,
-          guid: guid as string 
+          guid: guid as string,
         }).unwrap();
         // Success notification could be added here
       } catch (error) {
-        console.error('Failed to delete loan product:', error);
+        console.error("Failed to delete loan product:", error);
         // Error notification could be added here
       }
     }
@@ -205,11 +207,14 @@ export default function LoanProductsPage() {
 
   const handleToggleStatus = (product: LoanProduct) => {
     setProductToToggle(product);
-    if (product.status === 1) { // Active to Inactive
+    if (product.status === 1) {
+      // Active to Inactive
       setIsDisableModalOpen(true);
-    } else if (product.status === 2) { // Inactive to Active
+    } else if (product.status === 2) {
+      // Inactive to Active
       setIsEnableModalOpen(true);
-    } else { // Draft to Active - no confirmation needed
+    } else {
+      // Draft to Active - no confirmation needed
       handleConfirmToggleStatus();
     }
   };
@@ -218,14 +223,14 @@ export default function LoanProductsPage() {
     if (productToToggle && guid) {
       try {
         const newStatus = productToToggle.status === 1 ? 2 : 1; // Toggle between Active (1) and Inactive (2)
-        await updateLoanProductStatus({ 
+        await updateLoanProductStatus({
           productId: productToToggle.id,
           guid: guid as string,
-          status: newStatus
+          status: newStatus,
         }).unwrap();
         // Success notification could be added here
       } catch (error) {
-        console.error('Failed to update loan product status:', error);
+        console.error("Failed to update loan product status:", error);
         // Error notification could be added here
       }
     }
@@ -571,7 +576,7 @@ export default function LoanProductsPage() {
               </Button>
             </div>
           ) : (
-            <EmptyState onCreateClick={handleCreateClick} />
+            <EmptyState />
           )
         ) : (
           <div className="bg-white rounded-lg overflow-hidden shadow-sm">
@@ -646,7 +651,7 @@ export default function LoanProductsPage() {
                               <Pencil className="h-4 w-4" />
                               <span className="sr-only">Edit</span>
                             </button>
-                            <button 
+                            <button
                               className="text-primary-red hover:text-primary-red"
                               onClick={() => handleDeleteClick(product)}
                             >
@@ -654,7 +659,7 @@ export default function LoanProductsPage() {
                               <span className="sr-only">Delete</span>
                             </button>
                             {product.status === 1 ? (
-                              <button 
+                              <button
                                 className="text-amber-600 hover:text-amber-800"
                                 onClick={() => handleToggleStatus(product)}
                               >
@@ -662,7 +667,7 @@ export default function LoanProductsPage() {
                                 <span className="sr-only">Disable</span>
                               </button>
                             ) : (
-                              <button 
+                              <button
                                 className="text-primary-green hover:text-primary-green"
                                 onClick={() => handleToggleStatus(product)}
                               >
@@ -814,7 +819,7 @@ export default function LoanProductsPage() {
           productName={productToDelete.loanName}
         />
       )}
-      
+
       {/* Disable Confirmation Modal */}
       {productToToggle && productToToggle.status === 1 && (
         <DisableLoanProductModal
@@ -824,7 +829,7 @@ export default function LoanProductsPage() {
           productName={productToToggle.loanName}
         />
       )}
-      
+
       {/* Enable Confirmation Modal */}
       {productToToggle && productToToggle.status === 2 && (
         <EnableLoanProductModal

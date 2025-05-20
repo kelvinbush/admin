@@ -21,7 +21,6 @@ export function DisableLoanProductModal({
   open,
   onClose,
   onConfirm,
-  productName,
 }: DisableLoanProductModalProps) {
   const [, setIsHovered] = useState(false);
 
@@ -47,8 +46,9 @@ export function DisableLoanProductModal({
               marginBottom: "20px",
             }}
           >
-            Users will no longer be able to see or apply for this loan, but it will remain
-            stored in the system. You can enable it again later if needed.
+            Users will no longer be able to see or apply for this loan, but it
+            will remain stored in the system. You can enable it again later if
+            needed.
           </div>
         </DialogHeader>
         <div className="flex justify-center mt-4 gap-8 items-center">

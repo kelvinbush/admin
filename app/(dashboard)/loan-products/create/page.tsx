@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { RootState } from "@/lib/redux/store";
 import { resetForm } from "@/lib/redux/features/loan-product-form.slice";
 import { useCreateLoanProductMutation } from "@/lib/redux/services/loan-product";
-import { selectCurrentToken } from "@/lib/redux/features/authSlice";
-import { useAppSelector } from "@/lib/redux/hooks";
 import { SupportedCurrency } from "@/lib/types/loan-product";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import StepIndicator from "../_components/step-indicator";
 import StepOneForm from "../_components/step-one-form";
 import StepThreeForm from "../_components/step-three-form";
@@ -19,21 +16,16 @@ import { PartnerLoanForm } from "../_components/partner-loan-form";
 import { FormData as PartnerFormData } from "../_components/_schemas/partner-loan-form-schema";
 import StepTwoForm from "@/app/(dashboard)/loan-products/_components/step-two-form";
 
-interface Props {
-  searchParams?: { [key: string]: string | undefined };
-}
-
-const AddLoanProductPage = ({ searchParams = {} }: Props) => {
+const AddLoanProductPage = () => {
   const dispatch = useDispatch();
-  const router = useRouter();
   const { activeStep, formData } = useSelector(
     (state: RootState) => state.loanProductForm,
   );
-  const guid = useAppSelector(selectCurrentToken);
   const [createLoanProduct] = useCreateLoanProductMutation();
   const [, setIsSubmitting] = useState(false);
 
-  const productType = searchParams.type || "mk";
+  // Hardcode product type to partner
+  const productType = "partner";
 
   useEffect(() => {
     // Reset form when component mounts
@@ -47,7 +39,6 @@ const AddLoanProductPage = ({ searchParams = {} }: Props) => {
     try {
       // Add the adminguid to the form data and ensure all required fields are present
       const apiRequest = {
-        adminguid: guid as string,
         loanName: data.loanName,
         description: data.description || "", // Provide default for optional fields
         partnerReference: data.partnerReference || "",

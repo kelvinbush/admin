@@ -1,64 +1,13 @@
-export const loanProviderOptions = [
-  {
-    value: "bank",
-    label: "Bank",
-    description: "Traditional banking institution",
-  },
-  {
-    value: "microfinance",
-    label: "Microfinance",
-    description: "Microfinance institution",
-  },
-  {
-    value: "sacco",
-    label: "SACCO",
-    description: "Savings and Credit Cooperative Organization",
-  },
-  {
-    value: "fintech",
-    label: "Fintech",
-    description: "Financial technology company",
-  },
-];
-
 export const loanTypeOptions = [
   {
     value: "0",
-    label: "Personal Loan",
-    description: "General purpose loan for individual borrowers",
+    label: "Secured",
+    description: "Loan backed by collateral or assets",
   },
   {
     value: "1",
-    label: "Business Loan",
-    description: "Loan for business purposes",
-  },
-  {
-    value: "2",
-    label: "Asset Financing",
-    description: "Loan for purchasing assets",
-  },
-  {
-    value: "3",
-    label: "Emergency Loan",
-    description: "Short-term loan for urgent needs",
-  },
-];
-
-export const userGroupOptions = [
-  {
-    value: "0",
-    label: "Public",
-    description: "Visible to all users",
-  },
-  {
-    value: "1",
-    label: "Private",
-    description: "Visible only to selected users",
-  },
-  {
-    value: "2",
-    label: "Restricted",
-    description: "Visible to specific user groups",
+    label: "Unsecured",
+    description: "Loan that doesn't require collateral",
   },
 ];
 
@@ -77,22 +26,22 @@ export const processingMethodOptions = [
 
 export const periodOptions = [
   {
-    value: "per_day",
+    value: "DAILY",
     label: "Per Day",
     description: "Interest is calculated daily",
   },
   {
-    value: "per_week",
+    value: "WEEKLY",
     label: "Per Week",
     description: "Interest is calculated weekly",
   },
   {
-    value: "per_month",
+    value: "MONTHLY",
     label: "Per Month",
     description: "Interest is calculated monthly",
   },
   {
-    value: "per_year",
+    value: "YEARLY",
     label: "Per Year",
     description: "Interest is calculated yearly",
   },
@@ -100,23 +49,44 @@ export const periodOptions = [
 
 export const termUnitOptions = [
   {
-    value: "days",
+    value: "DAYS",
     label: "Days",
     description: "Loan term in days",
   },
   {
-    value: "weeks",
+    value: "WEEKS",
     label: "Weeks",
     description: "Loan term in weeks",
   },
   {
-    value: "months",
+    value: "MONTHS",
     label: "Months",
     description: "Loan term in months",
   },
   {
-    value: "years",
+    value: "YEARS",
     label: "Years",
     description: "Loan term in years",
+  },
+];
+
+export const interestCalculationMethodOptions = [
+  {
+    value: "FLAT_RATE",
+    label: "Flat Rate",
+    description:
+      "Interest is calculated on the original loan amount for the entire duration of the loan.",
+  },
+  {
+    value: "REDUCING_BALANCE",
+    label: "Reducing Balance",
+    description:
+      "Interest is calculated on the remaining loan balance, reducing as the loan is repaid.",
+  },
+  {
+    value: "COMPOUND_INTEREST",
+    label: "Compound Interest",
+    description:
+      "Interest is calculated on the principal plus any accumulated interest.",
   },
 ];

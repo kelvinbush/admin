@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { setTitle } from "@/lib/redux/features/top-bar.slice";
 import { cn } from "@/lib/utils";
-import { useGetBusinessProfileByPersonalGuidQuery } from "@/lib/redux/services/user";
+import { useGetBusinessProfileByPersonalGuidQuery, useGetLoanApplicationQuery } from "@/lib/redux/services/user";
 import { Loader2 } from "lucide-react";
 import LoanProfileHeader from "@/components/loan/loan-profile.header";
 
@@ -61,12 +61,22 @@ const LoanProfile = ({
       { guid: personalGuid || "" },
       { skip: !personalGuid },
     );
+    
+  // Fetch loan application data
+  const { data: loanApplicationData, isLoading: isLoanDataLoading } =
+    useGetLoanApplicationQuery(
+      { guid: loanId || "" },
+      { skip: !loanId },
+    );
 
   dispatch(setTitle("Loan Applications"));
 
   const currentMainTab = pathname.split("/").slice(3, 4)[0] ?? "loan";
+  
+  // Get loan status from loan application data
+  const loanStatus = loanApplicationData?.loanStatus || 0;
 
-  if (isLoading) {
+  if (isLoading || isLoanDataLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -98,6 +108,8 @@ const LoanProfile = ({
     <div className="space-y-6">
       <LoanProfileHeader
         onImageUpload={() => console.log("Image Uploaded")}
+        loanId={loanId}
+        loanStatus={loanStatus}
         {...business}
       />
       <main className="space-y-6 bg-white">

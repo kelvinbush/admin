@@ -11,6 +11,7 @@ import {
   PARTNER,
   USER,
   LOAN_PRODUCT,
+  LOAN_APPLICATION,
 } from "@/lib/constants/tags";
 import { logOut, setAccessToken } from "@/lib/redux/features/authSlice";
 
@@ -84,5 +85,5 @@ const baseQueryWithReAuth = async (
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReAuth,
   endpoints: () => ({}),
-  tagTypes: [USER, AUTH, FUNDING, PARTNER, LOAN_PRODUCT],
+  tagTypes: [USER, AUTH, FUNDING, PARTNER, LOAN_PRODUCT, LOAN_APPLICATION],
 });

@@ -21,7 +21,6 @@ export function EnableLoanProductModal({
   open,
   onClose,
   onConfirm,
-  productName,
 }: EnableLoanProductModalProps) {
   const [, setIsHovered] = useState(false);
 

@@ -5,14 +5,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -44,27 +43,32 @@ const affiliationTypeOptions = [
   {
     value: "partner",
     label: "Partner",
-    description: "Organizations that collaborate with Melanin Kapital on various initiatives",
+    description:
+      "Organizations that collaborate with Melanin Kapital on various initiatives",
   },
   {
     value: "lender",
     label: "Lender",
-    description: "Financial institutions that provide loans through the platform",
+    description:
+      "Financial institutions that provide loans through the platform",
   },
   {
     value: "fintech",
     label: "Fintech",
-    description: "Technology companies offering financial services or solutions",
+    description:
+      "Technology companies offering financial services or solutions",
   },
   {
     value: "bank",
     label: "Bank",
-    description: "Traditional banking institutions working with Melanin Kapital",
+    description:
+      "Traditional banking institutions working with Melanin Kapital",
   },
   {
     value: "other",
     label: "Other",
-    description: "Any other type of organization not covered by the categories above",
+    description:
+      "Any other type of organization not covered by the categories above",
   },
 ];
 
@@ -120,10 +124,7 @@ export function NewOrganizationModal({
                       Organization name <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter organization name"
-                        {...field}
-                      />
+                      <Input placeholder="Enter organization name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

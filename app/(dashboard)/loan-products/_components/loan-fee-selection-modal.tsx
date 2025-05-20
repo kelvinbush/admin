@@ -66,7 +66,7 @@ export function LoanFeeSelectionModal({
   onSelect,
 }: LoanFeeSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [loanFees, setLoanFees] = useState<LoanFee[]>(dummyLoanFees);
+  const [loanFees] = useState<LoanFee[]>(dummyLoanFees);
 
   // Filter loan fees based on search query
   const filteredFees = loanFees.filter(

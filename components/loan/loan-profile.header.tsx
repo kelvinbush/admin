@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Camera,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  Share2,
-} from "lucide-react";
+import { Camera, CheckCheck, Clock, Mail, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +20,7 @@ import {
 import { useAppSelector } from "@/lib/redux/hooks";
 import { selectCurrentToken } from "@/lib/redux/features/authSlice";
 import { userApiSlice } from "@/lib/redux/services/user";
+import { useUpdateNormalLoanApplicationMutation } from "@/lib/redux/services/loan-application";
 import { cn } from "@/lib/utils";
 
 // Required document types for business profile completion
@@ -47,6 +49,8 @@ interface BusinessProfileHeaderProps
   isVerified: boolean;
   imageUrl: string;
   pitchDeckUrl: string;
+  loanId?: string;
+  loanStatus?: number;
   onImageUpload?: () => void;
   onShare?: () => void;
 }
@@ -55,17 +59,64 @@ const LoanProfileHeader = ({
   name,
   location,
   companyType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isVerified,
   imageUrl,
+  loanId,
+  loanStatus = 0,
   onImageUpload,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onShare,
   className,
   ...props
 }: BusinessProfileHeaderProps) => {
   const [completionPercentage, setCompletionPercentage] = useState(80); // Default to 80% as shown in the image
   const guid = useAppSelector(selectCurrentToken);
+  const { toast } = useToast();
   userApiSlice.useUploadBusinessDocumentMutation();
   const [logoUrl] = useState(imageUrl);
+  const [updateLoanApplication, { isLoading: isUpdating }] =
+    useUpdateNormalLoanApplicationMutation();
+
+  // Loan status labels
+  const loanStatusLabels = {
+    0: "Applied",
+    1: "Review",
+    2: "Approved",
+    3: "Rejected",
+  };
+
+  // Handle loan status update
+  const handleLoanStatusUpdate = async (newStatus: number) => {
+    if (!loanId || !guid) {
+      toast({
+        title: "Error",
+        description: "Missing loan ID or admin reference",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateLoanApplication({
+        loanStatus: newStatus,
+        loanApplicationReference: loanId,
+        adminReference: guid,
+      });
+
+      toast({
+        title: "Success",
+        description: `Loan status updated to ${loanStatusLabels[newStatus as keyof typeof loanStatusLabels]}`,
+      });
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description: "Failed to update loan status",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch business profile
   const { data: response } =
@@ -108,11 +159,9 @@ const LoanProfileHeader = ({
       );
     }
   }, [response?.business, documentResponse?.documents]);
-
-  const pitchDeck = documentResponse?.documents?.find(
+  documentResponse?.documents?.find(
     (doc: { docType: number }) => doc.docType === 7,
   );
-
   // Memoize the background style to prevent unnecessary re-renders
   const backgroundStyle = React.useMemo(
     () => ({
@@ -125,10 +174,7 @@ const LoanProfileHeader = ({
 
   return (
     <div
-      className={cn(
-        "relative overflow-hidden rounded-lg border",
-        className,
-      )}
+      className={cn("relative overflow-hidden rounded-lg border", className)}
       {...props}
       style={backgroundStyle}
     >
@@ -163,40 +209,84 @@ const LoanProfileHeader = ({
                 </button>
               )}
             </div>
-            
+
             {/* Company details */}
             <div className="w-full space-y-1 relative">
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-medium text-white">{name}</h1>
-                
+
                 {/* Loan Actions Button */}
-                <Button 
-                  variant="default" 
-                  className="text-white relative overflow-hidden group"
-                  style={{ background: "linear-gradient(90deg, #00CC99 0%, #F0459C 100%)" }}
-                >
-                  <span className="relative z-10">Loan Actions <span className="ml-1">▼</span></span>
-                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
-                        style={{ background: "linear-gradient(90deg, #00BB88 0%, #E0358B 100%)" }}></span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="default"
+                      className="text-white relative overflow-hidden group"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, #00CC99 0%, #F0459C 100%)",
+                      }}
+                      disabled={isUpdating}
+                    >
+                      <span className="relative z-10">
+                        Loan Actions <span className="ml-1">▼</span>
+                      </span>
+                      <span
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #00BB88 0%, #E0358B 100%)",
+                        }}
+                      ></span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem
+                      onClick={() => handleLoanStatusUpdate(2)}
+                      className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50"
+                      disabled={loanStatus === 2}
+                    >
+                      <CheckCheck className="mr-2 h-4 w-4" />
+                      Pre-approve Loan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleLoanStatusUpdate(3)}
+                      className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={loanStatus === 3}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject Loan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => console.log("Email user")}
+                      className="cursor-pointer"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Email User
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              
+
               <div className="flex items-center gap-2 text-gray-300 text-sm">
-                <span className="capitalize">{companyType.replace(/-/g, " ")} • {location}</span>
+                <span className="capitalize">
+                  {companyType.replace(/-/g, " ")} • {location}
+                </span>
               </div>
-              
+
               {/* Progress bar */}
               <div className="mt-3 w-full bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-teal-500 h-2 rounded-full" 
+                <div
+                  className="bg-teal-500 h-2 rounded-full"
                   style={{ width: `${completionPercentage}%` }}
                 ></div>
               </div>
-              <div className="text-right text-xs text-gray-300">{completionPercentage}% profile completion</div>
+              <div className="text-right text-xs text-gray-300">
+                {completionPercentage}% profile completion
+              </div>
             </div>
           </div>
         </div>
-        
+
         {/* Bottom section with metadata */}
         <div className="bg-gray-900 border-t border-gray-700 grid grid-cols-5 divide-x divide-gray-700 text-sm">
           {/* Member since */}
@@ -204,33 +294,38 @@ const LoanProfileHeader = ({
             <div className="text-gray-400 text-xs">Member since</div>
             <div className="text-white">08/April/2023</div>
           </div>
-          
+
           {/* Last login */}
           <div className="p-4">
             <div className="text-gray-400 text-xs">Last login</div>
             <div className="text-white">08/Nov/2024</div>
           </div>
-          
+
           {/* Affiliate/Program */}
           <div className="p-4">
             <div className="text-gray-400 text-xs">Affiliate/Program</div>
             <div className="text-white flex items-center">
-              <span className="bg-gray-700 rounded-full w-4 h-4 flex items-center justify-center mr-1 text-xs">→</span>
+              <span className="bg-gray-700 rounded-full w-4 h-4 flex items-center justify-center mr-1 text-xs">
+                →
+              </span>
               Tuungane2xna Absa
             </div>
           </div>
-          
+
           {/* Sector(s) */}
           <div className="p-4">
             <div className="text-gray-400 text-xs">Sector(s)</div>
             <div className="text-white">Agriculture, Technology</div>
           </div>
-          
+
           {/* Loan status */}
           <div className="p-4">
             <div className="text-gray-400 text-xs">Loan status</div>
             <div className="text-white flex items-center">
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-300 border-blue-500/20 flex items-center gap-1">
+              <Badge
+                variant="outline"
+                className="bg-blue-500/10 text-blue-300 border-blue-500/20 flex items-center gap-1"
+              >
                 <Clock className="h-3 w-3" />
                 Pending review
               </Badge>
