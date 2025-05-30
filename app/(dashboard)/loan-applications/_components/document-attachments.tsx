@@ -108,6 +108,8 @@ export default function DocumentAttachments({ loanId }: { loanId: string }) {
 
   const documents = documentResponse?.documents || [];
 
+  console.log(documents);
+
   // Get status badge styles
   const getStatusBadgeStyles = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
@@ -177,7 +179,13 @@ export default function DocumentAttachments({ loanId }: { loanId: string }) {
       const status = getDocumentStatus(doc).text.toLowerCase();
       return matchesSearch && status === filterStatus.toLowerCase();
     });
-  }, [documents, searchQuery, filterStatus]);
+  }, [
+    documents,
+    documentTypeNames,
+    searchQuery,
+    filterStatus,
+    getDocumentStatus,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);

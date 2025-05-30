@@ -1,11 +1,13 @@
 "use client";
 import { Suspense } from "react";
+import DocumentAttachments from "@/app/(dashboard)/loan-applications/_components/document-attachments";
+import { useParams } from "next/navigation";
 
 function CompanyDocumentsPage() {
+  const { loanId } = useParams();
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div>Cleaning this page up... construction 🦺 in progress</div>
-      {/*<DocumentAttachments loanId={loanId as string} />*/}
+      <DocumentAttachments loanId={loanId as string} />
     </Suspense>
   );
 }
