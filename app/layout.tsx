@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { Providers } from "@/app/providers";
 import { Toaster } from "sonner";
+import { TitleProvider } from "@/context/title-context";
 
 const montreal = localFont({
   src: [
@@ -67,8 +68,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(montreal.className)}>
         <Providers>
-          {children}
-          <Toaster richColors position={"top-right"} />
+          <TitleProvider>
+            {children}
+            <Toaster richColors position={"top-right"} />
+          </TitleProvider>
         </Providers>
       </body>
     </html>

@@ -1,8 +1,8 @@
-import { useState } from "react";
 import UserNav from "./user-nav";
+import { useTitle } from "@/context/title-context";
 
 const Topnav = () => {
-  const [title, setTitle] = useState("Dashboard");
+  const { title } = useTitle();
   
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white py-3 pl-[308px] pr-4">

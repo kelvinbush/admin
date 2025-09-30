@@ -1,7 +1,6 @@
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { setTitle } from "@/lib/redux/features/top-bar.slice";
-import { useAppDispatch } from "@/lib/redux/hooks";
+import { useTitle } from "@/context/title-context";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -82,10 +81,10 @@ const sidenavLinks = [
 ];
 
 const Sidenav = () => {
-  const dispatch = useAppDispatch();
+  const { setTitle } = useTitle();
 
   const setTitleOnBar = (title: string) => {
-    dispatch(setTitle(title));
+    setTitle(title);
   };
 
   return (
