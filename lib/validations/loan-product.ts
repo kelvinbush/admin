@@ -31,7 +31,7 @@ export const createLoanProductSchema = z.object({
   lateFeeFlat: z.number().min(0, 'Late fee flat must be positive').optional(),
   prepaymentPenaltyRate: z.number().min(0, 'Prepayment penalty rate must be positive').optional(),
   gracePeriodDays: z.number().int().min(0, 'Grace period must be positive').optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean().optional().default(true),
 }).refine((data) => data.maxAmount >= data.minAmount, {
   message: 'Maximum amount must be greater than or equal to minimum amount',
   path: ['maxAmount'],

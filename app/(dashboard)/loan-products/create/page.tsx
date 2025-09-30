@@ -44,7 +44,7 @@ export default function CreateLoanProductPage() {
   const createLoanProductMutation = useCreateLoanProduct();
 
   const form = useForm<CreateLoanProductFormData>({
-    resolver: zodResolver(createLoanProductSchema),
+    resolver: zodResolver(createLoanProductSchema) as any,
     defaultValues: {
       name: "",
       slug: "",
@@ -78,7 +78,7 @@ export default function CreateLoanProductPage() {
 
   const onSubmit = async (data: CreateLoanProductFormData) => {
     try {
-      await createLoanProductMutation.mutateAsync(data);
+      await createLoanProductMutation.mutateAsync(data as any);
       toast.success("Loan product created successfully");
       router.push("/loan-products");
     } catch (error) {
@@ -136,7 +136,7 @@ export default function CreateLoanProductPage() {
       <Form {...form}>
         <form
           id="loan-product-form"
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(onSubmit as any)}
           className="space-y-0"
         >
           {/* Basic Information */}
@@ -853,7 +853,7 @@ export default function CreateLoanProductPage() {
                 )}
               />
             </div>
-          </div>
+      </div>
         </form>
       </Form>
     </div>
