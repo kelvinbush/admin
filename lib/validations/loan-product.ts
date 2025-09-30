@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
-// Enums for validation
-export const LoanTermUnitEnum = ['DAYS', 'WEEKS', 'MONTHS', 'YEARS'] as const;
-export const InterestTypeEnum = ['FIXED', 'VARIABLE'] as const;
-export const InterestRatePeriodEnum = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'] as const;
-export const AmortizationMethodEnum = ['STRAIGHT_LINE', 'DECLINING_BALANCE', 'BALLOON'] as const;
-export const RepaymentFrequencyEnum = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'] as const;
+// Enums for validation - matching backend enum values
+export const LoanTermUnitEnum = ['days', 'weeks', 'months', 'quarters', 'years'] as const;
+export const InterestTypeEnum = ['fixed', 'variable'] as const;
+export const InterestRatePeriodEnum = ['per_day', 'per_month', 'per_quarter', 'per_year'] as const;
+export const AmortizationMethodEnum = ['flat', 'reducing_balance'] as const;
+export const RepaymentFrequencyEnum = ['weekly', 'biweekly', 'monthly', 'quarterly'] as const;
 
 // Create loan product validation schema
 export const createLoanProductSchema = z.object({
   name: z.string().min(1, 'Name is required').max(150, 'Name must be less than 150 characters'),
-  slug: z.string().min(1, 'Slug is required').max(180, 'Slug must be less than 180 characters').optional(),
+  slug: z.string().max(180, 'Slug must be less than 180 characters').optional(),
   imageUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
   summary: z.string().optional(),
   description: z.string().optional(),
@@ -19,12 +19,12 @@ export const createLoanProductSchema = z.object({
   maxAmount: z.number().min(0, 'Maximum amount must be positive'),
   minTerm: z.number().int().min(0, 'Minimum term must be positive'),
   maxTerm: z.number().int().min(0, 'Maximum term must be positive'),
-  termUnit: z.enum(LoanTermUnitEnum, { required_error: 'Term unit is required' }),
+  termUnit: z.enum(LoanTermUnitEnum),
   interestRate: z.number().min(0, 'Interest rate must be positive'),
-  interestType: z.enum(InterestTypeEnum, { required_error: 'Interest type is required' }),
-  ratePeriod: z.enum(InterestRatePeriodEnum, { required_error: 'Rate period is required' }),
-  amortizationMethod: z.enum(AmortizationMethodEnum, { required_error: 'Amortization method is required' }),
-  repaymentFrequency: z.enum(RepaymentFrequencyEnum, { required_error: 'Repayment frequency is required' }),
+  interestType: z.enum(InterestTypeEnum),
+  ratePeriod: z.enum(InterestRatePeriodEnum),
+  amortizationMethod: z.enum(AmortizationMethodEnum),
+  repaymentFrequency: z.enum(RepaymentFrequencyEnum),
   processingFeeRate: z.number().min(0, 'Processing fee rate must be positive').optional(),
   processingFeeFlat: z.number().min(0, 'Processing fee flat must be positive').optional(),
   lateFeeRate: z.number().min(0, 'Late fee rate must be positive').optional(),
