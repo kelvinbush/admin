@@ -215,7 +215,7 @@ export default function LoanProductsPage() {
   };
 
   if (isLoading) {
-    return (
+        return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -231,7 +231,7 @@ export default function LoanProductsPage() {
   }
 
   if (error) {
-    return (
+        return (
       <div className="flex items-center justify-center h-64">
         <Card className="w-full max-w-md">
           <CardHeader>
@@ -256,18 +256,18 @@ export default function LoanProductsPage() {
           <div>
             <h1 className="text-2xl font-bold text-midnight-blue">
               Loan Products
-            </h1>
-            <p className="text-gray-600 mt-1">
+          </h1>
+            <p className="text-primaryGrey-400 mt-1">
               Manage your loan products and their configurations
             </p>
-          </div>
-          <Button
-            className="bg-[#00B67C] hover:bg-[#00B67C]/90"
+            </div>
+            <Button
+            className="bg-primary-green hover:bg-primary-green/90"
             onClick={handleAddProduct}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Product
-          </Button>
+            </Button>
         </div>
 
         {/* Filters */}

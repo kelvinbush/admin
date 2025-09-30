@@ -55,21 +55,21 @@ export function LoanProductsFilters({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {activeFiltersCount > 0 && (
-              <Badge
-                variant="secondary"
-                className="bg-[#00B67C]/10 text-[#00B67C] border-[#00B67C]/20"
-              >
+               <Badge
+                 variant="secondary"
+                 className="bg-primary-green/10 text-primary-green border-primary-green/20"
+               >
                 {activeFiltersCount} active
               </Badge>
             )}
           </div>
           {activeFiltersCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearFilters}
-              className="text-gray-500 hover:text-gray-700"
-            >
+             <Button
+               variant="ghost"
+               size="sm"
+               onClick={onClearFilters}
+               className="text-primaryGrey-400 hover:text-primaryGrey-500"
+             >
               <X className="h-4 w-4 mr-1" />
               Clear all
             </Button>
@@ -80,7 +80,7 @@ export function LoanProductsFilters({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primaryGrey-400 h-4 w-4" />
             <Input
               placeholder="Search products..."
               value={searchTerm}

@@ -62,26 +62,26 @@ export function LoanProductsTable({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className={""}>
-              <TableRow className="bg-primaryGrey-50 p-4">
-                <TableHead className="w-[220px] font-medium text-primaryGrey-500">
+              <TableRow className="bg-primaryGrey-50">
+                <TableHead className="w-[220px] font-medium text-primaryGrey-500 py-4">
                   PRODUCT NAME
                 </TableHead>
-                <TableHead className=" font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   STATUS
                 </TableHead>
-                <TableHead className="font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   AMOUNT RANGE
                 </TableHead>
-                <TableHead className="font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   TERM
                 </TableHead>
-                <TableHead className="font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   INTEREST RATE
                 </TableHead>
-                <TableHead className="font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   CREATED
                 </TableHead>
-                <TableHead className="font-medium text-midnight-blue">
+                <TableHead className="font-medium text-midnight-blue py-4">
                   ACTIONS
                 </TableHead>
               </TableRow>
@@ -91,17 +91,17 @@ export function LoanProductsTable({
                 <TableRow className={"p-4"}>
                   <TableCell colSpan={7} className="text-center py-12">
                     <div className="text-center">
-                      <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <DollarSign className="h-12 w-12 text-primaryGrey-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-midnight-blue mb-2">
                         No loan products found
                       </h3>
-                      <p className="text-gray-600 mb-6">
+                      <p className="text-primaryGrey-400 mb-6">
                         Get started by creating your first loan product
                       </p>
-                      <Button
-                        className="bg-[#00B67C] hover:bg-[#00B67C]/90"
-                        onClick={onAddProduct}
-                      >
+                       <Button
+                         className="bg-primary-green hover:bg-primary-green/90"
+                         onClick={onAddProduct}
+                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Create First Product
                       </Button>
@@ -112,38 +112,38 @@ export function LoanProductsTable({
                 data.map((product: LoanProduct) => (
                   <TableRow
                     key={product.id}
-                    className="hover:bg-gray-50 cursor-pointer p-4"
+                    className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => onRowClick(product)}
                   >
-                    <TableCell>
+                    <TableCell className="py-4">
                       <div className="font-medium text-midnight-blue">
                         {product.name}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`font-light text-xs ${
-                          product.isActive
-                            ? "border-green-200 text-green-700"
-                            : "border-red-200 text-red-700"
-                        }`}
-                      >
-                        {product.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>
-                          {formatCurrency(product.minAmount, product.currency)}
-                        </div>
-                        <div className="text-gray-500">
-                          to{" "}
-                          {formatCurrency(product.maxAmount, product.currency)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
+                     <TableCell className="py-4">
+                       <Badge
+                         variant="outline"
+                         className={`font-normal border text-xs ${
+                           product.isActive
+                             ? "border-green-500 text-green-500"
+                             : "border-red-500 text-red-500"
+                         }`}
+                       >
+                         {product.isActive ? "Active" : "Inactive"}
+                       </Badge>
+                     </TableCell>
+                     <TableCell className="py-4">
+                       <div className="text-sm">
+                         <div>
+                           {formatCurrency(product.minAmount, product.currency)}
+                         </div>
+                         <div className="text-primaryGrey-400">
+                           to{" "}
+                           {formatCurrency(product.maxAmount, product.currency)}
+                         </div>
+                       </div>
+                     </TableCell>
+                    <TableCell className="py-4">
                       <div className="text-sm">
                         {formatTerm(
                           product.minTerm,
@@ -152,22 +152,25 @@ export function LoanProductsTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium text-[#00B67C]">
-                          {product.interestRate}%
-                        </div>
-                        <div className="text-gray-500">
-                          {product.interestType}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-gray-500">
-                        {new Date(product.createdAt).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                     <TableCell className="py-4">
+                       <div className="text-sm">
+                         <div className="font-medium text-primary-green">
+                           {product.interestRate}%
+                         </div>
+                         <div className="text-primaryGrey-400">
+                           {product.interestType}
+                         </div>
+                       </div>
+                     </TableCell>
+                     <TableCell className="py-4">
+                       <div className="text-sm text-primaryGrey-400">
+                         {new Date(product.createdAt).toLocaleDateString()}
+                       </div>
+                     </TableCell>
+                    <TableCell
+                      className="py-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button

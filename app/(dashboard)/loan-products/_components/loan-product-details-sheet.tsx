@@ -52,148 +52,139 @@ export function LoanProductDetailsSheet({
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
-          {/* Status and Basic Info */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Badge 
-                variant="outline" 
-                className={`font-light text-xs ${
-                  product.isActive 
-                    ? 'border-green-200 text-green-700' 
-                    : 'border-red-200 text-red-700'
-                }`}
-              >
-                {product.isActive ? "Active" : "Inactive"}
-              </Badge>
-              <Button 
-                className="bg-[#00B67C] hover:bg-[#00B67C]/90"
-                onClick={() => onEdit(product)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Product
-              </Button>
-            </div>
-            
-            {product.summary && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Summary</h4>
-                <p className="text-sm text-gray-600">{product.summary}</p>
-              </div>
-            )}
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <Badge 
+              variant="outline" 
+              className={`font-normal text-xs ${
+                product.isActive 
+                  ? 'border-green-500 text-green-500' 
+                  : 'border-red-500 text-red-500'
+              }`}
+            >
+              {product.isActive ? "Active" : "Inactive"}
+            </Badge>
+            <Button 
+              size="sm"
+              className="bg-primary-green hover:bg-primary-green/90"
+              onClick={() => onEdit(product)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
           </div>
+
+          {product.summary && (
+            <div className="bg-primaryGrey-50 p-4 rounded-lg">
+              <p className="text-sm text-primaryGrey-400">{product.summary}</p>
+            </div>
+          )}
 
           {/* Financial Details */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Financial Details</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Amount Range</p>
-                <p className="font-medium">
+          <div>
+            <h4 className="font-medium text-midnight-blue mb-3">Financial Details</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Amount Range</span>
+                <span className="text-sm font-medium text-midnight-blue">
                   {formatCurrency(product.minAmount, product.currency)} - {formatCurrency(product.maxAmount, product.currency)}
-                </p>
+                </span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Interest Rate</p>
-                <p className="font-medium text-[#00B67C]">
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Interest Rate</span>
+                <span className="text-sm font-medium text-primary-green">
                   {product.interestRate}% {product.interestType}
-                </p>
+                </span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Term Range</p>
-                <p className="font-medium">
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Term Length</span>
+                <span className="text-sm font-medium text-midnight-blue">
                   {formatTerm(product.minTerm, product.maxTerm, product.termUnit)}
-                </p>
+                </span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Grace Period</p>
-                <p className="font-medium">{product.gracePeriodDays} days</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Grace Period</span>
+                <span className="text-sm font-medium text-midnight-blue">
+                  {product.gracePeriodDays} days
+                </span>
               </div>
             </div>
           </div>
+
+          <div className="border-t border-primaryGrey-50"></div>
 
           {/* Loan Structure */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Loan Structure</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Amortization Method</p>
-                <p className="font-medium">{product.amortizationMethod.replace(/_/g, ' ')}</p>
+          <div>
+            <h4 className="font-medium text-midnight-blue mb-3">Loan Structure</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Amortization</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.amortizationMethod.replace(/_/g, ' ')}</span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Repayment Frequency</p>
-                <p className="font-medium">{product.repaymentFrequency}</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Repayment Frequency</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.repaymentFrequency}</span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Rate Period</p>
-                <p className="font-medium">{product.ratePeriod}</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Rate Period</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.ratePeriod}</span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Currency</p>
-                <p className="font-medium">{product.currency}</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-primaryGrey-400">Currency</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.currency}</span>
               </div>
             </div>
           </div>
 
+          <div className="border-t border-primaryGrey-50"></div>
+
           {/* Fees */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Fees</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Processing Fee</p>
-                <p className="font-medium">
+          <div>
+            <h4 className="font-medium text-midnight-blue mb-3">Fees</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-xs text-primaryGrey-400 mb-1">Processing Fee</p>
+                <p className="text-sm font-medium text-midnight-blue">
                   {product.processingFeeRate ? `${product.processingFeeRate}%` : 
                    product.processingFeeFlat ? formatCurrency(product.processingFeeFlat, product.currency) : 
                    'Not set'}
                 </p>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Late Fee</p>
-                <p className="font-medium">
+              <div className="text-center">
+                <p className="text-xs text-primaryGrey-400 mb-1">Late Fee</p>
+                <p className="text-sm font-medium text-midnight-blue">
                   {product.lateFeeRate ? `${product.lateFeeRate}%` : 
                    product.lateFeeFlat ? formatCurrency(product.lateFeeFlat, product.currency) : 
                    'Not set'}
                 </p>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Prepayment Penalty</p>
-                <p className="font-medium">
+              <div className="text-center">
+                <p className="text-xs text-primaryGrey-400 mb-1">Prepayment Penalty</p>
+                <p className="text-sm font-medium text-midnight-blue">
                   {product.prepaymentPenaltyRate ? `${product.prepaymentPenaltyRate}%` : 'Not set'}
                 </p>
               </div>
             </div>
           </div>
 
+          <div className="border-t border-primaryGrey-50"></div>
+
           {/* Additional Info */}
           {product.description && (
-            <div className="space-y-4">
-              <h4 className="font-medium text-gray-900">Description</h4>
-              <p className="text-sm text-gray-600">{product.description}</p>
+            <div>
+              <h4 className="font-medium text-midnight-blue mb-3">Description</h4>
+              <p className="text-sm text-primaryGrey-400 leading-relaxed">{product.description}</p>
             </div>
           )}
 
           {/* Metadata */}
-          <div className="space-y-4 pt-4 border-t">
-            <h4 className="font-medium text-gray-900">Metadata</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Created</p>
-                <p className="font-medium text-sm">
-                  {new Date(product.createdAt).toLocaleDateString()}
-                </p>
+          <div className="pt-4 border-t border-primaryGrey-50">
+            <div className="grid grid-cols-2 gap-4 text-xs text-primaryGrey-400">
+              <div>
+                <span>Created: {new Date(product.createdAt).toLocaleDateString()}</span>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Last Updated</p>
-                <p className="font-medium text-sm">
-                  {new Date(product.updatedAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Product ID</p>
-                <p className="font-medium text-sm font-mono">{product.id}</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Slug</p>
-                <p className="font-medium text-sm font-mono">{product.slug}</p>
+              <div>
+                <span>Updated: {new Date(product.updatedAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
