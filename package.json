@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.33.0",
     "@edgestore/react": "^0.3.3",
     "@edgestore/server": "^0.3.3",
     "@heroicons/react": "^2.2.0",
@@ -30,7 +31,9 @@
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-toast": "^1.2.11",
     "@radix-ui/react-tooltip": "^1.1.8",
-    "@reduxjs/toolkit": "^2.5.1",
+    "@tanstack/react-query": "^5.90.2",
+    "@tanstack/react-query-devtools": "^5.90.2",
+    "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",
@@ -43,7 +46,6 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.1",
     "react-phone-input-2": "^2.15.1",
-    "react-redux": "^9.2.0",
     "recharts": "^2.15.2",
     "sonner": "^2.0.1",
     "tailwind-merge": "^2.6.0",

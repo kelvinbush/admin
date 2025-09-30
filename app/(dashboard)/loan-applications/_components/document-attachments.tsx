@@ -1,560 +1,375 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import {
-  Search,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  X as XIcon,
-} from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Icons } from "@/components/icons";
-import { Loader2 } from "lucide-react";
+import { Eye, Check, X, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { userApiSlice } from "@/lib/redux/services/user";
-import { BusinessDocument } from "@/lib/types/user";
 
-// EmptyState Component for when no documents are found
-const EmptyState = ({
-  hasDocuments,
-  hasFilters,
-  onReset,
-}: {
-  hasDocuments: boolean;
-  hasFilters: boolean;
-  onReset: () => void;
-}) => {
-  if (!hasDocuments) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Icons.emptyFunds className="h-32 w-32 mb-6 text-gray-400" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          No Documents Available
-        </h3>
-        <p className="text-gray-500">
-          No documents have been uploaded for this application.
-        </p>
-      </div>
-    );
-  }
+// Using our own enum and interface to match the API response
+enum DocumentType {
+  NationalIdFront = 0,
+  NationalIdBack = 1,
+  Passport = 2,
+  TaxComplaintDocument = 3,
+}
 
-  if (hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Icons.emptyFunds className="h-32 w-32 mb-6 text-gray-400" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          No documents found
-        </h3>
-        <p className="text-gray-500">
-          Try adjusting your filters or search terms.
-        </p>
-        <Button
-          variant="outline"
-          onClick={onReset}
-          className="mt-4 flex items-center gap-2 bg-gray-50 hover:bg-gray-100"
-        >
-          Reset Filters
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
+// Define our own PersonalDocument interface to match the component needs
+interface PersonalDocument {
+  id: number;
+  docType: DocumentType;
+  docPath: string;
+  createdDate: string;
+  modifiedDate: string | null;
+  status?: string;
+  remarks?: string;
+}
 
-  return null;
+// Document type mapping for display names
+const documentTypeNames: Record<DocumentType, string> = {
+  [DocumentType.NationalIdFront]: "National ID (Front)",
+  [DocumentType.NationalIdBack]: "National ID (Back)",
+  [DocumentType.Passport]: "Passport",
+  [DocumentType.TaxComplaintDocument]: "Personal Tax Complaint Document",
 };
 
-export default function DocumentAttachments({ loanId }: { loanId: string }) {
-  // Get the loan application data
-  const { data: loanApplication, isLoading: isLoanLoading } =
-    userApiSlice.useGetLoanApplicationQuery(
-      { guid: loanId },
-      { skip: !loanId },
-    );
+// List of required documents
+const requiredDocuments = [
+  DocumentType.NationalIdFront,
+  DocumentType.NationalIdBack,
+  DocumentType.Passport,
+  DocumentType.TaxComplaintDocument,
+];
 
-  // State for active tab
-  const [activeTab, setActiveTab] = useState("company");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [, setSelectedDocument] = useState<BusinessDocument | null>(null);
+const DocumentAttachments = ({ loanId }: { loanId: string }) => {
+  const [activeTab, setActiveTab] = useState<"personal" | "company" | "missing">("personal");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
   const itemsPerPage = 5;
-
-  // Get business documents
-  const { data: documentResponse, isLoading: isDocumentsLoading } =
-    userApiSlice.useGetBusinessDocumentsQuery(
-      { businessGuid: loanApplication?.businessProfile?.businessGuid || "" },
-      { skip: !loanApplication?.businessProfile?.businessGuid },
-    );
+  
+  // Fetch personal documents using the API
+  const { data: documentResponse } = userApiSlice.endpoints.getPersonalDocuments.useQuery(
+    { personalGuid: loanId || "" },
+    { skip: !loanId }
+  );
 
   const documents = documentResponse?.documents || [];
 
-  console.log(documents);
+  // Create a map of all required documents, including missing ones
+  const allDocuments = useMemo(() => {
+    const documentMap = new Map<DocumentType, PersonalDocument | null>();
 
-  // Get status badge styles
-  const getStatusBadgeStyles = (status: string | undefined) => {
-    switch (status?.toLowerCase()) {
-      case "pending verification":
-      case "pending":
-        return "text-[#8C5E00] bg-[#FFE5B0] hover:text-[#8C5E00] hover:bg-[#FFE5B0]";
-      case "verified":
-        return "text-[#007054] bg-[#B0EFDF] hover:text-[#007054] hover:bg-[#B0EFDF]";
-      case "rejected":
-        return "text-[#650D17] bg-[#E9B7BD] hover:text-[#650D17] hover:bg-[#E9B7BD]";
-      case "under review":
-        return "text-[#1E429F] bg-[#E1EFFE] hover:text-[#1E429F] hover:bg-[#E1EFFE]";
-      default:
-        return "text-[#1E429F] bg-[#E1EFFE] hover:text-[#1E429F] hover:bg-[#E1EFFE]";
-    }
-  };
-
-  const getDocumentStatus = (doc: BusinessDocument | null) => {
-    if (!doc)
-      return {
-        text: "Pending",
-        style:
-          "text-[#8C5E00] bg-[#FFE5B0] hover:text-[#8C5E00] hover:bg-[#FFE5B0]",
-      };
-
-    if (!doc.status) {
-      return {
-        text: "Under Review",
-        style:
-          "text-[#1E429F] bg-[#E1EFFE] hover:text-[#1E429F] hover:bg-[#E1EFFE]",
-      };
-    }
-
-    return {
-      text: doc.status,
-      style: getStatusBadgeStyles(doc.status),
-    };
-  };
-
-  // List of document names by type
-  const documentTypeNames: Record<number, string> = {
-    0: "Business Registration",
-    1: "Articles of Association",
-    2: "Business Permit",
-    3: "Tax Registration Certificate",
-    4: "Annual Bank Statement",
-    5: "Business Plan",
-    6: "Certificate of Incorporation",
-    7: "Pitch Deck",
-    8: "Tax Clearance Document",
-    9: "Partnership Deed",
-    10: "Memorandum of Association",
-    11: "Audited Financial Statement",
-    12: "Balance Cash Flow Income Statement",
-    13: "Audited Financial Statement (2024)",
-    14: "Audited Financial Statement (2023)",
-  };
-
-  // Filter documents based on search and status
-  const filteredDocuments = useMemo(() => {
-    return documents.filter((doc) => {
-      const name = documentTypeNames[doc.docType]?.toLowerCase() || "";
-      const matchesSearch = name.includes(searchQuery.toLowerCase());
-
-      if (filterStatus === "all") return matchesSearch;
-
-      const status = getDocumentStatus(doc).text.toLowerCase();
-      return matchesSearch && status === filterStatus.toLowerCase();
+    // Initialize with all required documents as null (missing)
+    requiredDocuments.forEach((docType) => {
+      documentMap.set(docType, null);
     });
-  }, [
-    documents,
-    documentTypeNames,
-    searchQuery,
-    filterStatus,
-    getDocumentStatus,
-  ]);
+
+    // Update with existing documents
+    documents.forEach((doc) => {
+      documentMap.set(doc.docType, doc);
+    });
+
+    return documentMap;
+  }, [documents]);
+
+  // Filter documents based on active tab
+  const filteredDocuments = useMemo(() => {
+    const entries = Array.from(allDocuments.entries());
+    
+    switch (activeTab) {
+      case "personal":
+        // Show all personal documents
+        return entries;
+      case "company":
+        // In a real implementation, this would filter for company documents
+        // For now, we'll return an empty array as this is just for personal documents
+        return [];
+      case "missing":
+        // Show only missing documents (where doc is null)
+        return entries.filter(([_, doc]) => doc === null);
+      default:
+        return entries;
+    }
+  }, [allDocuments, activeTab]);
 
   // Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(
-    startIndex + itemsPerPage,
-    filteredDocuments.length,
-  );
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredDocuments.length);
   const currentDocuments = filteredDocuments.slice(startIndex, endIndex);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const handleViewDocument = (doc: BusinessDocument) => {
-    setSelectedDocument(doc);
+  const handleViewDocument = (doc: PersonalDocument) => {
     window.open(doc.docPath, "_blank");
   };
 
-  // Generate pagination numbers
-  const generatePaginationNumbers = () => {
-    const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
-    let l;
-
-    range.push(1);
-
-    if (totalPages <= 1) return range;
-
-    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
-      if (i < totalPages && i > 1) {
-        range.push(i);
-      }
-    }
-    range.push(totalPages);
-
-    for (const i of range) {
-      if (l) {
-        if (i - l === 2) {
-          rangeWithDots.push(l + 1);
-        } else if (i - l !== 1) {
-          rangeWithDots.push("...");
-        }
-      }
-      rangeWithDots.push(i);
-      l = i;
+  // Helper function to get status badge
+  const getStatusBadge = (doc: PersonalDocument | null) => {
+    if (!doc) {
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+          Pending
+        </Badge>
+      );
     }
 
-    return rangeWithDots;
+    const status = doc.status?.toLowerCase();
+    
+    switch (status) {
+      case "verified":
+        return (
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+            Verified
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
+            Rejected
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+            Under Review
+          </Badge>
+        );
+    }
   };
 
-  if (isLoanLoading || isDocumentsLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const hasActiveFilters = searchQuery.length > 0 || filterStatus !== "all";
-  const noDocuments = !documents?.length;
-  const noFilteredResults = filteredDocuments.length === 0;
-
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Attachments</h1>
+    <div className="w-full">
+      {/* Tabs */}
+      <div className="border-b">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("personal")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium",
+              activeTab === "personal"
+                ? "border-b-2 border-emerald-500 text-emerald-600"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Personal Documents
+          </button>
+          <button
+            onClick={() => setActiveTab("company")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium",
+              activeTab === "company"
+                ? "border-b-2 border-emerald-500 text-emerald-600"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Company Documents
+          </button>
+          <button
+            onClick={() => setActiveTab("missing")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium",
+              activeTab === "missing"
+                ? "border-b-2 border-emerald-500 text-emerald-600"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Missing Documents
+          </button>
+        </div>
+      </div>
 
-      {/* Search and Filter */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search document..."
-              className="pl-8 w-64"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      {/* Document List */}
+      <div className="mt-4">
+        <div className="rounded-md border">
+          {/* Header */}
+          <div className="grid grid-cols-12 bg-gray-50 p-4 text-sm font-medium text-gray-500">
+            <div className="col-span-1"></div>
+            <div className="col-span-3">DOCUMENT NAME</div>
+            <div className="col-span-2">STATUS</div>
+            <div className="col-span-3">STATUS REMARKS</div>
+            <div className="col-span-3 text-right">ACTIONS</div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2">
-              <span>Sort by</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-
-            <Button variant="outline" className="gap-2">
-              <span>Filter status</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            {/* Tabs */}
-            <div className="border-b flex space-x-6">
-              <button
-                className={cn(
-                  "pb-2 font-medium text-sm",
-                  activeTab === "personal"
-                    ? "border-b-2 border-primary text-primary"
-                    : "text-gray-600 hover:text-primary",
-                )}
-                onClick={() => setActiveTab("personal")}
-              >
-                Personal Documents
-              </button>
-              <button
-                className={cn(
-                  "pb-2 font-medium text-sm",
-                  activeTab === "company"
-                    ? "border-b-2 border-primary text-primary"
-                    : "text-gray-600 hover:text-primary",
-                )}
-                onClick={() => setActiveTab("company")}
-              >
-                Company Documents
-              </button>
-              <button
-                className={cn(
-                  "pb-2 font-medium text-sm",
-                  activeTab === "missing"
-                    ? "border-b-2 border-primary text-primary"
-                    : "text-gray-600 hover:text-primary",
-                )}
-                onClick={() => setActiveTab("missing")}
-              >
-                Missing Documents
-              </button>
-            </div>
-
-            {/* Search and filter controls */}
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search documents"
-                  className="pl-9 bg-transparent border-gray-300"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setSearchQuery("")}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Status:
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-9 px-3 flex items-center justify-between min-w-[120px]"
+          {/* Document Items */}
+          {currentDocuments.length > 0 ? (
+            currentDocuments.map(([docType, doc]) => (
+              <div key={docType} className="grid grid-cols-12 items-center border-t p-4">
+                <div className="col-span-1">
+                  <Checkbox 
+                    id={`select-${docType}`} 
+                    checked={selectedDocs.has(docType.toString())}
+                    onCheckedChange={(checked) => {
+                      const newSelected = new Set(selectedDocs);
+                      if (checked) {
+                        newSelected.add(docType.toString());
+                      } else {
+                        newSelected.delete(docType.toString());
+                      }
+                      setSelectedDocs(newSelected);
+                    }}
+                    disabled={!doc}
+                  />
+                </div>
+                <div className="col-span-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      {filterStatus === "all"
-                        ? "All"
-                        : filterStatus === "pending"
-                          ? "Pending"
-                          : filterStatus === "verified"
-                            ? "Verified"
-                            : filterStatus === "rejected"
-                              ? "Rejected"
-                              : "Unknown"}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-40">
-                    <DropdownMenuRadioGroup
-                      value={filterStatus}
-                      onValueChange={setFilterStatus}
-                    >
-                      <DropdownMenuRadioItem value="all">
-                        All
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="pending">
-                        Pending
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="verified">
-                        Verified
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="rejected">
-                        Rejected
-                      </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* Empty states */}
-            {(noDocuments || noFilteredResults) && (
-              <EmptyState
-                hasDocuments={!noDocuments}
-                hasFilters={hasActiveFilters}
-                onReset={() => {
-                  setSearchQuery("");
-                  setFilterStatus("all");
-                }}
-              />
-            )}
-
-            {/* Documents Table */}
-            {!noDocuments && !noFilteredResults && (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[40px]">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4"
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const newSelected = new Set(selectedDocs);
-                              currentDocuments.forEach((doc) =>
-                                newSelected.add(String(doc.id)),
-                              );
-                              setSelectedDocs(newSelected);
-                            } else {
-                              setSelectedDocs(new Set());
-                            }
-                          }}
-                          checked={
-                            currentDocuments.length > 0 &&
-                            selectedDocs.size === currentDocuments.length
-                          }
-                        />
-                      </TableHead>
-                      <TableHead>Document Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Status Remarks</TableHead>
-                      <TableHead>Upload Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentDocuments.map((doc) => {
-                      const docStatus = getDocumentStatus(doc);
-                      return (
-                        <TableRow key={doc.id}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4"
-                              checked={selectedDocs.has(String(doc.id))}
-                              onChange={(e) => {
-                                const newSelected = new Set(selectedDocs);
-                                if (e.target.checked) {
-                                  newSelected.add(String(doc.id));
-                                } else {
-                                  newSelected.delete(String(doc.id));
-                                }
-                                setSelectedDocs(newSelected);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {documentTypeNames[doc.docType] ||
-                              `Document Type ${doc.docType}`}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={docStatus.style}
-                            >
-                              {docStatus.text}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{doc.statusRemarks || "-"}</TableCell>
-                          <TableCell>
-                            {new Date(doc.createdDate).toLocaleDateString(
-                              "en-US",
-                              {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              },
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                className="h-7 px-2 text-xs"
-                                variant="default"
-                                onClick={() => handleViewDocument(doc)}
-                              >
-                                <Search className="h-3 w-3 mr-1" /> View
-                              </Button>
-                              {docStatus.text === "Pending" && (
-                                <>
-                                  <Button
-                                    className="h-7 px-2 text-xs"
-                                    variant="outline"
-                                  >
-                                    <Check className="h-3 w-3 mr-1" /> Approve
-                                  </Button>
-                                  <Button
-                                    className="h-7 px-2 text-xs"
-                                    variant="outline"
-                                  >
-                                    <XIcon className="h-3 w-3 mr-1" /> Reject
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-
-                {/* Pagination */}
-                {filteredDocuments.length > 0 && (
-                  <div className="flex justify-between items-center border-t p-4">
-                    <div className="text-sm text-gray-600">
-                      Showing {startIndex + 1} to {endIndex} of{" "}
-                      {filteredDocuments.length} documents
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      {generatePaginationNumbers().map((page, index) =>
-                        typeof page === "string" ? (
-                          <span key={`dots-${index}`} className="mx-1">
-                            ...
-                          </span>
-                        ) : (
-                          <Button
-                            key={page}
-                            variant={
-                              currentPage === page ? "default" : "outline"
-                            }
-                            className={cn(
-                              "h-8 w-8 p-0",
-                              currentPage === page
-                                ? "bg-primary text-white"
-                                : "text-gray-600",
-                            )}
-                            onClick={() => handlePageChange(Number(page))}
-                          >
-                            {page}
-                          </Button>
-                        ),
-                      )}
-                      <Button
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        disabled={currentPage === totalPages}
-                        onClick={() => handlePageChange(currentPage + 1)}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
                   </div>
-                )}
+                  <div>
+                    <div className="font-medium">{documentTypeNames[docType]}</div>
+                    {doc && (
+                      <div className="text-xs text-gray-500">
+                        Uploaded {new Date(doc.createdDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-2">{getStatusBadge(doc)}</div>
+                <div className="col-span-3 text-sm">{doc?.remarks || "-"}</div>
+                <div className="col-span-3 flex justify-end gap-2">
+                  {doc ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1"
+                        onClick={() => handleViewDocument(doc)}
+                      >
+                        <Eye className="h-4 w-4" /> View
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                      >
+                        <Check className="h-4 w-4" /> Approve
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      >
+                        <X className="h-4 w-4" /> Reject
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-            )}
+            ))
+          ) : (
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-gray-500"
+                >
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <h3 className="mb-1 text-lg font-medium">No documents found</h3>
+              <p className="text-sm text-gray-500">
+                {activeTab === "personal" && "No personal documents have been uploaded yet."}
+                {activeTab === "company" && "No company documents have been uploaded yet."}
+                {activeTab === "missing" && "There are no missing documents."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length} results
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </Button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button 
+                  key={page}
+                  variant="outline" 
+                  size="sm" 
+                  className={cn(
+                    currentPage === page && "bg-emerald-50 text-emerald-600"
+                  )}
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default DocumentAttachments;

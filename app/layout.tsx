@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { Providers } from "@/app/providers";
 import { Toaster } from "sonner";
-import { LogoutModalProvider } from "@/context/logout-modal-context";
 
 const montreal = localFont({
   src: [
@@ -68,10 +67,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(montreal.className)}>
         <Providers>
-          <LogoutModalProvider>
-            {children}
-            <Toaster richColors position={"top-right"} />
-          </LogoutModalProvider>
+          {children}
+          <Toaster richColors position={"top-right"} />
         </Providers>
       </body>
     </html>

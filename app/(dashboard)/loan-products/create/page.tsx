@@ -95,8 +95,8 @@ const AddLoanProductPage = () => {
             </p>
 
             <div className="mt-6">
-              {activeStep === 3 && <StepOneForm initialData={formData} />}
-              {activeStep === 2 && <StepTwoForm initialData={formData} />}
+              {activeStep === 2 && <StepOneForm initialData={formData} />}
+              {activeStep === 3 && <StepTwoForm initialData={formData} />}
               {activeStep === 1 && <StepThreeForm initialData={formData} />}
             </div>
           </>

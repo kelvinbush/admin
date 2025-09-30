@@ -1,8 +1,28 @@
-import React from "react";
+"use client";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push("/");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (isSignedIn) {
+    return null;
+  }
+
   return (
     <div
       className={
