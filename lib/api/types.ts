@@ -406,6 +406,42 @@ export interface ListDocumentsResponse {
   data: PersonalDocument[];
 }
 
+// Loan Products Types
+export interface LoanProduct {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl?: string;
+  summary?: string;
+  description: string;
+  currency: string;
+  minAmount: number;
+  maxAmount: number;
+  minTerm: number;
+  maxTerm: number;
+  termUnit: 'DAYS' | 'WEEKS' | 'MONTHS' | 'YEARS';
+  interestRate: number;
+  interestType: 'FIXED' | 'VARIABLE';
+  ratePeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  amortizationMethod: 'EQUAL_PAYMENTS' | 'EQUAL_PRINCIPAL' | 'BALLOON' | 'INTEREST_ONLY';
+  repaymentFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  processingFeeRate?: number;
+  processingFeeFlat?: number;
+  lateFeeRate?: number;
+  lateFeeFlat?: number;
+  prepaymentPenaltyRate?: number;
+  gracePeriodDays: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListLoanProductsResponse {
+  success: boolean;
+  message: string;
+  data: LoanProduct[];
+}
+
 // Types for adding documents
 export type AddDocumentsBody = PersonalDocument | PersonalDocument[];
 export interface AddDocumentsResponse {

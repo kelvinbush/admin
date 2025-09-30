@@ -7,6 +7,7 @@ import type {
   User,
   LoanApplication,
   LoanProduct,
+  ListLoanProductsResponse,
   Organization,
   Partner,
   UserGroup,
@@ -96,12 +97,14 @@ export function useUpdateLoanApplicationStatus() {
 
 // ===== LOAN PRODUCT HOOKS =====
 
-export function useLoanProducts(filters?: LoanProductFilters, pagination?: PaginationParams) {
-  return useClientApiPaginatedQuery<LoanProduct[]>(
-    queryKeys.loanProducts.list(filters),
+export function useLoanProducts(filters?: Record<string, any>) {
+  return useClientApiQuery<ListLoanProductsResponse>(
+    queryKeys.loanProducts.list(filters || {}),
     '/loan-products',
-    pagination?.page || 1,
-    pagination?.limit || 10
+    undefined,
+    {
+      enabled: true,
+    }
   );
 }
 
@@ -115,7 +118,7 @@ export function useLoanProduct(productId: string) {
 export function useCreateLoanProduct() {
   const queryClient = useQueryClient();
   
-  return useClientApiPost<LoanProduct, CreateLoanProductData>(
+  return useClientApiPost<LoanProduct, any>(
     '/loan-products',
     {
       onSuccess: () => {
@@ -128,11 +131,10 @@ export function useCreateLoanProduct() {
 export function useUpdateLoanProduct() {
   const queryClient = useQueryClient();
   
-  return useClientApiPut<LoanProduct, UpdateLoanProductData>(
+  return useClientApiPut<LoanProduct, any>(
     '/loan-products',
     {
-      onSuccess: (data, variables) => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.detail(variables.id) });
+      onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });
       }
     }
