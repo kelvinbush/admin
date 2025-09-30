@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useLoanProducts } from "@/lib/api/example-hooks";
+import { useRouter } from "next/navigation";
+import { useLoanProducts } from "@/lib/api/hooks/loan-products";
 import { useTitle } from "@/context/title-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import { LoanProductDetailsSheet } from "./_components/loan-product-details-shee
 import { PaginationControls } from "./_components/pagination-controls";
 
 export default function LoanProductsPage() {
+  const router = useRouter();
   const { setTitle } = useTitle();
   const { data, isLoading, error } = useLoanProducts();
 
@@ -196,8 +198,7 @@ export default function LoanProductsPage() {
   };
 
   const handleAddProduct = () => {
-    // TODO: Implement add product functionality
-    console.log("Add product clicked");
+    router.push("/loan-products/create");
   };
 
   const handleEditProduct = (product: LoanProduct) => {
@@ -308,12 +309,12 @@ export default function LoanProductsPage() {
       />
 
       {/* Product Details Side Sheet */}
-      <LoanProductDetailsSheet
-        product={selectedProduct}
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        onEdit={handleEditProduct}
-      />
-    </div>
-  );
-}
+          <LoanProductDetailsSheet
+            product={selectedProduct}
+            isOpen={isSheetOpen}
+            onClose={() => setIsSheetOpen(false)}
+            onEdit={handleEditProduct}
+          />
+        </div>
+      );
+    }
