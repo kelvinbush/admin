@@ -134,7 +134,7 @@ export interface Document {
 }
 
 // Loan Product types
-export interface LoanProduct {
+export interface LoanProductLegacy {
   id: string;
   name: string;
   description: string;
@@ -259,7 +259,7 @@ export interface SMEAnalytics {
 }
 
 // Form types for mutations
-export interface CreateLoanProductData {
+export interface CreateLoanProductDataLegacy {
   name: string;
   description: string;
   minAmount: number;
@@ -271,8 +271,29 @@ export interface CreateLoanProductData {
   fees: Omit<LoanFee, 'id'>[];
 }
 
-export interface UpdateLoanProductData extends Partial<CreateLoanProductData> {
-  id: string;
+export interface UpdateLoanProductData {
+  name?: string;
+  description?: string;
+  summary?: string;
+  imageUrl?: string;
+  currency?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  minTerm?: number;
+  maxTerm?: number;
+  termUnit?: 'days' | 'weeks' | 'months' | 'quarters' | 'years';
+  interestRate?: number;
+  interestType?: 'fixed' | 'variable';
+  ratePeriod?: 'per_day' | 'per_month' | 'per_quarter' | 'per_year';
+  amortizationMethod?: 'flat' | 'reducing_balance';
+  repaymentFrequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+  gracePeriodDays?: number;
+  processingFeeRate?: number;
+  processingFeeFlat?: number;
+  lateFeeRate?: number;
+  lateFeeFlat?: number;
+  prepaymentPenaltyRate?: number;
+  changeReason: string;
 }
 
 export interface CreateUserGroupData {
@@ -413,33 +434,83 @@ export interface LoanProduct {
   slug: string;
   imageUrl?: string;
   summary?: string;
-  description: string;
+  description?: string;
   currency: string;
   minAmount: number;
   maxAmount: number;
   minTerm: number;
   maxTerm: number;
-  termUnit: 'DAYS' | 'WEEKS' | 'MONTHS' | 'YEARS';
+  termUnit: 'days' | 'weeks' | 'months' | 'quarters' | 'years';
   interestRate: number;
-  interestType: 'FIXED' | 'VARIABLE';
-  ratePeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-  amortizationMethod: 'EQUAL_PAYMENTS' | 'EQUAL_PRINCIPAL' | 'BALLOON' | 'INTEREST_ONLY';
-  repaymentFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  interestType: 'fixed' | 'variable';
+  ratePeriod: 'per_day' | 'per_month' | 'per_quarter' | 'per_year';
+  amortizationMethod: 'flat' | 'reducing_balance';
+  repaymentFrequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
   processingFeeRate?: number;
   processingFeeFlat?: number;
   lateFeeRate?: number;
   lateFeeFlat?: number;
   prepaymentPenaltyRate?: number;
   gracePeriodDays: number;
+  // Versioning fields
+  version: number;
+  status: 'draft' | 'active' | 'archived';
+  changeReason?: string;
+  approvedBy?: string;
+  approvedAt?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface ListLoanProductsResponse {
   success: boolean;
   message: string;
   data: LoanProduct[];
+  pagination: PaginationInfo;
+}
+
+export interface LoanProductsFilters {
+  // Pagination
+  page?: number;
+  limit?: number;
+  
+  // Status filtering
+  status?: 'draft' | 'active' | 'archived';
+  includeArchived?: boolean;
+  
+  // Currency and amount filtering
+  currency?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  
+  // Term filtering
+  minTerm?: number;
+  maxTerm?: number;
+  termUnit?: 'days' | 'weeks' | 'months' | 'quarters' | 'years';
+  
+  // Interest and repayment filtering
+  interestType?: 'fixed' | 'variable';
+  ratePeriod?: 'per_day' | 'per_month' | 'per_quarter' | 'per_year';
+  amortizationMethod?: 'flat' | 'reducing_balance';
+  repaymentFrequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+  
+  // Active status
+  isActive?: boolean;
+  
+  // Search
+  search?: string;
+  
+  // Sorting
+  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'interestRate' | 'minAmount' | 'maxAmount';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Types for adding documents

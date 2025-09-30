@@ -32,12 +32,14 @@ interface LoanProductsTableProps {
   data: LoanProduct[];
   onRowClick: (product: LoanProduct) => void;
   onAddProduct: () => void;
+  onViewProduct: (product: LoanProduct) => void;
 }
 
 export function LoanProductsTable({
   data,
   onRowClick,
   onAddProduct,
+  onViewProduct,
 }: LoanProductsTableProps) {
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
@@ -124,12 +126,14 @@ export function LoanProductsTable({
                        <Badge
                          variant="outline"
                          className={`font-normal border text-xs ${
-                           product.isActive
+                           product.status === 'active'
                              ? "border-green-500 text-green-500"
+                             : product.status === 'draft'
+                             ? "border-yellow-500 text-yellow-500"
                              : "border-red-500 text-red-500"
                          }`}
                        >
-                         {product.isActive ? "Active" : "Inactive"}
+                         {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                        </Badge>
                      </TableCell>
                      <TableCell className="py-4">
@@ -182,13 +186,13 @@ export function LoanProductsTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onRowClick(product)}>
+                          <DropdownMenuItem onClick={() => onViewProduct(product)}>
                             <Eye className="h-4 w-4 mr-2" />
-                            View
+                            Quick View
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onRowClick(product)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600">
                             <Trash2 className="h-4 w-4 mr-2" />

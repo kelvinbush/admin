@@ -1,11 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Edit, ArrowRight, CheckCircle, Archive, FileText } from "lucide-react";
 import { LoanProduct } from "@/lib/api/types";
+import { useUpdateLoanProductStatus } from "@/lib/api/hooks/loan-products";
+import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 interface LoanProductDetailsSheetProps {
   product: LoanProduct | null;
@@ -20,6 +27,12 @@ export function LoanProductDetailsSheet({
   onClose, 
   onEdit 
 }: LoanProductDetailsSheetProps) {
+  const { user } = useUser();
+  const updateStatusMutation = useUpdateLoanProductStatus();
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [changeReason, setChangeReason] = useState('');
+
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -37,7 +50,41 @@ export function LoanProductDetailsSheet({
     return `${minTerm} - ${maxTerm} ${unit}`;
   };
 
+  const getStatusTransition = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'draft':
+        return { next: 'active', label: 'Activate', icon: CheckCircle, color: 'text-green-500' };
+      case 'active':
+        return { next: 'archived', label: 'Archive', icon: Archive, color: 'text-red-500' };
+      case 'archived':
+        return { next: 'active', label: 'Reactivate', icon: CheckCircle, color: 'text-green-500' };
+      default:
+        return null;
+    }
+  };
+
+  const handleStatusChange = async () => {
+    if (!newStatus || !changeReason || !user?.id) return;
+
+    try {
+      await updateStatusMutation.mutateAsync({
+        id: product.id,
+        status: newStatus,
+        changeReason,
+        approvedBy: user.id
+      });
+      toast.success(`Product ${newStatus === 'active' ? 'activated' : 'archived'} successfully`);
+      setStatusDialogOpen(false);
+      setChangeReason('');
+    } catch (error) {
+      toast.error('Failed to update product status');
+      console.error('Error updating status:', error);
+    }
+  };
+
   if (!product) return null;
+
+  const statusTransition = getStatusTransition(product.status);
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -57,21 +104,78 @@ export function LoanProductDetailsSheet({
             <Badge 
               variant="outline" 
               className={`font-normal text-xs ${
-                product.isActive 
-                  ? 'border-green-500 text-green-500' 
+                product.status === 'active'
+                  ? 'border-green-500 text-green-500'
+                  : product.status === 'draft'
+                  ? 'border-yellow-500 text-yellow-500'
                   : 'border-red-500 text-red-500'
               }`}
             >
-              {product.isActive ? "Active" : "Inactive"}
+              {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
             </Badge>
-            <Button 
-              size="sm"
-              className="bg-primary-green hover:bg-primary-green/90"
-              onClick={() => onEdit(product)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            <div className="flex items-center gap-2">
+              {statusTransition && (
+                <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`${statusTransition.color} hover:bg-opacity-10`}
+                      onClick={() => {
+                        setNewStatus(statusTransition.next);
+                        setStatusDialogOpen(true);
+                      }}
+                    >
+                      <statusTransition.icon className="h-4 w-4 mr-2" />
+                      {statusTransition.label}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Change Product Status</DialogTitle>
+                      <DialogDescription>
+                        You are about to change this product status from <strong>{product.status}</strong> to <strong>{statusTransition.next}</strong>.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="changeReason">Reason for change *</Label>
+                        <Textarea
+                          id="changeReason"
+                          placeholder="Enter the reason for this status change..."
+                          value={changeReason}
+                          onChange={(e) => setChangeReason(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setStatusDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleStatusChange}
+                        disabled={!changeReason || updateStatusMutation.isPending}
+                        className="bg-primary-green hover:bg-primary-green/90"
+                      >
+                        {updateStatusMutation.isPending ? 'Updating...' : `Confirm ${statusTransition.label}`}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+              <Button 
+                size="sm"
+                className="bg-primary-green hover:bg-primary-green/90"
+                onClick={() => onEdit(product)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </div>
           </div>
 
           {product.summary && (
@@ -123,11 +227,11 @@ export function LoanProductDetailsSheet({
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-primaryGrey-400">Repayment Frequency</span>
-                <span className="text-sm font-medium text-midnight-blue">{product.repaymentFrequency}</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.repaymentFrequency.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-primaryGrey-400">Rate Period</span>
-                <span className="text-sm font-medium text-midnight-blue">{product.ratePeriod}</span>
+                <span className="text-sm font-medium text-midnight-blue">{product.ratePeriod.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-primaryGrey-400">Currency</span>

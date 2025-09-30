@@ -8,20 +8,20 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationControlsProps {
   currentPage: number;
-  totalPages: number;
+  setCurrentPage: (page: number) => void;
   itemsPerPage: number;
+  setItemsPerPage: (itemsPerPage: number) => void;
   totalItems: number;
-  onPageChange: (page: number) => void;
-  onItemsPerPageChange: (itemsPerPage: number) => void;
+  totalPages: number;
 }
 
 export function PaginationControls({
   currentPage,
-  totalPages,
+  setCurrentPage,
   itemsPerPage,
+  setItemsPerPage,
   totalItems,
-  onPageChange,
-  onItemsPerPageChange
+  totalPages
 }: PaginationControlsProps) {
   if (totalPages <= 1) return null;
 
@@ -31,7 +31,7 @@ export function PaginationControls({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <p className="text-sm text-gray-600">Show</p>
-            <Select value={itemsPerPage.toString()} onValueChange={(value) => onItemsPerPageChange(Number(value))}>
+            <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
               <SelectTrigger className="w-20">
                 <SelectValue />
               </SelectTrigger>
@@ -55,7 +55,7 @@ export function PaginationControls({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+              onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -69,8 +69,8 @@ export function PaginationControls({
                     key={pageNum}
                     variant={currentPage === pageNum ? "default" : "outline"}
                     size="sm"
-                    onClick={() => onPageChange(pageNum)}
-                    className={currentPage === pageNum ? "bg-[#00B67C] hover:bg-[#00B67C]/90" : ""}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={currentPage === pageNum ? "bg-primary-green hover:bg-primary-green/90" : ""}
                   >
                     {pageNum}
                   </Button>
@@ -81,7 +81,7 @@ export function PaginationControls({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+              onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
               <ChevronRight className="h-4 w-4" />
