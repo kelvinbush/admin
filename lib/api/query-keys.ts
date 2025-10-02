@@ -20,6 +20,13 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.loanApplications.details(), id] as const,
     documents: (id: string) => [...queryKeys.loanApplications.detail(id), 'documents'] as const,
     status: (id: string) => [...queryKeys.loanApplications.detail(id), 'status'] as const,
+    statusHistory: (id: string) => [...queryKeys.loanApplications.detail(id), 'statusHistory'] as const,
+    auditTrail: (id: string, filters?: Record<string, any>) => [...queryKeys.loanApplications.detail(id), 'auditTrail', JSON.stringify(filters || {})] as const,
+    auditSummary: (id: string) => [...queryKeys.loanApplications.detail(id), 'auditSummary'] as const,
+    documentRequests: (id: string, filters?: Record<string, any>) => [...queryKeys.loanApplications.detail(id), 'documentRequests', JSON.stringify(filters || {})] as const,
+    documentStats: (id: string) => [...queryKeys.loanApplications.detail(id), 'documentStats'] as const,
+    snapshots: (id: string) => [...queryKeys.loanApplications.detail(id), 'snapshots'] as const,
+    latestSnapshot: (id: string) => [...queryKeys.loanApplications.detail(id), 'latestSnapshot'] as const,
   },
   
   // Loan products
@@ -82,6 +89,15 @@ export const queryKeys = {
     application: (applicationId: string) => [...queryKeys.documents.all, 'application', applicationId] as const,
   },
   
+  // Offer Letters
+  offerLetters: {
+    all: ['offer-letters'] as const,
+    lists: () => [...queryKeys.offerLetters.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => [...queryKeys.offerLetters.lists(), JSON.stringify(filters || {})] as const,
+    details: () => [...queryKeys.offerLetters.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.offerLetters.details(), id] as const,
+  },
+
   // Search
   search: {
     all: ['search'] as const,

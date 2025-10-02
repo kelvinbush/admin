@@ -303,6 +303,338 @@ export interface CreateUserGroupData {
   users: string[];
 }
 
+// ===== LOAN APPLICATION TYPES =====
+
+export type LoanApplicationStatus = 
+  | "draft"
+  | "submitted" 
+  | "under_review"
+  | "approved"
+  | "offer_letter_sent"
+  | "offer_letter_signed"
+  | "offer_letter_declined"
+  | "rejected"
+  | "withdrawn"
+  | "disbursed";
+
+export type LoanPurpose =
+  | "working_capital"
+  | "business_expansion"
+  | "equipment_purchase"
+  | "inventory_financing"
+  | "debt_consolidation"
+  | "seasonal_financing"
+  | "emergency_funding"
+  | "other";
+
+export type AuditAction =
+  | "application_created"
+  | "application_submitted"
+  | "application_under_review"
+  | "application_approved"
+  | "application_rejected"
+  | "application_withdrawn"
+  | "application_disbursed"
+  | "status_updated"
+  | "snapshot_created"
+  | "offer_letter_created"
+  | "offer_letter_sent"
+  | "document_requested";
+
+export interface LoanApplicationItem {
+  id: string;
+  applicationNumber: string;
+  userId: string;
+  businessId?: string | null;
+  loanProductId: string;
+  coApplicantIds?: string | null;
+  loanAmount: number;
+  loanTerm: number;
+  currency: string;
+  purpose: LoanPurpose;
+  purposeDescription?: string | null;
+  status: LoanApplicationStatus;
+  isBusinessLoan: boolean;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+  approvedAt?: string | null;
+  disbursedAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
+  statusReason?: string | null;
+  lastUpdatedBy?: string | null;
+  lastUpdatedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Related data
+  user?: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  };
+  business?: {
+    id: string;
+    name: string;
+  } | null;
+  loanProduct?: {
+    id: string;
+    name: string;
+    currency: string;
+    minAmount: number;
+    maxAmount: number;
+    minTerm: number;
+    maxTerm: number;
+    termUnit: string;
+    interestRate: number;
+  };
+  offerLetters?: OfferLetterItem[];
+}
+
+export interface LoanApplicationsFilters {
+  page?: number;
+  limit?: number;
+  status?: LoanApplicationStatus;
+  isBusinessLoan?: boolean;
+  userId?: string;
+  businessId?: string;
+  loanProductId?: string;
+}
+
+export interface ListLoanApplicationsResponse {
+  success: boolean;
+  message: string;
+  data: LoanApplicationItem[];
+  pagination: PaginationInfo;
+}
+
+export interface UpdateLoanApplicationData {
+  loanAmount?: number;
+  loanTerm?: number;
+  purpose?: LoanPurpose;
+  purposeDescription?: string;
+  coApplicantIds?: string[];
+}
+
+// ===== STATUS MANAGEMENT TYPES =====
+
+export interface StatusResponse {
+  success: boolean;
+  message: string;
+  data: {
+    status: LoanApplicationStatus;
+    statusReason: string | null;
+    lastUpdatedBy: string | null;
+    lastUpdatedAt: string | null;
+    allowedTransitions: LoanApplicationStatus[];
+  };
+}
+
+export interface StatusUpdateData {
+  status: LoanApplicationStatus;
+  reason?: string;
+  rejectionReason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ApproveApplicationData {
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RejectApplicationData {
+  rejectionReason: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface StatusHistoryResponse {
+  success: boolean;
+  message: string;
+  data: Array<{
+    status: string;
+    reason: string | null;
+    details: string | null;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    createdAt: string;
+    metadata: Record<string, any> | null;
+  }>;
+}
+
+// ===== AUDIT TRAIL TYPES =====
+
+export interface AuditTrailFilters {
+  limit?: number;
+  offset?: number;
+  action?: AuditAction;
+}
+
+export interface AuditTrailResponse {
+  success: boolean;
+  message: string;
+  data: Array<{
+    id: string;
+    loanApplicationId: string;
+    userId: string;
+    action: AuditAction;
+    reason: string | null;
+    details: string | null;
+    metadata: string | null;
+    beforeData: string | null;
+    afterData: string | null;
+    createdAt: string;
+  }>;
+}
+
+export interface AuditSummaryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    totalEntries: number;
+    lastAction?: AuditAction;
+    lastActionAt?: string;
+    actions: Record<AuditAction, number>;
+  };
+}
+
+// ===== DOCUMENT REQUEST TYPES =====
+
+export interface DocumentRequestFilters {
+  status?: "pending" | "fulfilled" | "overdue";
+}
+
+export interface DocumentStatsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    pending: number;
+    fulfilled: number;
+    overdue: number;
+  };
+}
+
+// ===== OFFER LETTER TYPES =====
+
+export interface OfferLetterItem {
+  id: string;
+  loanApplicationId: string;
+  offerNumber: string;
+  version: number;
+  offerAmount: number;
+  offerTerm: number;
+  interestRate: number;
+  currency: string;
+  specialConditions?: string | null;
+  requiresGuarantor: boolean;
+  requiresCollateral: boolean;
+  docuSignEnvelopeId?: string | null;
+  docuSignStatus: string;
+  docuSignTemplateId?: string | null;
+  offerLetterUrl?: string | null;
+  signedDocumentUrl?: string | null;
+  recipientEmail: string;
+  recipientName: string;
+  sentAt?: string | null;
+  deliveredAt?: string | null;
+  viewedAt?: string | null;
+  signedAt?: string | null;
+  declinedAt?: string | null;
+  expiredAt?: string | null;
+  expiresAt: string;
+  reminderSentAt?: string | null;
+  status: string;
+  isActive: boolean;
+  createdBy?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOfferLetterData {
+  loanApplicationId: string;
+  recipientEmail: string;
+  recipientName: string;
+  offerAmount: number;
+  offerTerm: number;
+  interestRate: number;
+  currency: string;
+  specialConditions?: string;
+  requiresGuarantor?: boolean;
+  requiresCollateral?: boolean;
+  expiresAt: string;
+}
+
+export interface SendOfferLetterData {
+  templateId?: string;
+  customMessage?: string;
+}
+
+export interface SendOfferLetterResponse {
+  success: boolean;
+  message: string;
+  data: {
+    envelopeId: string;
+    status: string;
+    sentAt: string;
+    viewUrl?: string;
+  };
+}
+
+export interface UpdateOfferLetterData {
+  offerAmount?: number;
+  offerTerm?: number;
+  interestRate?: number;
+  specialConditions?: string;
+  requiresGuarantor?: boolean;
+  requiresCollateral?: boolean;
+  expiresAt?: string;
+}
+
+export interface OfferLetterFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  loanApplicationId?: string;
+  docuSignStatus?: string;
+}
+
+export interface ListOfferLettersResponse {
+  success: boolean;
+  message: string;
+  data: OfferLetterItem[];
+  pagination: PaginationInfo;
+}
+
+// ===== SNAPSHOT TYPES =====
+
+export interface SnapshotsResponse {
+  success: boolean;
+  message: string;
+  data: Array<{
+    id: string;
+    loanApplicationId: string;
+    createdBy: string;
+    approvalStage: string;
+    createdAt: string;
+    snapshotData: {
+      application: any;
+      businessProfile?: any;
+      personalDocuments: any[];
+      businessDocuments: any[];
+      offerLetters: any[];
+      metadata: {
+        createdAt: string;
+        createdBy: string;
+        approvalStage: string;
+      };
+    };
+  }>;
+}
+
 export interface UpdateUserGroupData extends Partial<CreateUserGroupData> {
   id: string;
 }

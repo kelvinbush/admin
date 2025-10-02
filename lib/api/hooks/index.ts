@@ -7,3 +7,4 @@ export * from './partners';
 export * from './user-groups';
 export * from './dashboard';
 export * from './documents';
+export * from './offer-letters';
