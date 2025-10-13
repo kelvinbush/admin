@@ -1,18 +1,24 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-import { useApiWithAuth } from './client';
-import { AxiosRequestConfig, AxiosError } from 'axios';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+  UseMutationOptions,
+} from "@tanstack/react-query";
+import { useApiWithAuth } from "./client";
+import { AxiosRequestConfig, AxiosError } from "axios";
 
 // Generic hook for GET requests with authentication
 export function useClientApiQuery<TData = unknown, TError = AxiosError>(
   queryKey: readonly unknown[],
   url: string,
   config?: AxiosRequestConfig,
-  options?: Omit<UseQueryOptions<TData, TError, TData>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<TData, TError, TData>, "queryKey" | "queryFn">,
 ) {
   const api = useApiWithAuth();
-  
+
   return useQuery<TData, TError>({
     queryKey,
     queryFn: () => api.get<TData>(url, config),
@@ -21,9 +27,16 @@ export function useClientApiQuery<TData = unknown, TError = AxiosError>(
 }
 
 // Generic hook for mutations with authentication
-export function useClientApiMutation<TData = unknown, TVariables = unknown, TError = AxiosError>(
-  mutationFn: (api: ReturnType<typeof useApiWithAuth>, variables: TVariables) => Promise<TData>,
-  options?: UseMutationOptions<TData, TError, TVariables>
+export function useClientApiMutation<
+  TData = unknown,
+  TVariables = unknown,
+  TError = AxiosError,
+>(
+  mutationFn: (
+    api: ReturnType<typeof useApiWithAuth>,
+    variables: TVariables,
+  ) => Promise<TData>,
+  options?: UseMutationOptions<TData, TError, TVariables>,
 ) {
   const api = useApiWithAuth();
   const queryClient = useQueryClient();
@@ -39,60 +52,66 @@ export function useClientApiMutation<TData = unknown, TVariables = unknown, TErr
 }
 
 // Hook for POST mutations
-export function useClientApiPost<TData = unknown, TVariables = unknown, TError = AxiosError>(
-  url: string,
-  options?: UseMutationOptions<TData, TError, TVariables>
-) {
+export function useClientApiPost<
+  TData = unknown,
+  TVariables = unknown,
+  TError = AxiosError,
+>(url: string, options?: UseMutationOptions<TData, TError, TVariables>) {
   return useClientApiMutation<TData, TVariables, TError>(
     (api, variables) => api.post<TData>(url, variables),
-    options
+    options,
   );
 }
 
 // Hook for PUT mutations
-export function useClientApiPut<TData = unknown, TVariables = unknown, TError = AxiosError>(
-  url: string,
-  options?: UseMutationOptions<TData, TError, TVariables>
-) {
+export function useClientApiPut<
+  TData = unknown,
+  TVariables = unknown,
+  TError = AxiosError,
+>(url: string, options?: UseMutationOptions<TData, TError, TVariables>) {
   return useClientApiMutation<TData, TVariables, TError>(
     (api, variables) => api.put<TData>(url, variables),
-    options
+    options,
   );
 }
 
 // Hook for PATCH mutations
-export function useClientApiPatch<TData = unknown, TVariables = unknown, TError = AxiosError>(
-  url: string,
-  options?: UseMutationOptions<TData, TError, TVariables>
-) {
+export function useClientApiPatch<
+  TData = unknown,
+  TVariables = unknown,
+  TError = AxiosError,
+>(url: string, options?: UseMutationOptions<TData, TError, TVariables>) {
   return useClientApiMutation<TData, TVariables, TError>(
     (api, variables) => api.patch<TData>(url, variables),
-    options
+    options,
   );
 }
 
 // Hook for DELETE mutations
 export function useClientApiDelete<TData = unknown, TError = AxiosError>(
   url: string,
-  options?: UseMutationOptions<TData, TError, void>
+  options?: UseMutationOptions<TData, TError, void>,
 ) {
   return useClientApiMutation<TData, void, TError>(
     (api) => api.delete<TData>(url),
-    options
+    options,
   );
 }
 
 // Hook for paginated queries
-export function useClientApiPaginatedQuery<TData = unknown, TError = AxiosError>(
+export function useClientApiPaginatedQuery<
+  TData = unknown,
+  TError = AxiosError,
+>(
   queryKey: readonly unknown[],
   url: string,
   page: number = 1,
   limit: number = 10,
   config?: AxiosRequestConfig,
-  options?: Omit<UseQueryOptions<TData, TError, TData>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<TData, TError, TData>, "queryKey" | "queryFn">,
 ) {
   const api = useApiWithAuth();
-  
+
   return useQuery<TData, TError>({
     queryKey: [...queryKey, page, limit],
     queryFn: () => api.get<TData>(`${url}?page=${page}&limit=${limit}`, config),
@@ -101,11 +120,11 @@ export function useClientApiPaginatedQuery<TData = unknown, TError = AxiosError>
 }
 
 // Hook for infinite queries (for infinite scroll)
-export function useClientApiInfiniteQuery<TData = unknown, TError = AxiosError>(
+export function useClientApiInfiniteQuery<TData = unknown>(
   queryKey: readonly unknown[],
   url: string,
   config?: AxiosRequestConfig,
-  options?: any
+  options?: any,
 ) {
   const api = useApiWithAuth();
 
@@ -116,7 +135,9 @@ export function useClientApiInfiniteQuery<TData = unknown, TError = AxiosError>(
     },
     getNextPageParam: (lastPage: any) => {
       // Adjust this based on your API's pagination structure
-      return lastPage?.pagination?.hasNext ? lastPage.pagination.page + 1 : undefined;
+      return lastPage?.pagination?.hasNext
+        ? lastPage.pagination.page + 1
+        : undefined;
     },
     ...options,
   });

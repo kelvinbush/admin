@@ -6,7 +6,6 @@ import { useLoanProduct } from "@/lib/api/hooks/loan-products";
 import { useTitle } from "@/context/title-context";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Edit, CheckCircle, Archive, FileText } from "lucide-react";
 import { LoanProductDetailsHeader } from "./_components/loan-product-details-header";
 import { LoanProductOverview } from "./_components/loan-product-overview";
 import { LoanProductFinancials } from "./_components/loan-product-financials";

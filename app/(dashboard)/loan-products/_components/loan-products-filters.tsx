@@ -33,8 +33,10 @@ export function LoanProductsFilters({
   onSearchChange,
 }: LoanProductsFiltersProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const [localFilters, setLocalFilters] = useState<Partial<LoanProductsFilters>>({});
-  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const [localFilters, setLocalFilters] = useState<
+    Partial<LoanProductsFilters>
+  >({});
+  const [searchInput, setSearchInput] = useState(filters.search || "");
 
   // Debounce search input
   useEffect(() => {
@@ -60,9 +62,9 @@ export function LoanProductsFilters({
   const handleApplyFilters = () => {
     // Filter out undefined values and 'all' values
     const cleanedFilters = Object.fromEntries(
-      Object.entries(localFilters).filter(([_, value]) => 
-        value !== undefined && value !== 'all' && value !== ''
-      )
+      Object.entries(localFilters).filter(
+        ([, value]) => value !== undefined && value !== "all" && value !== "",
+      ),
     );
     onFiltersChange(cleanedFilters);
     setIsFilterPanelOpen(false);
@@ -70,34 +72,45 @@ export function LoanProductsFilters({
 
   const handleClearFilters = () => {
     setLocalFilters({});
-    setSearchInput('');
+    setSearchInput("");
     onClearFilters();
     setIsFilterPanelOpen(false);
   };
 
   const handleStatusChange = (value: string) => {
-    setLocalFilters(prev => ({ ...prev, status: value === 'all' ? undefined : value as any }));
+    setLocalFilters((prev) => ({
+      ...prev,
+      status: value === "all" ? undefined : (value as any),
+    }));
   };
 
   const handleCurrencyChange = (value: string) => {
-    setLocalFilters(prev => ({ ...prev, currency: value === 'all' ? undefined : value }));
+    setLocalFilters((prev) => ({
+      ...prev,
+      currency: value === "all" ? undefined : value,
+    }));
   };
 
   const handleInterestTypeChange = (value: string) => {
-    setLocalFilters(prev => ({ ...prev, interestType: value === 'all' ? undefined : value as any }));
+    setLocalFilters((prev) => ({
+      ...prev,
+      interestType: value === "all" ? undefined : (value as any),
+    }));
   };
 
   const handleTermUnitChange = (value: string) => {
-    setLocalFilters(prev => ({ ...prev, termUnit: value === 'all' ? undefined : value as any }));
+    setLocalFilters((prev) => ({
+      ...prev,
+      termUnit: value === "all" ? undefined : (value as any),
+    }));
   };
 
-
   const handleSortChange = (value: string) => {
-    const [sortBy, sortOrder] = value.split('-');
-    setLocalFilters(prev => ({ 
+    const [sortBy, sortOrder] = value.split("-");
+    setLocalFilters((prev) => ({
       ...prev,
-      sortBy: sortBy as any, 
-      sortOrder: sortOrder as 'asc' | 'desc' 
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as "asc" | "desc",
     }));
   };
 
@@ -114,7 +127,7 @@ export function LoanProductsFilters({
             className="pl-10 h-10"
           />
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -152,7 +165,7 @@ export function LoanProductsFilters({
                   Status
                 </label>
                 <Select
-                  value={localFilters.status || 'all'}
+                  value={localFilters.status || "all"}
                   onValueChange={handleStatusChange}
                 >
                   <SelectTrigger className="h-10">
@@ -172,7 +185,7 @@ export function LoanProductsFilters({
                   Currency
                 </label>
                 <Select
-                  value={localFilters.currency || 'all'}
+                  value={localFilters.currency || "all"}
                   onValueChange={handleCurrencyChange}
                 >
                   <SelectTrigger className="h-10">
@@ -194,7 +207,7 @@ export function LoanProductsFilters({
                   Interest Type
                 </label>
                 <Select
-                  value={localFilters.interestType || 'all'}
+                  value={localFilters.interestType || "all"}
                   onValueChange={handleInterestTypeChange}
                 >
                   <SelectTrigger className="h-10">
@@ -213,7 +226,7 @@ export function LoanProductsFilters({
                   Term Unit
                 </label>
                 <Select
-                  value={localFilters.termUnit || 'all'}
+                  value={localFilters.termUnit || "all"}
                   onValueChange={handleTermUnitChange}
                 >
                   <SelectTrigger className="h-10">
@@ -235,7 +248,7 @@ export function LoanProductsFilters({
                   Sort By
                 </label>
                 <Select
-                  value={`${localFilters.sortBy || 'createdAt'}-${localFilters.sortOrder || 'desc'}`}
+                  value={`${localFilters.sortBy || "createdAt"}-${localFilters.sortOrder || "desc"}`}
                   onValueChange={handleSortChange}
                 >
                   <SelectTrigger className="h-10">
@@ -246,10 +259,18 @@ export function LoanProductsFilters({
                     <SelectItem value="name-desc">Name Z-A</SelectItem>
                     <SelectItem value="createdAt-desc">Newest First</SelectItem>
                     <SelectItem value="createdAt-asc">Oldest First</SelectItem>
-                    <SelectItem value="interestRate-asc">Interest Rate Low-High</SelectItem>
-                    <SelectItem value="interestRate-desc">Interest Rate High-Low</SelectItem>
-                    <SelectItem value="minAmount-asc">Amount Low-High</SelectItem>
-                    <SelectItem value="minAmount-desc">Amount High-Low</SelectItem>
+                    <SelectItem value="interestRate-asc">
+                      Interest Rate Low-High
+                    </SelectItem>
+                    <SelectItem value="interestRate-desc">
+                      Interest Rate High-Low
+                    </SelectItem>
+                    <SelectItem value="minAmount-asc">
+                      Amount Low-High
+                    </SelectItem>
+                    <SelectItem value="minAmount-desc">
+                      Amount High-Low
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoanProduct } from "@/lib/api/types";
 
 interface LoanProductFeesProps {
@@ -10,8 +9,8 @@ interface LoanProductFeesProps {
 
 export function LoanProductFees({ product }: LoanProductFeesProps) {
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -21,7 +20,7 @@ export function LoanProductFees({ product }: LoanProductFeesProps) {
   const formatFee = (rate?: number, flat?: number, currency?: string) => {
     if (rate) return `${rate}%`;
     if (flat && currency) return formatCurrency(flat, currency);
-    return 'Not set';
+    return "Not set";
   };
 
   return (
@@ -34,18 +33,28 @@ export function LoanProductFees({ product }: LoanProductFeesProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Processing Fee */}
         <div>
-          <h4 className="font-medium text-midnight-blue mb-3">Processing Fee</h4>
+          <h4 className="font-medium text-midnight-blue mb-3">
+            Processing Fee
+          </h4>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Amount</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {formatFee(product.processingFeeRate, product.processingFeeFlat, product.currency)}
+                {formatFee(
+                  product.processingFeeRate,
+                  product.processingFeeFlat,
+                  product.currency,
+                )}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Type</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {product.processingFeeRate ? 'Percentage' : product.processingFeeFlat ? 'Flat Fee' : 'Not configured'}
+                {product.processingFeeRate
+                  ? "Percentage"
+                  : product.processingFeeFlat
+                    ? "Flat Fee"
+                    : "Not configured"}
               </span>
             </div>
           </div>
@@ -58,13 +67,21 @@ export function LoanProductFees({ product }: LoanProductFeesProps) {
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Amount</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {formatFee(product.lateFeeRate, product.lateFeeFlat, product.currency)}
+                {formatFee(
+                  product.lateFeeRate,
+                  product.lateFeeFlat,
+                  product.currency,
+                )}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Type</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {product.lateFeeRate ? 'Percentage' : product.lateFeeFlat ? 'Flat Fee' : 'Not configured'}
+                {product.lateFeeRate
+                  ? "Percentage"
+                  : product.lateFeeFlat
+                    ? "Flat Fee"
+                    : "Not configured"}
               </span>
             </div>
           </div>
@@ -72,18 +89,24 @@ export function LoanProductFees({ product }: LoanProductFeesProps) {
 
         {/* Prepayment Penalty */}
         <div>
-          <h4 className="font-medium text-midnight-blue mb-3">Prepayment Penalty</h4>
+          <h4 className="font-medium text-midnight-blue mb-3">
+            Prepayment Penalty
+          </h4>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Amount</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {product.prepaymentPenaltyRate ? `${product.prepaymentPenaltyRate}%` : 'Not set'}
+                {product.prepaymentPenaltyRate
+                  ? `${product.prepaymentPenaltyRate}%`
+                  : "Not set"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-primaryGrey-400">Type</span>
               <span className="text-sm font-medium text-midnight-blue">
-                {product.prepaymentPenaltyRate ? 'Percentage' : 'Not configured'}
+                {product.prepaymentPenaltyRate
+                  ? "Percentage"
+                  : "Not configured"}
               </span>
             </div>
           </div>

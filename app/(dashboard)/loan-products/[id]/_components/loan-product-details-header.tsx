@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { LoanProduct } from "@/lib/api/types";
 
 interface LoanProductDetailsHeaderProps {
@@ -15,18 +15,17 @@ interface LoanProductDetailsHeaderProps {
 export function LoanProductDetailsHeader({
   product,
   onBack,
-  onEdit,
 }: LoanProductDetailsHeaderProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'border-green-500 text-green-500';
-      case 'draft':
-        return 'border-yellow-500 text-yellow-500';
-      case 'archived':
-        return 'border-red-500 text-red-500';
+      case "active":
+        return "border-green-500 text-green-500";
+      case "draft":
+        return "border-yellow-500 text-yellow-500";
+      case "archived":
+        return "border-red-500 text-red-500";
       default:
-        return 'border-primaryGrey-300 text-primaryGrey-400';
+        return "border-primaryGrey-300 text-primaryGrey-400";
     }
   };
 

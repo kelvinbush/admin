@@ -3,11 +3,18 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CheckCircle, Archive, FileText, Edit, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Archive, CheckCircle, Edit, FileText } from "lucide-react";
 import { LoanProduct } from "@/lib/api/types";
 import { useUpdateLoanProductStatus } from "@/lib/api/hooks/loan-products";
 import { toast } from "sonner";
@@ -23,17 +30,32 @@ export function LoanProductActions({ product }: LoanProductActionsProps) {
   const router = useRouter();
   const updateStatusMutation = useUpdateLoanProductStatus();
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<string>('');
-  const [changeReason, setChangeReason] = useState('');
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [changeReason, setChangeReason] = useState("");
 
   const getStatusTransition = (currentStatus: string) => {
     switch (currentStatus) {
-      case 'draft':
-        return { next: 'active', label: 'Activate Product', icon: CheckCircle, color: 'text-green-500' };
-      case 'active':
-        return { next: 'archived', label: 'Archive Product', icon: Archive, color: 'text-red-500' };
-      case 'archived':
-        return { next: 'active', label: 'Reactivate Product', icon: CheckCircle, color: 'text-green-500' };
+      case "draft":
+        return {
+          next: "active",
+          label: "Activate Product",
+          icon: CheckCircle,
+          color: "text-green-500",
+        };
+      case "active":
+        return {
+          next: "archived",
+          label: "Archive Product",
+          icon: Archive,
+          color: "text-red-500",
+        };
+      case "archived":
+        return {
+          next: "active",
+          label: "Reactivate Product",
+          icon: CheckCircle,
+          color: "text-green-500",
+        };
       default:
         return null;
     }
@@ -47,14 +69,16 @@ export function LoanProductActions({ product }: LoanProductActionsProps) {
         id: product.id,
         status: newStatus,
         changeReason,
-        approvedBy: user.id
+        approvedBy: user.id,
       });
-      toast.success(`Product ${newStatus === 'active' ? 'activated' : 'archived'} successfully`);
+      toast.success(
+        `Product ${newStatus === "active" ? "activated" : "archived"} successfully`,
+      );
       setStatusDialogOpen(false);
-      setChangeReason('');
+      setChangeReason("");
     } catch (error) {
-      toast.error('Failed to update product status');
-      console.error('Error updating status:', error);
+      toast.error("Failed to update product status");
+      console.error("Error updating status:", error);
     }
   };
 
@@ -101,7 +125,9 @@ export function LoanProductActions({ product }: LoanProductActionsProps) {
               <DialogHeader>
                 <DialogTitle>Change Product Status</DialogTitle>
                 <DialogDescription>
-                  You are about to change this product status from <strong>{product.status}</strong> to <strong>{statusTransition.next}</strong>.
+                  You are about to change this product status from{" "}
+                  <strong>{product.status}</strong> to{" "}
+                  <strong>{statusTransition.next}</strong>.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -128,7 +154,9 @@ export function LoanProductActions({ product }: LoanProductActionsProps) {
                   disabled={!changeReason || updateStatusMutation.isPending}
                   className="bg-primary-green hover:bg-primary-green/90"
                 >
-                  {updateStatusMutation.isPending ? 'Updating...' : `Confirm ${statusTransition.label}`}
+                  {updateStatusMutation.isPending
+                    ? "Updating..."
+                    : `Confirm ${statusTransition.label}`}
                 </Button>
               </DialogFooter>
             </DialogContent>

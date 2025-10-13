@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,13 @@ import {
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useGetLoanApplicationsQuery } from "@/lib/redux/services/user";
-import { selectCurrentToken } from "@/lib/redux/features/authSlice";
-import { useAppSelector } from "@/lib/redux/hooks";
-import { LoanApplication } from "@/lib/types/user";
+import { useLoanApplications } from "@/lib/api/hooks/loan-applications";
+import { useTitle } from "@/context/title-context";
+import { formatCurrency, formatStatusText } from "@/lib/utils/currency";
+import type {
+  LoanApplicationsFilters,
+  LoanApplicationStatus,
+} from "@/lib/api/types";
 
 interface StatCardProps {
   title: string;
@@ -48,220 +51,199 @@ const StatCard = ({
       className={`${bgColor} text-${textColor} shadow-md border-midnight-blue`}
     >
       <CardContent className="p-6">
-        <h3 className="text-lg">{title}</h3>
-        <div className="mt-2 items-baseline gap-2">
-          <span className="text-2xl font-bold">{value}</span>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium opacity-90">{title}</p>
+            <p className="text-3xl font-bold mt-2">{value}</p>
+          </div>
+        </div>
+        <div className="mt-4 flex items-center">
+          {isPositive ? (
+            <ArrowUpIcon className="h-4 w-4 text-green-400" />
+          ) : (
+            <ArrowDownIcon className="h-4 w-4 text-red-400" />
+          )}
           <span
-            className={`flex mt-2 items-center text-sm ${isPositive ? "text-primary-green" : "text-primary-red"}`}
+            className={`ml-1 text-sm ${isPositive ? "text-green-400" : "text-red-400"}`}
           >
-            {isPositive ? (
-              <div
-                className={cn(
-                  "p-[3px] rounded-full bg-primary-red",
-                  isPositive && "bg-primary-green",
-                )}
-              >
-                <ArrowUpIcon className="h-3.5 w-3.5 text-black transform rotate-45" />
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  "p-[3px] rounded-full bg-primary-red",
-                  isPositive && "bg-primary-green",
-                )}
-              >
-                <ArrowDownIcon className="h-3.5 w-3.5 text-black rotate-[315deg]" />
-              </div>
-            )}
-            <div className={"mx-1"}>{Math.abs(change)}%</div>
-            <span className={"text-white text-xs"}> From last month</span>
+            {Math.abs(change)}%
           </span>
+          <span className={"text-white text-xs ml-2"}> From last month</span>
         </div>
       </CardContent>
     </Card>
   );
 };
 
-interface FiltersState {
-  loanType: string;
-  ecobankInterest: string;
-  applicationDate: string;
-}
-
 const LoanApplicationsPage = () => {
-  const guid = useAppSelector(selectCurrentToken);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<FiltersState>({
-    loanType: "all",
-    ecobankInterest: "all",
-    applicationDate: "all",
-  });
   const router = useRouter();
-  const itemsPerPage = 10;
+  const { setTitle } = useTitle();
 
-  const { data: loanApplicationsResponse, isLoading } =
-    useGetLoanApplicationsQuery({
-      adminguid: guid as string,
-    });
-
-  const realData = loanApplicationsResponse || [];
-
-  const loanTypes = [
-    ...new Set(realData.map((item: LoanApplication) => item.loanProductName)),
-  ];
-
-  const getLoanStatusText = (status: number): string => {
-    switch (status) {
-      case 0:
-        return "applied";
-      case 1:
-        return "review";
-      case 2:
-        return "approved";
-      case 3:
-        return "rejected";
-      default:
-        return "pending";
-    }
-  };
-
-  const getLoanStatusBadgeColor = (status: number): string => {
-    switch (status) {
-      case 2:
-        return "bg-[#B0EFDF] text-[#007054]";
-      case 1:
-        return "bg-[#FECACA] text-[#B91C1C]";
-      case 3:
-        return "bg-[#DBEAFE] text-[#1E40AF]";
-      case 0:
-        return "bg-[#B1EFFE] text-[#1E429F]";
-      default:
-        return "bg-[#B1EFFE] text-[#1E429F]";
-    }
-  };
-
-  // Filter and search data using real data
-  const filteredData = realData.filter((item: LoanApplication) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      item.businessProfile.businessName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      `${item.personalProfile.firstName} ${item.personalProfile.lastName}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      item.personalProfile.email
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      item.loanProductName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesLoanType =
-      filters.loanType === "all" || item.loanProductName === filters.loanType;
-
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "approved" && item.loanStatus === 2) ||
-      (activeTab === "rejected" && item.loanStatus === 3) ||
-      (activeTab === "pending" && item.loanStatus === 0) ||
-      (activeTab === "review" && item.loanStatus === 1);
-
-    return matchesSearch && matchesLoanType && matchesTab;
+  // State for filters and pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<LoanApplicationStatus | "all">(
+    "all",
+  );
+  const [filters, setFilters] = useState<LoanApplicationsFilters>({
+    page: 1,
+    limit: 10,
   });
 
-  const sortedData = [...filteredData].sort(
-    (a: LoanApplication, b: LoanApplication) => {
-      switch (sortBy) {
-        case "newest":
-          return b.loanApplicationGuid.localeCompare(a.loanApplicationGuid);
-        case "oldest":
-          return a.loanApplicationGuid.localeCompare(b.loanApplicationGuid);
-        case "ascending":
-          return a.businessProfile.businessName.localeCompare(
-            b.businessProfile.businessName,
-          );
-        case "descending":
-          return b.businessProfile.businessName.localeCompare(
-            a.businessProfile.businessName,
-          );
-        default:
-          return 0;
-      }
-    },
-  );
+  // Build API filters based on UI state
+  const apiFilters = useMemo(() => {
+    const baseFilters: LoanApplicationsFilters = {
+      ...filters,
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+    };
 
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+    // Add status filter based on active tab
+    if (activeTab !== "all") {
+      baseFilters.status = activeTab as LoanApplicationStatus;
+    }
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, sortBy, filters, activeTab]);
+    return baseFilters;
+  }, [filters, activeTab]);
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const {
+    data: loanApplicationsResponse,
+    error,
+    isLoading,
+  } = useLoanApplications(apiFilters);
+
+  const loanApplications = loanApplicationsResponse?.data || [];
+  const pagination = loanApplicationsResponse?.pagination || {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
   };
 
-  const handleApplyFilters = () => {
-    setCurrentPage(1);
+  // Set page title
+  useEffect(() => {
+    setTitle("Loan Applications");
+  }, [setTitle]);
+
+  // Get unique loan product names for filter dropdown
+  const loanProductNames = useMemo(() => {
+    if (!loanApplications.length) return [];
+    return Array.from(
+      new Set(
+        loanApplications
+          .map((app) => app.loanProduct?.name)
+          .filter((name): name is string => Boolean(name)),
+      ),
+    );
+  }, [loanApplications]);
+
+  const getLoanStatusColor = (status: LoanApplicationStatus): string => {
+    switch (status) {
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "submitted":
+        return "bg-blue-100 text-blue-800";
+      case "under_review":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "offer_letter_sent":
+        return "bg-purple-100 text-purple-800";
+      case "offer_letter_signed":
+        return "bg-indigo-100 text-indigo-800";
+      case "offer_letter_declined":
+        return "bg-orange-100 text-orange-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "withdrawn":
+        return "bg-gray-100 text-gray-800";
+      case "disbursed":
+        return "bg-emerald-100 text-emerald-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Handler functions
+  const handleFilterChange = (
+    key: keyof LoanApplicationsFilters,
+    value: any,
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      page: 1, // Reset to first page when filters change
+    }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // TODO: Implement debounced search if needed
+  };
+
+  const handleTabChange = (tab: LoanApplicationStatus | "all") => {
+    setActiveTab(tab);
+    setFilters((prev) => ({ ...prev, page: 1 })); // Reset to first page
   };
 
   const clearFilters = () => {
-    setFilters({
-      loanType: "all",
-      ecobankInterest: "all",
-      applicationDate: "all",
-    });
-    setSearchQuery("");
-    setSortBy("");
-    setCurrentPage(1);
+    setFilters({ page: 1, limit: 10 });
+    setSearchTerm("");
+    setActiveTab("all");
   };
 
+  const handleRowClick = (applicationId: string) => {
+    router.push(`/loan-applications/${applicationId}`);
+  };
+
+  // Calculate stats from current data
+  const stats = useMemo(() => {
+    const total = pagination.total;
+    const approved = loanApplications.filter(
+      (app) => app.status === "approved",
+    ).length;
+    const rejected = loanApplications.filter(
+      (app) => app.status === "rejected",
+    ).length;
+    const pending = loanApplications.filter((app) =>
+      ["submitted", "under_review"].includes(app.status),
+    ).length;
+
+    return {
+      total,
+      approved,
+      rejected,
+      pending,
+    };
+  }, [loanApplications, pagination.total]);
+
   // Stat cards data based on the real data
-  const stats = [
+  const statCards = [
     {
       title: "Total Applications",
-      value: realData.length.toString(),
-      change: 10.7,
+      value: stats.total.toString(),
+      change: 10.7, // TODO: Calculate actual change
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Approved Loans",
-      value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 2)
-        .length.toString(),
-      change: -0.7,
+      value: stats.approved.toString(),
+      change: -0.7, // TODO: Calculate actual change
       bgColor: "bg-midnight-blue",
     },
     {
       title: "Rejected Loans",
-      value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 3)
-        .length.toString(),
-      change: 0.7,
+      value: stats.rejected.toString(),
+      change: 0.7, // TODO: Calculate actual change
       bgColor: "bg-midnight-blue",
     },
     {
-      title: "Disbursed Loans",
-      value: realData
-        .filter((item: LoanApplication) => item.loanStatus === 4)
-        .length.toString(),
-      change: -0.7,
-      bgColor: "bg-midnight-blue",
-    },
-    {
-      title: "Pending Review",
-      value: realData
-        .filter(
-          (item: LoanApplication) =>
-            item.loanStatus === 0 || item.loanStatus === 1,
-        )
-        .length.toString(),
-      change: 0.7,
+      title: "Pending Loans",
+      value: stats.pending.toString(),
+      change: 1.7, // TODO: Calculate actual change
       bgColor: "bg-midnight-blue",
     },
   ];
@@ -287,11 +269,22 @@ const LoanApplicationsPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center py-8">
+          <p className="text-red-500 mb-4">Failed to load loan applications</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {stats.map((stat, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
@@ -299,20 +292,22 @@ const LoanApplicationsPage = () => {
       {/* Table Section */}
       <div className="flex flex-col space-y-4 bg-white shadow p-4 rounded">
         <div className="flex flex-wrap items-center gap-4">
-          <h2 className="text-2xl font-medium mr-auto">Loans (30)</h2>
+          <h2 className="text-2xl font-medium mr-auto">
+            Loans ({pagination.total})
+          </h2>
           {/* Search Input */}
           <div className="relative min-w-[160px]">
             <Input
               type="text"
-              placeholder="Search loan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search applications..."
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8 h-10"
             />
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            {searchQuery && (
+            {searchTerm && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => handleSearchChange("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
                 <XMarkIcon className="h-5 w-5 text-gray-400" />
@@ -320,26 +315,13 @@ const LoanApplicationsPage = () => {
             )}
           </div>
 
-          {/* Sort Dropdown */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className={"w-max"}>
-              <div className="flex items-center gap-2">Sort by</div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="ascending">A-Z</SelectItem>
-              <SelectItem value="descending">Z-A</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Hide Filters Button */}
+          {/* Filter Button */}
           <Button
             variant="secondary"
             className="flex items-center gap-2 bg-[#E8E9EA]"
           >
             <FunnelIcon className="h-5 w-5" />
-            Hide Filters
+            Filters
           </Button>
 
           {/* Download Button */}
@@ -357,80 +339,63 @@ const LoanApplicationsPage = () => {
           </Button>
         </div>
 
+        {/* Filters */}
         <div className="flex flex-wrap items-center gap-4">
-          {/* Loan Type Filter */}
+          {/* Loan Product Filter */}
           <Select
-            value={filters.loanType}
+            value={filters.loanProductId || "all"}
             onValueChange={(value: string) =>
-              handleFilterChange("loanType", value)
+              handleFilterChange(
+                "loanProductId",
+                value === "all" ? undefined : value,
+              )
+            }
+          >
+            <SelectTrigger className="w-[200px] bg-white">
+              <SelectValue placeholder="LOAN PRODUCT" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Products</SelectItem>
+              {loanProductNames.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Business Loan Filter */}
+          <Select
+            value={
+              filters.isBusinessLoan === undefined
+                ? "all"
+                : filters.isBusinessLoan.toString()
+            }
+            onValueChange={(value: string) =>
+              handleFilterChange(
+                "isBusinessLoan",
+                value === "all" ? undefined : value === "true",
+              )
             }
           >
             <SelectTrigger className="w-[200px] bg-white">
               <SelectValue placeholder="LOAN TYPE" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Loan Types</SelectItem>
-              {loanTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Status Filter */}
-          <Select
-            value={filters.ecobankInterest}
-            onValueChange={(value: string) =>
-              handleFilterChange("ecobankInterest", value)
-            }
-          >
-            <SelectTrigger className="w-[200px] bg-white">
-              <SelectValue placeholder="ECOBANK INTEREST" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="yes">Yes</SelectItem>
-              <SelectItem value="no">No</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Application Date Filter */}
-          <Select
-            value={filters.applicationDate}
-            onValueChange={(value: string) =>
-              handleFilterChange("applicationDate", value)
-            }
-          >
-            <SelectTrigger className="w-[200px] bg-white">
-              <SelectValue placeholder="APPLICATION DATE" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Dates</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="thisWeek">This Week</SelectItem>
-              <SelectItem value="thisMonth">This Month</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="true">Business Loans</SelectItem>
+              <SelectItem value="false">Personal Loans</SelectItem>
             </SelectContent>
           </Select>
 
           <div className="flex gap-2">
             <Button
-              className="bg-[#00B67C] text-white hover:bg-[#00B67C]/90"
-              onClick={handleApplyFilters}
+              variant="outline"
+              onClick={clearFilters}
+              className="border-gray-300"
             >
-              APPLY
+              Clear Filters
             </Button>
-            {(filters.loanType !== "all" ||
-              filters.ecobankInterest !== "all" ||
-              filters.applicationDate !== "all") && (
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="border-gray-300"
-              >
-                Clear Filters
-              </Button>
-            )}
           </div>
         </div>
 
@@ -445,11 +410,16 @@ const LoanApplicationsPage = () => {
                 label: "Rejected Loans",
               },
               { id: "disbursed", label: "Disbursed Loans" },
-              { id: "pending", label: "Pending Loans" },
+              {
+                id: "under_review",
+                label: "Under Review",
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() =>
+                  handleTabChange(tab.id as LoanApplicationStatus | "all")
+                }
                 className={cn(
                   "py-4 px-1 border-b-2 font-medium text-sm",
                   activeTab === tab.id
@@ -464,7 +434,7 @@ const LoanApplicationsPage = () => {
         </div>
 
         {/* Show "No results found" message when there's no data */}
-        {paginatedData.length === 0 && (
+        {loanApplications.length === 0 && (
           <div className={"grid place-items-center h-full py-16"}>
             <Icons.entreIcon />
             <div className="text-center py-8">
@@ -475,88 +445,77 @@ const LoanApplicationsPage = () => {
         )}
 
         {/* Table */}
-        {paginatedData.length > 0 && (
+        {loanApplications.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-[#E8E9EA] border-b border-b-[#B6BABC]">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    Business Name
+                    Application #
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
                     Applicant
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    Loan Type
+                    Loan Product
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
                     Loan Amount
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    Loan Tenure
+                    Loan Term
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    Loan Status
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    Submitted Date
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.map((item: LoanApplication) => (
+                {loanApplications.map((application) => (
                   <tr
-                    key={item.loanApplicationGuid}
-                    className={
-                      "hover:bg-[#E6FAF5] cursor-pointer transition duration-300"
-                    }
-                    onClick={() =>
-                      router.push(
-                        `/loan-applications/${item.loanApplicationGuid}?userId=${item.personalGuid}`,
-                      )
-                    }
+                    key={application.id}
+                    onClick={() => handleRowClick(application.id)}
+                    className="hover:bg-gray-50 cursor-pointer"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {item.businessProfile.businessName}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {application.applicationNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div
-                          className="h-8 w-8 rounded-full mr-3 bg-gray-200 flex items-center justify-center text-gray-600"
-                        >
-                          {item.personalProfile.firstName.charAt(0)}
-                          {item.personalProfile.lastName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {item.personalProfile.firstName}{" "}
-                            {item.personalProfile.lastName}
-                          </div>
-                          <div className="text-sm">
-                            {item.personalProfile.email} |{" "}
-                            {item.personalProfile.phoneNumber}
-                          </div>
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {application.user?.firstName}{" "}
+                        {application.user?.lastName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {application.user?.email}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {item.loanProductName}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {application.loanProduct?.name || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {item.defaultCurrency}{" "}
-                      {item.loanAmount.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCurrency(
+                        application.loanAmount,
+                        application.currency || "USD",
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {item.repaymentPeriod}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {application.loanTerm}{" "}
+                      {application.loanProduct?.termUnit || "months"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLoanStatusBadgeColor(item.loanStatus)}`}
-                        >
-                          {getLoanStatusText(item.loanStatus)}
-                        </span>
-                      </div>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLoanStatusColor(application.status)}`}
+                      >
+                        {formatStatusText(application.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {application.submittedAt
+                        ? new Date(application.submittedAt).toLocaleDateString()
+                        : "Not submitted"}
                     </td>
                   </tr>
                 ))}
@@ -566,53 +525,50 @@ const LoanApplicationsPage = () => {
         )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-700">
-            Showing{" "}
-            <span className="font-medium">
-              {(currentPage - 1) * itemsPerPage + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(currentPage * itemsPerPage, filteredData.length)}
-            </span>{" "}
-            of <span className="font-medium">{filteredData.length}</span>{" "}
-            results
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = i + 1;
-              return (
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing{" "}
+                  <span className="font-medium">
+                    {(pagination.page - 1) * pagination.limit + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total,
+                    )}
+                  </span>{" "}
+                  of <span className="font-medium">{pagination.total}</span>{" "}
+                  results
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
                 <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page <= 1}
                 >
-                  {pageNum}
+                  Previous
                 </Button>
-              );
-            })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+                <span className="text-sm text-gray-700">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page >= pagination.totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

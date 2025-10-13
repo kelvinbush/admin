@@ -39,7 +39,7 @@ export function ProductStatusSection({ control }: ProductStatusSectionProps) {
                 </FormLabel>
                 <FormDescription className="text-sm text-primaryGrey-400">
                   Enable this loan product for new applications. Inactive
-                  products won't be available for new loans.
+                  products won&apos;t be available for new loans.
                 </FormDescription>
               </div>
               <FormControl>

@@ -1,7 +1,6 @@
 "use client";
 
 import { SignIn } from "@clerk/nextjs";
-import Image from "next/image";
 
 export default function SignInForm() {
   return (
@@ -19,7 +18,7 @@ export default function SignInForm() {
               </p>
             </div>
           </div>
-          
+
           <div className="space-y-4 text-white/70">
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-[#00B67C] rounded-full"></div>
@@ -39,30 +38,37 @@ export default function SignInForm() {
         {/* Right Side - Sign In Form */}
         <div className="flex justify-center lg:justify-end">
           <div className="w-full max-w-md">
-            <SignIn 
+            <SignIn
               appearance={{
                 elements: {
                   rootBox: "w-full",
                   card: "bg-white rounded-2xl shadow-none p-8 border border-gray-100",
                   headerTitle: "hidden",
                   headerSubtitle: "hidden",
-                  socialButtonsBlockButton: "border-gray-200 hover:border-[#00B67C] hover:bg-[#00B67C]/5 transition-all duration-200 bg-gray-50",
+                  socialButtonsBlockButton:
+                    "border-gray-200 hover:border-[#00B67C] hover:bg-[#00B67C]/5 transition-all duration-200 bg-gray-50",
                   socialButtonsBlockButtonText: "text-gray-700 font-medium",
-                  formButtonPrimary: "bg-[#00B67C] hover:bg-[#00B67C]/90 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl",
-                  formFieldInput: "border-gray-200 focus:border-[#00B67C] focus:ring-[#00B67C]/20 rounded-lg py-3 px-4 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500",
+                  formButtonPrimary:
+                    "bg-[#00B67C] hover:bg-[#00B67C]/90 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl",
+                  formFieldInput:
+                    "border-gray-200 focus:border-[#00B67C] focus:ring-[#00B67C]/20 rounded-lg py-3 px-4 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500",
                   formFieldLabel: "text-gray-700 font-medium mb-2",
-                  footerActionLink: "text-[#00B67C] hover:text-[#00B67C]/80 font-medium transition-colors duration-200",
+                  footerActionLink:
+                    "text-[#00B67C] hover:text-[#00B67C]/80 font-medium transition-colors duration-200",
                   identityPreviewText: "text-gray-600",
                   formHeaderTitle: "text-2xl font-bold text-gray-900 mb-2",
                   formHeaderSubtitle: "text-gray-600 mb-6",
                   dividerLine: "bg-gray-200",
                   dividerText: "text-gray-500 text-sm",
-                  formResendCodeLink: "text-[#00B67C] hover:text-[#00B67C]/80 font-medium",
-                  otpCodeFieldInput: "border-gray-200 focus:border-[#00B67C] focus:ring-[#00B67C]/20 rounded-lg bg-white text-gray-900",
+                  formResendCodeLink:
+                    "text-[#00B67C] hover:text-[#00B67C]/80 font-medium",
+                  otpCodeFieldInput:
+                    "border-gray-200 focus:border-[#00B67C] focus:ring-[#00B67C]/20 rounded-lg bg-white text-gray-900",
                   formFieldErrorText: "text-red-500 text-sm mt-1",
-                  alertText: "text-red-600 bg-red-50 border border-red-200 rounded-lg p-3",
+                  alertText:
+                    "text-red-600 bg-red-50 border border-red-200 rounded-lg p-3",
                   formFieldSuccessText: "text-green-600 text-sm mt-1",
-                }
+                },
               }}
             />
           </div>

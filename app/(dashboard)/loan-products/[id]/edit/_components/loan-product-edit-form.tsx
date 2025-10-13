@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useUpdateLoanProduct } from "@/lib/api/hooks/loan-products";
 import { LoanProduct } from "@/lib/api/types";
@@ -18,9 +17,12 @@ interface LoanProductEditFormProps {
   onSuccess: () => void;
 }
 
-export function LoanProductEditForm({ product, onSuccess }: LoanProductEditFormProps) {
+export function LoanProductEditForm({
+  product,
+  onSuccess,
+}: LoanProductEditFormProps) {
   const updateProductMutation = useUpdateLoanProduct();
-  const [changeReason, setChangeReason] = useState('');
+  const [changeReason, setChangeReason] = useState("");
 
   const form = useForm<Partial<LoanProduct>>({
     defaultValues: {
@@ -72,8 +74,18 @@ export function LoanProductEditForm({ product, onSuccess }: LoanProductEditFormP
   };
 
   // Check if any critical fields have changed
-  const criticalFields = ['minAmount', 'maxAmount', 'minTerm', 'maxTerm', 'interestRate', 'interestType', 'ratePeriod', 'amortizationMethod', 'repaymentFrequency'];
-  const hasCriticalChanges = criticalFields.some(field => {
+  const criticalFields = [
+    "minAmount",
+    "maxAmount",
+    "minTerm",
+    "maxTerm",
+    "interestRate",
+    "interestType",
+    "ratePeriod",
+    "amortizationMethod",
+    "repaymentFrequency",
+  ];
+  const hasCriticalChanges = criticalFields.some((field) => {
     const currentValue = form.watch(field as keyof LoanProduct);
     return currentValue !== product[field as keyof LoanProduct];
   });

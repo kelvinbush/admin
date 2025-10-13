@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Users, Building2, Database, FileText, CreditCard } from "lucide-react";
+import { ChevronDown, ChevronRight, Database } from "lucide-react";
 import Link from "next/link";
 
 const sidenavLinks = [
@@ -13,33 +13,6 @@ const sidenavLinks = [
     title: "Dashboard",
     href: "/",
     icon: <Icons.dashboard />,
-  },
-  {
-    title: "User Management",
-    href: "/#",
-    icon: <Users className="h-5 w-5" />,
-    children: [
-      {
-        title: "Organizations",
-        href: "/organizations",
-        icon: <Building2 className="h-4 w-4" />,
-      },
-      {
-        title: "System Users",
-        href: "/system-users",
-        icon: <Users className="h-4 w-4" />,
-      },
-      {
-        title: "User Groups",
-        href: "/partners",
-        icon: <Users className="h-4 w-4" />,
-      }
-    ],
-  },
-  {
-    title: "Entrepreneurs",
-    href: "/entrepreneurs",
-    icon: <Icons.entreIcon className="h-5 w-5" />,
   },
   {
     title: "Funding",
@@ -56,21 +29,6 @@ const sidenavLinks = [
         href: "/loan-products",
         icon: <Icons.moneyBag className="h-4 w-4" />,
       },
-      {
-        title: "Loan Fees",
-        href: "/loan-fees",
-        icon: <CreditCard className="h-4 w-4" />,
-      },
-      {
-        title: "MK Loan Applications",
-        href: "/mk-loan-applications",
-        icon: <FileText className="h-4 w-4" />,
-      },
-      {
-        title: "Partner Loan Applications",
-        href: "/partner-loan-applications",
-        icon: <FileText className="h-4 w-4" />,
-      }
     ],
   },
   {
