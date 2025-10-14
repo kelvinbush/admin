@@ -1,36 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.push("/");
-    }
-  }, [isLoaded, isSignedIn, router]);
-
-  if (!isLoaded) {
-    return (
-      <div className="bg-gradient-to-br from-midnight-blue via-blue-900 to-midnight-blue min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  if (isSignedIn) {
-    return null;
-  }
 
   return (
     <div 
