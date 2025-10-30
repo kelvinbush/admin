@@ -36,6 +36,11 @@ const sidenavLinks = [
     href: "/loan-applications",
     icon: <Icons.moneyBag className="h-5 w-5" />,
   },
+  {
+    title: "User Management",
+    href: "/usergroups",
+    icon: <Icons.businessProfile className="h-5 w-5" />,
+  },
 ];
 
 const Sidenav = () => {

@@ -298,9 +298,9 @@ export interface UpdateLoanProductData {
 
 export interface CreateUserGroupData {
   name: string;
-  description: string;
-  permissions: string[];
-  users: string[];
+  slug?: string;
+  description?: string;
+  userIds?: string[];
 }
 
 // ===== LOAN APPLICATION TYPES =====
@@ -637,6 +637,8 @@ export interface SnapshotsResponse {
 
 export interface UpdateUserGroupData extends Partial<CreateUserGroupData> {
   id: string;
+  addUserIds?: string[];
+  removeUserIds?: string[];
 }
 
 export interface CreateOrganizationData {
