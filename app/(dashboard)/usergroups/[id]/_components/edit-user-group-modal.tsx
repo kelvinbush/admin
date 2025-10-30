@@ -46,7 +46,7 @@ export default function EditUserGroupModal({
 
     await updateMutation.mutateAsync(body);
     onOpenChange(false);
-    onUpdated && onUpdated();
+    if (onUpdated) onUpdated();
   };
 
   const disableSubmit = updateMutation.isPending || !name;

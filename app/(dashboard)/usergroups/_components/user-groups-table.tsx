@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
-import { Icons } from "@/components/icons";
 import type { UserGroup } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
 import { useDeleteUserGroupMutation } from "@/lib/api/hooks/useUserGroups";
@@ -163,7 +162,7 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
                         const proceed = window.confirm("Delete this user group?");
                         if (!proceed) return;
                         await deleteMutation.mutateAsync({ id: (group as any).id });
-                        onDeleted && onDeleted((group as any).id);
+                        if (onDeleted) onDeleted((group as any).id);
                       }}
                     >
                       <Trash2 className="h-4 w-4 mr-1" /> Delete

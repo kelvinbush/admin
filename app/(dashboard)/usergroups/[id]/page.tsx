@@ -22,7 +22,7 @@ export default function UserGroupDetailPage() {
   const id = params?.id as string;
 
   const { data: group, error: groupError } = useUserGroup(id);
-  const { data: members, isLoading: membersLoading, error: membersError } = useUserGroupMembers(id, { page: 1, limit: 10 });
+  const { data: members } = useUserGroupMembers(id, { page: 1, limit: 10 });
   const deleteMutation = useDeleteUserGroupMutation();
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);

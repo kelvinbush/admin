@@ -42,7 +42,7 @@ export default function AddSmeModal({ open, onOpenChange, groupId, existingUserI
     await updateMutation.mutateAsync({ id: groupId, userIds });
     reset();
     onOpenChange(false);
-    onAdded && onAdded();
+    if (onAdded) onAdded();
   };
 
   const disableSubmit = selected.length === 0 || updateMutation.isPending;

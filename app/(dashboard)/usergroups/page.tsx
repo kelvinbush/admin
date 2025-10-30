@@ -45,14 +45,6 @@ export default function UserGroupsPage() {
     router.push(`/usergroups/${group.id}`);
   };
 
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  const handleItemsPerPageChange = (limit: number) => {
-    setPagination((prev) => ({ ...prev, limit, page: 1 }));
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">

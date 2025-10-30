@@ -98,6 +98,13 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.offerLetters.details(), id] as const,
   },
 
+  // Internal users and invitations
+  internalUsers: {
+    all: ['internal-users'] as const,
+    lists: () => [...queryKeys.internalUsers.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => [...queryKeys.internalUsers.lists(), JSON.stringify(filters || {})] as const,
+  },
+
   // Search
   search: {
     all: ['search'] as const,
