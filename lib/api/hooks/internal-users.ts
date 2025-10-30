@@ -63,4 +63,12 @@ export function useRemoveInternalUser() {
   );
 }
 
+export function useActivateInternalUser() {
+  return useClientApiMutation<void, { clerkId: string }>(
+    async (api, { clerkId }) => {
+      return api.post<void>(`/admin/internal-users/${clerkId}/activate`);
+    },
+  );
+}
+
 

@@ -8,6 +8,7 @@ import {
   useRemoveInternalUser,
   useResendInternalInvitation,
   useRevokeInternalInvitation,
+  useActivateInternalUser,
   type InternalUserItem,
 } from '@/lib/api/hooks/internal-users'
 
@@ -22,6 +23,7 @@ export default function InternalUsersPage() {
   const revokeInvitation = useRevokeInternalInvitation()
   const deactivateUser = useDeactivateInternalUser()
   const removeUser = useRemoveInternalUser()
+  const activateUser = useActivateInternalUser()
 
   // Fallbacks using custom mutation per-user because we need dynamic URLs
   const [actionBusyId, setActionBusyId] = useState<string | null>(null)
@@ -71,6 +73,16 @@ export default function InternalUsersPage() {
     setActionBusyId(clerkId)
     try {
       await removeUser.mutateAsync({ clerkId })
+    } finally {
+      setActionBusyId(null)
+    }
+  }
+
+  async function onActivate(clerkId?: string | null) {
+    if (!clerkId) return
+    setActionBusyId(clerkId)
+    try {
+      await activateUser.mutateAsync({ clerkId })
     } finally {
       setActionBusyId(null)
     }
@@ -158,7 +170,7 @@ export default function InternalUsersPage() {
                           </button>
                         </>
                       )}
-                      {u.status !== 'pending' && u.clerkId && (
+                      {u.status === 'active' && u.clerkId && (
                         <>
                           <button
                             onClick={() => onDeactivate(u.clerkId)}
@@ -166,6 +178,24 @@ export default function InternalUsersPage() {
                             className="rounded-md border px-3 py-1"
                           >
                             {actionBusyId === u.clerkId ? 'Updating…' : 'Deactivate'}
+                          </button>
+                          <button
+                            onClick={() => onRemove(u.clerkId)}
+                            disabled={actionBusyId === u.clerkId}
+                            className="rounded-md border px-3 py-1 text-red-600"
+                          >
+                            {actionBusyId === u.clerkId ? 'Removing…' : 'Remove'}
+                          </button>
+                        </>
+                      )}
+                      {u.status === 'inactive' && u.clerkId && (
+                        <>
+                          <button
+                            onClick={() => onActivate(u.clerkId)}
+                            disabled={actionBusyId === u.clerkId}
+                            className="rounded-md border px-3 py-1 text-emerald-700"
+                          >
+                            {actionBusyId === u.clerkId ? 'Activating…' : 'Activate'}
                           </button>
                           <button
                             onClick={() => onRemove(u.clerkId)}

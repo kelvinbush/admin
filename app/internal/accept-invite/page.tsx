@@ -14,13 +14,12 @@ function AcceptInviteForm() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setError(null)
-  }, [firstName, lastName, password, phoneNumber, ticket])
+  }, [firstName, lastName, password, ticket])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -38,7 +37,6 @@ function AcceptInviteForm() {
         firstName,
         lastName,
         password,
-        ...(phoneNumber ? { phoneNumber } : {}),
       })
 
       if (attempt.status === 'complete') {
@@ -108,16 +106,7 @@ function AcceptInviteForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="phoneNumber" className="text-sm font-medium">Phone number (optional)</label>
-          <input
-            id="phoneNumber"
-            name="phoneNumber"
-            className="w-full rounded-md border px-3 py-2"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        </div>
+        
         <button
           type="submit"
           disabled={!isLoaded || !ticket || submitting}
