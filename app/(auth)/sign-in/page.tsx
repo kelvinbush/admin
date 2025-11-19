@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function Page() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -115,12 +116,12 @@ export default function Page() {
           </div>
 
           <div className="flex items-center justify-end">
-            <a
+            <Link
               href="/forgot-password"
               className="text-sm text-primary-green hover:underline"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
 
           <Button
