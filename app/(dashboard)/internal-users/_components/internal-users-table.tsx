@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "./custom-dropdown-menu";
 import {
   Plus,
   MoreHorizontal,
@@ -29,7 +29,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { InternalUserItem } from "@/lib/api/hooks/internal-users";
-import { ConfirmActionModal } from "./confirm-action-modal";
+import { ConfirmActionModal } from "./custom-confirm-modal";
 
 export type InternalUserTableItem = InternalUserItem & {
   createdAt?: string;
@@ -89,16 +89,31 @@ export function InternalUsersTable({
   }>({ type: "deactivate", open: false });
 
   const handleConfirm = () => {
-    if (confirmModal.type === "deactivate" && confirmModal.userId && onDeactivate) {
-      onDeactivate(confirmModal.userId);
-    } else if (confirmModal.type === "activate" && confirmModal.userId && onActivate) {
-      onActivate(confirmModal.userId);
-    } else if (confirmModal.type === "remove" && confirmModal.userId && onRemove) {
-      onRemove(confirmModal.userId);
-    } else if (confirmModal.type === "revoke" && confirmModal.invitationId && onRevokeInvitation) {
-      onRevokeInvitation(confirmModal.invitationId);
+    // Capture current modal state before it changes
+    const currentModal = { ...confirmModal };
+    
+    // Execute action immediately
+    if (currentModal.type === "deactivate" && currentModal.userId && onDeactivate) {
+      onDeactivate(currentModal.userId);
+    } else if (currentModal.type === "activate" && currentModal.userId && onActivate) {
+      onActivate(currentModal.userId);
+    } else if (currentModal.type === "remove" && currentModal.userId && onRemove) {
+      onRemove(currentModal.userId);
+    } else if (currentModal.type === "revoke" && currentModal.invitationId && onRevokeInvitation) {
+      onRevokeInvitation(currentModal.invitationId);
     }
-    setConfirmModal({ type: "deactivate", open: false });
+    
+    // AlertDialogAction will automatically close the dialog, 
+    // and onOpenChange will reset the state
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Fully reset state when closing
+      setConfirmModal({ type: "deactivate", open: false });
+    } else {
+      setConfirmModal((prev) => ({ ...prev, open }));
+    }
   };
 
   const getModalProps = () => {
@@ -489,20 +504,16 @@ export function InternalUsersTable({
         </div>
       </CardContent>
 
-      {confirmModal.open && (
-        <ConfirmActionModal
-          open={confirmModal.open}
-          onOpenChange={(open) =>
-            setConfirmModal((prev) => ({ ...prev, open }))
-          }
-          onConfirm={handleConfirm}
-          isLoading={
-            actionBusyId === confirmModal.userId ||
-            actionBusyId === confirmModal.invitationId
-          }
-          {...getModalProps()}
-        />
-      )}
+      <ConfirmActionModal
+        open={confirmModal.open}
+        onOpenChange={handleOpenChange}
+        onConfirm={handleConfirm}
+        isLoading={
+          actionBusyId === confirmModal.userId ||
+          actionBusyId === confirmModal.invitationId
+        }
+        {...getModalProps()}
+      />
     </Card>
   );
 }

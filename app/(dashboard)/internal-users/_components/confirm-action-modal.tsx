@@ -1,17 +1,6 @@
-"use client";
-
-import React from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+// This file is deprecated - use custom-confirm-modal.tsx instead
+// Keeping for backwards compatibility
+export { ConfirmActionModal } from "./custom-confirm-modal";
 
 type ConfirmActionModalVariant = "orange" | "red";
 
