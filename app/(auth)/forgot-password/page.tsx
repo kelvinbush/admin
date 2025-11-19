@@ -39,7 +39,9 @@ export default function ForgotPasswordPage() {
       setStep("code");
     } catch (err: any) {
       const message =
-        err?.errors?.[0]?.message || err?.message || "Failed to send reset code. Please try again.";
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        "Failed to send reset code. Please try again.";
       setError(message);
       toast.error(message);
     } finally {
@@ -68,7 +70,9 @@ export default function ForgotPasswordPage() {
       }
     } catch (err: any) {
       const message =
-        err?.errors?.[0]?.message || err?.message || "Invalid code. Please try again.";
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        "Invalid code. Please try again.";
       setError(message);
       toast.error(message);
     } finally {
@@ -76,19 +80,36 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  const validatePassword = (pwd: string, confirm: string): string | null => {
+    if (pwd.length < 8) {
+      return "Password must be at least 8 characters long.";
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return "Password must contain at least one uppercase letter.";
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return "Password must contain at least one lowercase letter.";
+    }
+    if (!/\d/.test(pwd)) {
+      return "Password must contain at least one number.";
+    }
+    if (!/[!@#$%^&*]/.test(pwd)) {
+      return "Password must contain at least one special character (!@#$%^&*).";
+    }
+    if (pwd !== confirm) {
+      return "Passwords do not match.";
+    }
+    return null;
+  };
+
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoaded) return;
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      toast.error("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
-      toast.error("Password must be at least 8 characters long.");
+    const validationError = validatePassword(password, confirmPassword);
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
@@ -110,7 +131,9 @@ export default function ForgotPasswordPage() {
       }
     } catch (err: any) {
       const message =
-        err?.errors?.[0]?.message || err?.message || "Failed to reset password. Please try again.";
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        "Failed to reset password. Please try again.";
       setError(message);
       toast.error(message);
     } finally {
@@ -139,7 +162,9 @@ export default function ForgotPasswordPage() {
       setCode("");
     } catch (err: any) {
       const message =
-        err?.errors?.[0]?.message || err?.message || "Failed to resend code. Please try again.";
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        "Failed to resend code. Please try again.";
       setError(message);
       toast.error(message);
     } finally {
@@ -152,6 +177,7 @@ export default function ForgotPasswordPage() {
     setPassword("");
     setConfirmPassword("");
     setError(null);
+    router.push("/sign-in");
   };
 
   return (
