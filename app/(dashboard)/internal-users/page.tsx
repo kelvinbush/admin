@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from "react";
 import {
   useInternalUsers,
   useCreateInternalInvite,
@@ -10,212 +10,171 @@ import {
   useRevokeInternalInvitation,
   useActivateInternalUser,
   type InternalUserItem,
-} from '@/lib/api/hooks/internal-users'
+} from "@/lib/api/hooks/internal-users";
+import { InternalUsersHeader, type InternalUsersSort } from "./_components/internal-users-header";
+import {
+  InternalUsersFilters,
+  type InternalUserFiltersState,
+} from "./_components/internal-users-filters";
+
+type InternalUsersFilterValues = InternalUserFiltersState & {
+  search?: string;
+};
 
 export default function InternalUsersPage() {
-  const { data, isLoading, error } = useInternalUsers()
+  const [filters, setFilters] = useState<InternalUsersFilterValues>({});
+  const [sort, setSort] = useState<InternalUsersSort>({
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState<'super-admin' | 'admin' | 'member'>('member')
+  const queryFilters = useMemo(() => {
+    const payload: Record<string, string> = {};
+    if (filters.search) {
+      payload.search = filters.search;
+    }
+    if (filters.role && filters.role !== "all") {
+      payload.role = filters.role;
+    }
+    if (filters.status && filters.status !== "all") {
+      payload.status = filters.status;
+    }
+    if (filters.createdAt && filters.createdAt !== "all") {
+      payload.createdAt = filters.createdAt;
+    }
+    payload.sortBy = sort.sortBy;
+    payload.sortOrder = sort.sortOrder;
+    return payload;
+  }, [filters, sort]);
 
-  const createInvite = useCreateInternalInvite()
-  const resendInvitation = useResendInternalInvitation()
-  const revokeInvitation = useRevokeInternalInvitation()
-  const deactivateUser = useDeactivateInternalUser()
-  const removeUser = useRemoveInternalUser()
-  const activateUser = useActivateInternalUser()
+  const { data, isLoading, error } = useInternalUsers(queryFilters);
+
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"super-admin" | "admin" | "member">(
+    "member",
+  );
+
+  const createInvite = useCreateInternalInvite();
+  const resendInvitation = useResendInternalInvitation();
+  const revokeInvitation = useRevokeInternalInvitation();
+  const deactivateUser = useDeactivateInternalUser();
+  const removeUser = useRemoveInternalUser();
+  const activateUser = useActivateInternalUser();
 
   // Fallbacks using custom mutation per-user because we need dynamic URLs
-  const [actionBusyId, setActionBusyId] = useState<string | null>(null)
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
 
-  const users = useMemo<InternalUserItem[]>(() => data?.items || [], [data])
+  const users = useMemo<InternalUserItem[]>(() => data?.items || [], [data]);
+
+  const totalUsers = users.length;
+
+  const setFilterValue = <K extends keyof InternalUsersFilterValues,>(
+    key: K,
+    value: InternalUsersFilterValues[K],
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value === "" ? undefined : value,
+    }));
+  };
+
+  const handleClearSearch = () => {
+    setFilters((prev) => ({ ...prev, search: undefined }));
+  };
+
+  const handleDownload = () => {
+    // TODO: wire up export action
+    console.info("Download internal users");
+  };
 
   async function onCreateInvite(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email) return
-    await createInvite.mutateAsync({ email, role })
-    setEmail('')
-    setRole('member')
+    e.preventDefault();
+    if (!email) return;
+    await createInvite.mutateAsync({ email, role });
+    setEmail("");
+    setRole("member");
   }
 
   async function onResend(invitationId?: string | null) {
-    if (!invitationId) return
-    setActionBusyId(invitationId)
+    if (!invitationId) return;
+    setActionBusyId(invitationId);
     try {
-      await resendInvitation.mutateAsync({ invitationId })
+      await resendInvitation.mutateAsync({ invitationId });
     } finally {
-      setActionBusyId(null)
+      setActionBusyId(null);
     }
   }
 
   async function onRevoke(invitationId?: string | null) {
-    if (!invitationId) return
-    setActionBusyId(invitationId)
+    if (!invitationId) return;
+    setActionBusyId(invitationId);
     try {
-      await revokeInvitation.mutateAsync({ invitationId })
+      await revokeInvitation.mutateAsync({ invitationId });
     } finally {
-      setActionBusyId(null)
+      setActionBusyId(null);
     }
   }
 
   async function onDeactivate(clerkId?: string | null) {
-    if (!clerkId) return
-    setActionBusyId(clerkId)
+    if (!clerkId) return;
+    setActionBusyId(clerkId);
     try {
-      await deactivateUser.mutateAsync({ clerkId })
+      await deactivateUser.mutateAsync({ clerkId });
     } finally {
-      setActionBusyId(null)
+      setActionBusyId(null);
     }
   }
 
   async function onRemove(clerkId?: string | null) {
-    if (!clerkId) return
-    setActionBusyId(clerkId)
+    if (!clerkId) return;
+    setActionBusyId(clerkId);
     try {
-      await removeUser.mutateAsync({ clerkId })
+      await removeUser.mutateAsync({ clerkId });
     } finally {
-      setActionBusyId(null)
+      setActionBusyId(null);
     }
   }
 
   async function onActivate(clerkId?: string | null) {
-    if (!clerkId) return
-    setActionBusyId(clerkId)
+    if (!clerkId) return;
+    setActionBusyId(clerkId);
     try {
-      await activateUser.mutateAsync({ clerkId })
+      await activateUser.mutateAsync({ clerkId });
     } finally {
-      setActionBusyId(null)
+      setActionBusyId(null);
     }
   }
 
   return (
-    <div className="p-6">
-      <h1 className="mb-2 text-2xl font-semibold">Internal users</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Create and manage internal user invitations and access.</p>
+    <div className="space-y-6 bg-white p-6 rounded-md">
+      <InternalUsersHeader
+        total={totalUsers}
+        searchValue={filters.search}
+        filtersVisible={filtersVisible}
+        sort={sort}
+        onSearchChange={(value) => setFilterValue("search", value || undefined)}
+        onClearSearch={handleClearSearch}
+        onSortChange={setSort}
+        onToggleFilters={() => setFiltersVisible((prev) => !prev)}
+        onDownload={handleDownload}
+        onAddUser={() => {
+          // placeholder action until invite modal is wired up
+          console.info("Open create user dialog");
+        }}
+      />
 
-      <form onSubmit={onCreateInvite} className="mb-6 flex flex-col gap-3 md:flex-row md:items-end">
-        <div className="flex-1">
-          <label className="mb-1 block text-sm font-medium" htmlFor="invite-email">Email</label>
-          <input
-            id="invite-email"
-            type="email"
-            required
-            className="w-full rounded-md border px-3 py-2"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium" htmlFor="invite-role">Role</label>
-          <select
-            id="invite-role"
-            className="w-full rounded-md border px-3 py-2"
-            value={role}
-            onChange={(e) => setRole(e.target.value as any)}
-          >
-            <option value="member">Member</option>
-            <option value="admin">Admin</option>
-            <option value="super-admin">Super admin</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-black px-4 text-sm font-medium text-white"
-        >
-          Create invite
-        </button>
-      </form>
+      <InternalUsersFilters
+        values={filters}
+        visible={filtersVisible}
+        onValueChange={(key, value) => setFilterValue(key, value)}
+        onApply={() => {
+          // Filters already reactive; button exists to match UI
+        }}
+      />
 
-      {isLoading && <div>Loading users…</div>}
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">Failed to load users.</div>
-      )}
-
-      {!isLoading && !error && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y">
-            <thead>
-              <tr className="text-left text-sm">
-                <th className="py-2 pr-4">Name</th>
-                <th className="py-2 pr-4">Email</th>
-                <th className="py-2 pr-4">Role</th>
-                <th className="py-2 pr-4">Status</th>
-                <th className="py-2 pr-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {users.map((u) => (
-                <tr key={`${u.clerkId || u.invitationId || u.email}`} className="text-sm">
-                  <td className="py-2 pr-4">{u.name || '—'}</td>
-                  <td className="py-2 pr-4">{u.email}</td>
-                  <td className="py-2 pr-4">{u.role || '—'}</td>
-                  <td className="py-2 pr-4 capitalize">{u.status}</td>
-                  <td className="py-2 pr-4">
-                    <div className="flex flex-wrap gap-2">
-                      {u.status === 'pending' && u.invitationId && (
-                        <>
-                          <button
-                            onClick={() => onResend(u.invitationId)}
-                            disabled={actionBusyId === u.invitationId}
-                            className="rounded-md border px-3 py-1"
-                          >
-                            {actionBusyId === u.invitationId ? 'Resending…' : 'Resend'}
-                          </button>
-                          <button
-                            onClick={() => onRevoke(u.invitationId)}
-                            disabled={actionBusyId === u.invitationId}
-                            className="rounded-md border px-3 py-1"
-                          >
-                            {actionBusyId === u.invitationId ? 'Revoking…' : 'Revoke'}
-                          </button>
-                        </>
-                      )}
-                      {u.status === 'active' && u.clerkId && (
-                        <>
-                          <button
-                            onClick={() => onDeactivate(u.clerkId)}
-                            disabled={actionBusyId === u.clerkId}
-                            className="rounded-md border px-3 py-1"
-                          >
-                            {actionBusyId === u.clerkId ? 'Updating…' : 'Deactivate'}
-                          </button>
-                          <button
-                            onClick={() => onRemove(u.clerkId)}
-                            disabled={actionBusyId === u.clerkId}
-                            className="rounded-md border px-3 py-1 text-red-600"
-                          >
-                            {actionBusyId === u.clerkId ? 'Removing…' : 'Remove'}
-                          </button>
-                        </>
-                      )}
-                      {u.status === 'inactive' && u.clerkId && (
-                        <>
-                          <button
-                            onClick={() => onActivate(u.clerkId)}
-                            disabled={actionBusyId === u.clerkId}
-                            className="rounded-md border px-3 py-1 text-emerald-700"
-                          >
-                            {actionBusyId === u.clerkId ? 'Activating…' : 'Activate'}
-                          </button>
-                          <button
-                            onClick={() => onRemove(u.clerkId)}
-                            disabled={actionBusyId === u.clerkId}
-                            className="rounded-md border px-3 py-1 text-red-600"
-                          >
-                            {actionBusyId === u.clerkId ? 'Removing…' : 'Remove'}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div>Table with empty state here</div>
+      <div>Pagination here</div>
     </div>
-  )
+  );
 }
-
-
