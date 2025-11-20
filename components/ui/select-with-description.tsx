@@ -41,12 +41,25 @@ export function SelectWithDescription({
   // Calculate dropdown position
   React.useEffect(() => {
     if (isOpen && selectRef.current) {
-      const rect = selectRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
+      const updatePosition = () => {
+        if (selectRef.current) {
+          const rect = selectRef.current.getBoundingClientRect();
+          setPosition({
+            top: rect.bottom + window.scrollY + 4,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+          });
+        }
+      };
+      
+      updatePosition();
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      
+      return () => {
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
     }
   }, [isOpen]);
 
