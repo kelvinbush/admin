@@ -6,6 +6,8 @@ import {
   EntrepreneursFilters,
   type EntrepreneurFiltersState,
 } from "./_components/entrepreneurs-filters";
+import { EntrepreneursTabs, type EntrepreneurTab } from "./_components/entrepreneurs-tabs";
+import { EntrepreneursEmptyState } from "./_components/entrepreneurs-empty-state";
 
 const statCards = [
   { label: "Total SMEs", value: "0", delta: "0%" },
@@ -23,6 +25,7 @@ export default function EntrepreneursPage() {
     sortOrder: "desc",
   });
   const [filters, setFilters] = useState<EntrepreneurFiltersState>({});
+  const [activeTab, setActiveTab] = useState<EntrepreneurTab>("all");
 
   const handleFilterChange = <K extends keyof EntrepreneurFiltersState>(
     key: K,
@@ -82,10 +85,17 @@ export default function EntrepreneursPage() {
           }}
         />
 
-        <div className="flex-1 min-h-[320px] border border-dashed border-primaryGrey-100 rounded-xl flex items-center justify-center">
-          <p className="text-primaryGrey-300 text-sm">
-            Empty state and tables will appear here.
-          </p>
+        <EntrepreneursTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+
+        <div className="flex-1 min-h-[320px]">
+          <EntrepreneursEmptyState
+            onAddEntrepreneur={() => {
+              /* TODO: open create modal */
+            }}
+          />
         </div>
       </section>
     </div>
