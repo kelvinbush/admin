@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -20,6 +20,7 @@ interface SelectWithDescriptionProps {
   className?: string;
   triggerClassName?: string;
   error?: boolean;
+  searchable?: boolean;
 }
 
 export function SelectWithDescription({
@@ -31,12 +32,24 @@ export function SelectWithDescription({
   className,
   triggerClassName,
   error = false,
+  searchable = false,
 }: SelectWithDescriptionProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
   const selectRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [position, setPosition] = React.useState({ top: 0, left: 0, width: 0 });
   const selectedOption = options.find(option => option.value === value);
+
+  const filteredOptions = React.useMemo(() => {
+    if (!searchTerm || !searchable) return options;
+    const term = searchTerm.toLowerCase();
+    return options.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(term) ||
+        opt.description?.toLowerCase().includes(term)
+    );
+  }, [options, searchTerm, searchable]);
 
   // Calculate dropdown position
   React.useEffect(() => {
@@ -77,6 +90,7 @@ export function SelectWithDescription({
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        setSearchTerm("");
       }
     };
 
@@ -93,6 +107,7 @@ export function SelectWithDescription({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsOpen(false);
+        setSearchTerm("");
       } else if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         setIsOpen(prev => !prev);
@@ -106,6 +121,7 @@ export function SelectWithDescription({
   const handleSelect = (option: SelectOption) => {
     onValueChange(option.value);
     setIsOpen(false);
+    setSearchTerm("");
   };
 
   return (
@@ -150,8 +166,30 @@ export function SelectWithDescription({
               width: `${position.width}px`,
             }}
           >
+            {/* Search Input */}
+            {searchable && (
+              <div className="p-2 border-b">
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primaryGrey-400" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search"
+                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-primaryGrey-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-green"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="max-h-60 overflow-y-auto p-0">
-              {options.map((option) => (
+              {filteredOptions.length === 0 ? (
+                <div className="py-4 px-6 text-sm text-primaryGrey-400 text-center">
+                  No options found
+                </div>
+              ) : (
+                filteredOptions.map((option) => (
                 <div
                   key={option.value}
                   role="option"
@@ -178,7 +216,8 @@ export function SelectWithDescription({
                     </span>
                   )}
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>,
           document.body
