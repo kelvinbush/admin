@@ -1,16 +1,34 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { StepsSidebar, type StepId } from "./_components/steps-sidebar";
+import { Step1EntrepreneurDetails } from "./_components/step-1-entrepreneur-details";
+import { Step2CompanyInformation } from "./_components/step-2-company-information";
+import { Step3BusinessLocation } from "./_components/step-3-business-location";
+import { Step4EntrepreneurDocuments } from "./_components/step-4-entrepreneur-documents";
+import { Step5CompanyRegistrationDocuments } from "./_components/step-5-company-registration-documents";
+import { Step6CompanyFinancialDocuments } from "./_components/step-6-company-financial-documents";
+import { Step7OtherSupportingDocuments } from "./_components/step-7-other-supporting-documents";
 
 export default function CreateEntrepreneurPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<StepId>(1);
+  const searchParams = useSearchParams();
+
+  // Get step from URL or default to 1
+  const currentStep = useMemo<StepId>(() => {
+    const stepParam = searchParams.get("step");
+    const step = stepParam ? parseInt(stepParam, 10) : 1;
+    return (step >= 1 && step <= 7 ? step : 1) as StepId;
+  }, [searchParams]);
+
+  const handleStepChange = (step: StepId) => {
+    router.push(`/entrepreneurs/create?step=${step}`);
+  };
 
   const handleCancel = () => {
     router.push("/entrepreneurs");
@@ -42,7 +60,7 @@ export default function CreateEntrepreneurPage() {
                 alt="Branding"
                 width={0}
                 height={0}
-                className="h-[120%] w-auto object-contain scale-125"
+                className="h-[120%] w-auto object-cover"
                 unoptimized
               />
             </div>
@@ -50,39 +68,22 @@ export default function CreateEntrepreneurPage() {
         </div>
 
         {/* Form Content - Split Layout */}
-        <div className="flex py-4">
+        <div className="flex py-6">
           {/* Steps Sidebar */}
           <StepsSidebar
             currentStep={currentStep}
-            onStepClick={setCurrentStep}
+            onStepClick={handleStepChange}
           />
 
           {/* Main Content Area */}
-          <div className="flex-1 p-8">
-            <div className="space-y-4">
-              <p className="text-primaryGrey-500">
-                Step {currentStep} content will be implemented here.
-              </p>
-              
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="text-white border-0"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-                  }}
-                  disabled
-                >
-                  Save SME
-                </Button>
-              </div>
-            </div>
+          <div className="flex-1 px-8">
+            {currentStep === 1 && <Step1EntrepreneurDetails />}
+            {currentStep === 2 && <Step2CompanyInformation />}
+            {currentStep === 3 && <Step3BusinessLocation />}
+            {currentStep === 4 && <Step4EntrepreneurDocuments />}
+            {currentStep === 5 && <Step5CompanyRegistrationDocuments />}
+            {currentStep === 6 && <Step6CompanyFinancialDocuments />}
+            {currentStep === 7 && <Step7OtherSupportingDocuments />}
           </div>
         </div>
       </div>
