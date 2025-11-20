@@ -1,6 +1,7 @@
 "use client";
 import { ArrowUpRight } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EntrepreneursHeader, type EntrepreneurSort } from "./_components/entrepreneurs-header";
 import {
   EntrepreneursFilters,
@@ -18,6 +19,7 @@ const statCards = [
 ];
 
 export default function EntrepreneursPage() {
+  const router = useRouter();
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<EntrepreneurSort>({
@@ -26,6 +28,10 @@ export default function EntrepreneursPage() {
   });
   const [filters, setFilters] = useState<EntrepreneurFiltersState>({});
   const [activeTab, setActiveTab] = useState<EntrepreneurTab>("all");
+
+  const handleAddEntrepreneur = () => {
+    router.push("/entrepreneurs/create");
+  };
 
   const handleFilterChange = <K extends keyof EntrepreneurFiltersState>(
     key: K,
@@ -58,7 +64,7 @@ export default function EntrepreneursPage() {
         ))}
       </section>
 
-      <section className="rounded-2xl bg-white shadow-sm border border-primaryGrey-50 p-8 flex flex-col gap-6">
+      <section className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex flex-col gap-6">
         <EntrepreneursHeader
           total={0}
           searchValue={searchValue}
@@ -71,9 +77,7 @@ export default function EntrepreneursPage() {
           onDownload={() => {
             /* TODO: hook up download */
           }}
-          onAddEntrepreneur={() => {
-            /* TODO: open create modal */
-          }}
+          onAddEntrepreneur={handleAddEntrepreneur}
         />
 
         <EntrepreneursFilters
@@ -92,9 +96,7 @@ export default function EntrepreneursPage() {
 
         <div className="flex-1 min-h-[320px]">
           <EntrepreneursEmptyState
-            onAddEntrepreneur={() => {
-              /* TODO: open create modal */
-            }}
+            onAddEntrepreneur={handleAddEntrepreneur}
           />
         </div>
       </section>
