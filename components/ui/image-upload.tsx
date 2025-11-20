@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
 import Image from "next/image";
@@ -161,14 +161,16 @@ export function ImageUpload({
                   <button
                     type="button"
                     onClick={() => handleRemove(index)}
-                    className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                    disabled={isUploading}
+                    className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <X className="h-4 w-4 text-red-500" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleChangeImage(index)}
-                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors"
+                    disabled={isUploading}
+                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Change Image
                   </button>
@@ -185,7 +187,8 @@ export function ImageUpload({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="mt-3 px-4 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors"
+                    disabled={isUploading}
+                    className="mt-3 px-4 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Upload Image
                   </button>
@@ -197,24 +200,36 @@ export function ImageUpload({
           {currentImages.length < maxFiles && (
             <div
               className={cn(
-                "relative border-2 border-dashed rounded-md overflow-hidden aspect-square flex flex-col items-center justify-center p-4 bg-primaryGrey-50 cursor-pointer hover:bg-primaryGrey-100 transition-colors",
-                error ? "border-red-500" : "border-primaryGrey-200"
+                "relative border-2 border-dashed rounded-md overflow-hidden aspect-square flex flex-col items-center justify-center p-4 bg-primaryGrey-50 transition-colors",
+                error ? "border-red-500" : "border-primaryGrey-200",
+                isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-primaryGrey-100"
               )}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isUploading && fileInputRef.current?.click()}
             >
-              <ImageIcon className="h-8 w-8 text-primaryGrey-400 mb-2" />
-              <p className="text-xs text-center text-primaryGrey-400 mb-1">
-                File formats: {acceptedFormats.join(", ")}
-              </p>
-              <p className="text-xs text-center text-primaryGrey-400">
-                Max. File Size: {maxSizeMB}MB
-              </p>
-              <button
-                type="button"
-                className="mt-3 px-4 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors"
-              >
-                Upload Image
-              </button>
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-8 w-8 text-primary-green animate-spin mb-2" />
+                  <p className="text-xs text-center text-primaryGrey-400 font-medium">
+                    Uploading...
+                  </p>
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="h-8 w-8 text-primaryGrey-400 mb-2" />
+                  <p className="text-xs text-center text-primaryGrey-400 mb-1">
+                    File formats: {acceptedFormats.join(", ")}
+                  </p>
+                  <p className="text-xs text-center text-primaryGrey-400">
+                    Max. File Size: {maxSizeMB}MB
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-3 px-4 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors"
+                  >
+                    Upload Image
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -249,7 +264,7 @@ export function ImageUpload({
 
       <div className="flex items-start gap-4">
         {/* Preview */}
-        {showPreview && value ? (
+        {showPreview && value && typeof value === "string" ? (
           <div
             className={cn(
               "relative flex-shrink-0 overflow-hidden",
@@ -262,15 +277,24 @@ export function ImageUpload({
               fill
               className="object-cover"
             />
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              </div>
+            )}
           </div>
         ) : (
           <div
             className={cn(
-              "flex-shrink-0 flex items-center justify-center bg-primaryGrey-100 text-primaryGrey-400 font-semibold",
+              "relative flex-shrink-0 flex items-center justify-center bg-primaryGrey-100 text-primaryGrey-400 font-semibold",
               circular ? "w-24 h-24 rounded-full" : "w-24 h-24 rounded-md"
             )}
           >
-            {getInitials(0)}
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 text-primary-green animate-spin" />
+            ) : (
+              getInitials(0)
+            )}
           </div>
         )}
 
@@ -285,8 +309,17 @@ export function ImageUpload({
               error && "ring-2 ring-red-500"
             )}
           >
-            <Upload className="h-4 w-4" />
-            {isUploading ? "Uploading..." : "Upload logo"}
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Upload logo
+              </>
+            )}
           </button>
           <p className="text-xs text-primaryGrey-400">
             File types: {acceptedFormats.join(", ")}
