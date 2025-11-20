@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { StepsSidebar, type StepId } from "./_components/steps-sidebar";
 
 export default function CreateEntrepreneurPage() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<StepId>(1);
 
   const handleCancel = () => {
     router.push("/entrepreneurs");
@@ -25,7 +28,7 @@ export default function CreateEntrepreneurPage() {
       </Link>
 
       {/* Main Card */}
-      <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 overflow-hidden">
+      <div className="rounded-sm bg-white shadow-sm border border-primaryGrey-50 overflow-hidden">
         {/* Header Section */}
         <div className="relative bg-midnight-blue">
           {/* Header Content */}
@@ -46,30 +49,39 @@ export default function CreateEntrepreneurPage() {
           </div>
         </div>
 
-        {/* Form Content */}
-        <div className="p-8">
-          <div className="space-y-4">
-            <p className="text-primaryGrey-500">
-              This is a placeholder page for adding a new SME. The form will be implemented here.
-            </p>
-            
-            <div className="flex gap-3 pt-4">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="text-white border-0"
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-                }}
-                disabled
-              >
-                Save SME
-              </Button>
+        {/* Form Content - Split Layout */}
+        <div className="flex py-4">
+          {/* Steps Sidebar */}
+          <StepsSidebar
+            currentStep={currentStep}
+            onStepClick={setCurrentStep}
+          />
+
+          {/* Main Content Area */}
+          <div className="flex-1 p-8">
+            <div className="space-y-4">
+              <p className="text-primaryGrey-500">
+                Step {currentStep} content will be implemented here.
+              </p>
+              
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="text-white border-0"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                  }}
+                  disabled
+                >
+                  Save SME
+                </Button>
+              </div>
             </div>
           </div>
         </div>
