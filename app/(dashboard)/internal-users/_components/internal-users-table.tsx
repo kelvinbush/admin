@@ -92,6 +92,9 @@ export function InternalUsersTable({
     // Capture current modal state before it changes
     const currentModal = { ...confirmModal };
     
+    // Close the modal first
+    setConfirmModal({ type: "deactivate", open: false });
+    
     // Execute action immediately
     if (currentModal.type === "deactivate" && currentModal.userId && onDeactivate) {
       onDeactivate(currentModal.userId);
@@ -102,9 +105,6 @@ export function InternalUsersTable({
     } else if (currentModal.type === "revoke" && currentModal.invitationId && onRevokeInvitation) {
       onRevokeInvitation(currentModal.invitationId);
     }
-    
-    // AlertDialogAction will automatically close the dialog, 
-    // and onOpenChange will reset the state
   };
 
   const handleOpenChange = (open: boolean) => {

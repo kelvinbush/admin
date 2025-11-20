@@ -1,21 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
-  useInternalUsers,
-  useCreateInternalInvite,
+  useActivateInternalUser,
   useDeactivateInternalUser,
+  useInternalUsers,
   useRemoveInternalUser,
   useResendInternalInvitation,
   useRevokeInternalInvitation,
-  useActivateInternalUser,
 } from "@/lib/api/hooks/internal-users";
-import { InternalUsersHeader, type InternalUsersSort } from "./_components/internal-users-header";
 import {
-  InternalUsersFilters,
+  InternalUsersHeader,
+  type InternalUsersSort,
+} from "./_components/internal-users-header";
+import {
   type InternalUserFiltersState,
+  InternalUsersFilters,
 } from "./_components/internal-users-filters";
-import { InternalUsersTable, type InternalUserTableItem } from "./_components/internal-users-table";
+import {
+  InternalUsersTable,
+  type InternalUserTableItem,
+} from "./_components/internal-users-table";
 import InviteUserModal from "./_components/invite-user-modal";
 
 type InternalUsersFilterValues = InternalUserFiltersState & {
@@ -31,7 +37,7 @@ export default function InternalUsersPage() {
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
-  const { data, isLoading, error } = useInternalUsers();
+  const { data, isLoading } = useInternalUsers();
 
   const resendInvitation = useResendInternalInvitation();
   const revokeInvitation = useRevokeInternalInvitation();
@@ -42,15 +48,23 @@ export default function InternalUsersPage() {
   // Fallbacks using custom mutation per-user because we need dynamic URLs
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
 
-  const users = useMemo<InternalUserTableItem[]>(() => (data?.items || []) as InternalUserTableItem[], [data]);
+  const users = useMemo<InternalUserTableItem[]>(
+    () => (data?.items || []) as InternalUserTableItem[],
+    [data],
+  );
 
   const totalUsers = users.length;
 
   const filteredUsers = useMemo<InternalUserTableItem[]>(() => {
     const searchTerm = filters.search?.toLowerCase().trim();
-    const roleFilter = filters.role && filters.role !== "all" ? filters.role : undefined;
-    const statusFilter = filters.status && filters.status !== "all" ? filters.status : undefined;
-    const createdFilter = filters.createdAt && filters.createdAt !== "all" ? filters.createdAt : undefined;
+    const roleFilter =
+      filters.role && filters.role !== "all" ? filters.role : undefined;
+    const statusFilter =
+      filters.status && filters.status !== "all" ? filters.status : undefined;
+    const createdFilter =
+      filters.createdAt && filters.createdAt !== "all"
+        ? filters.createdAt
+        : undefined;
 
     const now = Date.now();
     const durationMap: Record<string, number> = {
@@ -61,7 +75,9 @@ export default function InternalUsersPage() {
     };
 
     const createdThreshold =
-      createdFilter && createdFilter !== "year" ? now - durationMap[createdFilter] : null;
+      createdFilter && createdFilter !== "year"
+        ? now - durationMap[createdFilter]
+        : null;
     const startOfYear = new Date(new Date().getFullYear(), 0, 1).getTime();
 
     const matchesCreatedAt = (user: InternalUserTableItem) => {
@@ -79,7 +95,8 @@ export default function InternalUsersPage() {
     const sorted = [...users]
       .filter((user) => {
         if (searchTerm) {
-          const haystack = `${user.name ?? ""} ${user.email ?? ""} ${user.phoneNumber ?? ""}`.toLowerCase();
+          const haystack =
+            `${user.name ?? ""} ${user.email ?? ""} ${user.phoneNumber ?? ""}`.toLowerCase();
           if (!haystack.includes(searchTerm)) {
             return false;
           }
@@ -112,7 +129,7 @@ export default function InternalUsersPage() {
     return sorted;
   }, [users, filters, sort]);
 
-  const setFilterValue = <K extends keyof InternalUsersFilterValues,>(
+  const setFilterValue = <K extends keyof InternalUsersFilterValues>(
     key: K,
     value: InternalUsersFilterValues[K],
   ) => {
@@ -138,7 +155,15 @@ export default function InternalUsersPage() {
   };
 
   const handleDownload = () => {
-    const headers = ["Name", "Email", "Phone", "Role", "Status", "Created At", "Updated At"];
+    const headers = [
+      "Name",
+      "Email",
+      "Phone",
+      "Role",
+      "Status",
+      "Created At",
+      "Updated At",
+    ];
     const rows = filteredUsers.map((user) => [
       user.name ?? "",
       user.email ?? "",
@@ -150,7 +175,8 @@ export default function InternalUsersPage() {
     ]);
 
     const escapeCell = (cell: string) => {
-      const needsEscaping = cell.includes(",") || cell.includes("\"") || cell.includes("\n");
+      const needsEscaping =
+        cell.includes(",") || cell.includes('"') || cell.includes("\n");
       const sanitized = cell.replace(/"/g, '""');
       return needsEscaping ? `"${sanitized}"` : sanitized;
     };
@@ -163,19 +189,28 @@ export default function InternalUsersPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `internal-users-${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute(
+      "download",
+      `internal-users-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-
   async function onResend(invitationId?: string | null) {
     if (!invitationId) return;
     setActionBusyId(invitationId);
     try {
       await resendInvitation.mutateAsync({ invitationId });
+      toast.success("Invitation resent successfully!");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to resend invitation. Please try again.";
+      toast.error(message);
     } finally {
       setActionBusyId(null);
     }
