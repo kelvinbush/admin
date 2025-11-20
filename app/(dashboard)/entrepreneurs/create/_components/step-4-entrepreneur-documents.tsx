@@ -1,6 +1,102 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
+import { FileUpload } from "@/components/ui/file-upload";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+const entrepreneurDocumentsSchema = z.object({
+  hasIdentificationDocuments: z.enum(["yes", "no"]),
+  documentType: z.string().optional(),
+  identificationNumber: z.string().optional(),
+  passportNumber: z.string().optional(),
+  frontIdDocument: z.string().optional(),
+  backIdDocument: z.string().optional(),
+  passportBioPage: z.string().optional(),
+  passportPhoto: z.string().optional(),
+  personalTaxIdNumber: z.string().min(1, "Personal tax identification number is required"),
+  personalTaxCertificate: z.string().min(1, "Personal tax registration certificate is required"),
+}).refine((data) => {
+  // If has documents is "yes", document type is required
+  if (data.hasIdentificationDocuments === "yes" && !data.documentType) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Document type is required",
+  path: ["documentType"],
+}).refine((data) => {
+  // If has documents is "yes" and document type is "identity-card", require identification fields
+  if (data.hasIdentificationDocuments === "yes" && data.documentType === "identity-card") {
+    if (!data.identificationNumber) return false;
+    if (!data.frontIdDocument) return false;
+    if (!data.backIdDocument) return false;
+  }
+  return true;
+}, {
+  message: "All identity card fields are required",
+  path: ["identificationNumber"],
+}).refine((data) => {
+  // If has documents is "yes" and document type is "passport", require passport fields
+  if (data.hasIdentificationDocuments === "yes" && data.documentType === "passport") {
+    if (!data.passportNumber) return false;
+    if (!data.passportBioPage) return false;
+  }
+  return true;
+}, {
+  message: "All passport fields are required",
+  path: ["passportNumber"],
+});
+
+type EntrepreneurDocumentsFormData = z.infer<typeof entrepreneurDocumentsSchema>;
+
+const documentTypeOptions: SelectOption[] = [
+  { value: "identity-card", label: "Identity Card" },
+  { value: "passport", label: "Passport" },
+];
+
 export function Step4EntrepreneurDocuments() {
+  const router = useRouter();
+  const [hasDocuments, setHasDocuments] = useState<"yes" | "no" | undefined>(undefined);
+  const [documentType, setDocumentType] = useState<string>("");
+
+  const form = useForm<EntrepreneurDocumentsFormData>({
+    resolver: zodResolver(entrepreneurDocumentsSchema),
+    defaultValues: {
+      hasIdentificationDocuments: undefined,
+      documentType: "",
+      identificationNumber: "",
+      passportNumber: "",
+      frontIdDocument: "",
+      backIdDocument: "",
+      passportBioPage: "",
+      passportPhoto: "",
+      personalTaxIdNumber: "",
+      personalTaxCertificate: "",
+    },
+  });
+
+  const handleCancel = () => {
+    router.push("/entrepreneurs/create?step=3");
+  };
+
+  const onSubmit = (data: EntrepreneurDocumentsFormData) => {
+    console.log("Step 4 data:", data);
+    router.push("/entrepreneurs/create?step=5");
+  };
+
+  const watchHasDocuments = form.watch("hasIdentificationDocuments");
+  const watchDocumentType = form.watch("documentType");
+
   return (
     <div className="space-y-6">
       <div>
@@ -9,16 +105,358 @@ export function Step4EntrepreneurDocuments() {
           Entrepreneur Documents
         </h2>
         <p className="text-sm text-primaryGrey-500">
-          Upload required documents for the entrepreneur
+          Upload identification and tax documents for the entrepreneur.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <p className="text-primaryGrey-400 text-sm">
-          Document upload fields for Step 4 will be implemented here.
-        </p>
-      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Do you have identification documents? */}
+          <FormField
+            control={form.control}
+            name="hasIdentificationDocuments"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required className="text-primaryGrey-400">
+                  Do you have the entrepreneur's identification documents?
+                </FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setHasDocuments(value as "yes" | "no");
+                      // Reset document fields when changing answer
+                      if (value === "no") {
+                        form.resetField("documentType");
+                        form.resetField("identificationNumber");
+                        form.resetField("passportNumber");
+                        form.resetField("frontIdDocument");
+                        form.resetField("backIdDocument");
+                        form.resetField("passportBioPage");
+                        form.resetField("passportPhoto");
+                        setDocumentType("");
+                      }
+                    }}
+                    className="flex flex-row gap-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="yes" />
+                      <Label htmlFor="yes" className="cursor-pointer text-primaryGrey-400">
+                        Yes, I do
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="no" />
+                      <Label htmlFor="no" className="cursor-pointer text-primaryGrey-400">
+                        No, I don't
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Identification Documents Section - Only show if "Yes" */}
+          {watchHasDocuments === "yes" && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium text-midnight-blue">
+                Identification Documents
+              </h3>
+
+              {/* Document Type - Spans 2 cols when alone, 1 col when number field is shown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Document Type */}
+                <FormField
+                  control={form.control}
+                  name="documentType"
+                  render={({ field }) => (
+                    <FormItem className={!watchDocumentType ? "md:col-span-2" : ""}>
+                      <FormLabel required className="text-primaryGrey-400">
+                        Document type
+                      </FormLabel>
+                      <FormControl>
+                        <SelectWithDescription
+                          options={documentTypeOptions}
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setDocumentType(value);
+                            // Reset fields when changing document type
+                            form.resetField("identificationNumber");
+                            form.resetField("passportNumber");
+                            form.resetField("frontIdDocument");
+                            form.resetField("backIdDocument");
+                            form.resetField("passportBioPage");
+                            form.resetField("passportPhoto");
+                          }}
+                          placeholder="Select document type"
+                          triggerClassName="h-10"
+                          error={!!form.formState.errors.documentType}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Identification Number - Show when Identity Card is selected */}
+                {watchDocumentType === "identity-card" && (
+                  <FormField
+                    control={form.control}
+                    name="identificationNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-primaryGrey-400">
+                          Identification number
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter ID number"
+                            {...field}
+                            className={cn(
+                              "h-10",
+                              form.formState.errors.identificationNumber && "border-red-500"
+                            )}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Passport Number - Show when Passport is selected */}
+                {watchDocumentType === "passport" && (
+                  <FormField
+                    control={form.control}
+                    name="passportNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-primaryGrey-400">
+                          Passport number
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter passport number"
+                            {...field}
+                            className={cn(
+                              "h-10",
+                              form.formState.errors.passportNumber && "border-red-500"
+                            )}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+
+              {/* Identity Card Fields */}
+              {watchDocumentType === "identity-card" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  {/* Upload Front ID Document */}
+                  <FormField
+                    control={form.control}
+                    name="frontIdDocument"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Upload front ID document"
+                            required
+                            error={!!form.formState.errors.frontIdDocument}
+                            errorMessage={form.formState.errors.frontIdDocument?.message}
+                            acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                            maxSizeMB={5}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Upload Back ID Document */}
+                  <FormField
+                    control={form.control}
+                    name="backIdDocument"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Upload back ID document"
+                            required
+                            error={!!form.formState.errors.backIdDocument}
+                            errorMessage={form.formState.errors.backIdDocument?.message}
+                            acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                            maxSizeMB={5}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Upload Passport Photo (Optional) - Spans 2 columns */}
+                  <FormField
+                    control={form.control}
+                    name="passportPhoto"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Upload passport photo (optional)"
+                            acceptedFormats={["PNG", "JPG", "JPEG"]}
+                            maxSizeMB={5}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Passport Fields */}
+              {watchDocumentType === "passport" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Upload Passport Bio Page */}
+                  <FormField
+                    control={form.control}
+                    name="passportBioPage"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Upload passport bio page"
+                            required
+                            error={!!form.formState.errors.passportBioPage}
+                            errorMessage={form.formState.errors.passportBioPage?.message}
+                            acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                            maxSizeMB={5}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Upload Passport Photo (Optional) - Spans 2 columns */}
+                  <FormField
+                    control={form.control}
+                    name="passportPhoto"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Upload passport photo (optional)"
+                            acceptedFormats={["PNG", "JPG", "JPEG"]}
+                            maxSizeMB={5}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tax Documents Section - Always shown */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium text-midnight-blue">
+              Tax Documents
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Personal Tax Identification Number - Spans 2 columns */}
+              <FormField
+                control={form.control}
+                name="personalTaxIdNumber"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel required className="text-primaryGrey-400">
+                      Personal tax identification number
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter tax identification number"
+                        {...field}
+                        className={cn(
+                          "h-10",
+                          form.formState.errors.personalTaxIdNumber && "border-red-500"
+                        )}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Upload Personal Tax Registration Certificate */}
+              <FormField
+                control={form.control}
+                name="personalTaxCertificate"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormControl>
+                      <FileUpload
+                        value={field.value}
+                        onChange={field.onChange}
+                        label="Upload personal tax registration certificate"
+                        required
+                        error={!!form.formState.errors.personalTaxCertificate}
+                        errorMessage={form.formState.errors.personalTaxCertificate?.message}
+                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        maxSizeMB={5}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              size="lg"
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="lg"
+              type="submit"
+              className="text-white border-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+              }}
+            >
+              Save & Continue
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }
-
