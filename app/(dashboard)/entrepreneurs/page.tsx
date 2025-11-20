@@ -1,4 +1,11 @@
+"use client";
 import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { EntrepreneursHeader, type EntrepreneurSort } from "./_components/entrepreneurs-header";
+import {
+  EntrepreneursFilters,
+  type EntrepreneurFiltersState,
+} from "./_components/entrepreneurs-filters";
 
 const statCards = [
   { label: "Total SMEs", value: "0", delta: "0%" },
@@ -9,6 +16,24 @@ const statCards = [
 ];
 
 export default function EntrepreneursPage() {
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [searchValue, setSearchValue] = useState("");
+  const [sort, setSort] = useState<EntrepreneurSort>({
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+  const [filters, setFilters] = useState<EntrepreneurFiltersState>({});
+
+  const handleFilterChange = <K extends keyof EntrepreneurFiltersState>(
+    key: K,
+    value?: EntrepreneurFiltersState[K],
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value === "all" ? undefined : value,
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -30,10 +55,38 @@ export default function EntrepreneursPage() {
         ))}
       </section>
 
-      <section className="rounded-2xl bg-white shadow-sm border border-primaryGrey-50 p-8 min-h-[420px] flex items-center justify-center">
-        <p className="text-primaryGrey-400 text-sm">
-          Filters, tabs, and SME table will appear here.
-        </p>
+      <section className="rounded-2xl bg-white shadow-sm border border-primaryGrey-50 p-8 flex flex-col gap-6">
+        <EntrepreneursHeader
+          total={0}
+          searchValue={searchValue}
+          filtersVisible={filtersVisible}
+          sort={sort}
+          onSearchChange={setSearchValue}
+          onClearSearch={() => setSearchValue("")}
+          onSortChange={setSort}
+          onToggleFilters={() => setFiltersVisible((prev) => !prev)}
+          onDownload={() => {
+            /* TODO: hook up download */
+          }}
+          onAddEntrepreneur={() => {
+            /* TODO: open create modal */
+          }}
+        />
+
+        <EntrepreneursFilters
+          values={filters}
+          visible={filtersVisible}
+          onValueChange={handleFilterChange}
+          onApply={() => {
+            /* Filters reactive */
+          }}
+        />
+
+        <div className="flex-1 min-h-[320px] border border-dashed border-primaryGrey-100 rounded-xl flex items-center justify-center">
+          <p className="text-primaryGrey-300 text-sm">
+            Empty state and tables will appear here.
+          </p>
+        </div>
       </section>
     </div>
   );
