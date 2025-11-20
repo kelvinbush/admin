@@ -62,16 +62,29 @@ interface StepsSidebarProps {
 }
 
 export function StepsSidebar({ currentStep, onStepClick }: StepsSidebarProps) {
+  const isStepEnabled = (stepId: StepId) => {
+    // Allow navigation to current step and all previous steps
+    return stepId <= currentStep;
+  };
+
   return (
     <div className="w-64 bg-white border-r border-t border-primaryGrey-50">
-      {steps.map((step) => (
-        <StepItem
-          key={step.id}
-          step={step}
-          isActive={step.id === currentStep}
-          onClick={() => onStepClick?.(step.id)}
-        />
-      ))}
+      {steps.map((step) => {
+        const enabled = isStepEnabled(step.id);
+        return (
+          <StepItem
+            key={step.id}
+            step={step}
+            isActive={step.id === currentStep}
+            isEnabled={enabled}
+            onClick={() => {
+              if (enabled) {
+                onStepClick?.(step.id);
+              }
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -79,26 +92,31 @@ export function StepsSidebar({ currentStep, onStepClick }: StepsSidebarProps) {
 interface StepItemProps {
   step: Step;
   isActive: boolean;
+  isEnabled: boolean;
   onClick?: () => void;
 }
 
-function StepItem({ step, isActive, onClick }: StepItemProps) {
+function StepItem({ step, isActive, isEnabled, onClick }: StepItemProps) {
   return (
     <button
       onClick={onClick}
+      disabled={!isEnabled}
       className={cn(
-        "w-full flex items-start gap-3 p-3 transition-colors text-left border-b border-primaryGrey-50 hover:bg-primaryGrey-50",
-        isActive
-          && "bg-primary-green/10 "
+        "w-full flex items-start gap-3 p-3 transition-colors text-left border-b border-primaryGrey-50",
+        isEnabled && "hover:bg-primaryGrey-50 cursor-pointer",
+        !isEnabled && "cursor-not-allowed opacity-50",
+        isActive && "bg-primary-green/10"
       )}
     >
       {/* Step Number */}
       <div
         className={cn(
-          "flex-shrink-0 w-10 h-10 rounded-sm flex items-center justify-center   text-sm",
+          "flex-shrink-0 w-10 h-10 rounded-sm flex items-center justify-center text-sm",
           isActive
             ? "bg-primary-green text-white"
-            : "bg-white border border-primaryGrey-200 text-primaryGrey-400"
+            : isEnabled
+            ? "bg-white border border-primaryGrey-200 text-primaryGrey-400"
+            : "bg-primaryGrey-50 border border-primaryGrey-200 text-primaryGrey-300"
         )}
       >
         {step.number}
@@ -109,7 +127,11 @@ function StepItem({ step, isActive, onClick }: StepItemProps) {
         <div
           className={cn(
             "text-xs mb-0.5",
-            isActive ? "text-midnight-blue" : "text-primaryGrey-400"
+            isActive
+              ? "text-midnight-blue"
+              : isEnabled
+              ? "text-primaryGrey-400"
+              : "text-primaryGrey-300"
           )}
         >
           {step.title}
@@ -117,7 +139,11 @@ function StepItem({ step, isActive, onClick }: StepItemProps) {
         <div
           className={cn(
             "text-sm",
-            isActive ? "text-midnight-blue" : "text-primaryGrey-400"
+            isActive
+              ? "text-midnight-blue"
+              : isEnabled
+              ? "text-primaryGrey-400"
+              : "text-primaryGrey-300"
           )}
         >
           {step.description}
