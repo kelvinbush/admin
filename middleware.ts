@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { Roles } from '@/lib/types/global'
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/accept-invite(.*)', '/forgot-password(.*)'])
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/accept-invite(.*)', '/forgot-password(.*)', "/api/uploadthing(.*)"])
 
 const ALLOWED_ROLES: Roles[] = ['admin', 'member', 'super-admin']
 

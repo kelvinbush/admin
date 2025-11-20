@@ -44,15 +44,19 @@ export function SelectWithDescription({
       const updatePosition = () => {
         if (selectRef.current) {
           const rect = selectRef.current.getBoundingClientRect();
+          // For fixed positioning, use viewport coordinates directly
           setPosition({
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.left + window.scrollX,
+            top: rect.bottom + 4,
+            left: rect.left,
             width: rect.width,
           });
         }
       };
       
+      // Update position immediately
       updatePosition();
+      
+      // Update on scroll and resize
       window.addEventListener("scroll", updatePosition, true);
       window.addEventListener("resize", updatePosition);
       
