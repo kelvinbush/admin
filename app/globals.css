@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 .gradient-border {
   border-bottom: 1px solid; /* Set border thickness */
   border-image-source: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 56%, rgba(255, 255, 255, 0) 100%);
@@ -72,25 +68,12 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    @apply text-midnight-blue;
-  }
-}
-
-
-
-@layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    @apply text-midnight-blue;
+    font-family: var(--font-montreal), sans-serif;
   }
 }

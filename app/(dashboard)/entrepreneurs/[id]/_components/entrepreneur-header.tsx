@@ -41,7 +41,7 @@ export function EntrepreneurHeader({
   return (
     <div className="relative rounded-md overflow-hidden">
       {/* Background Image with Overlay */}
-      <div className="relative h-[280px] w-full">
+      <div className="relative w-full">
         <Image
           src="/banner-image.png"
           alt="Company banner"
@@ -53,74 +53,76 @@ export function EntrepreneurHeader({
         
         {/* Content Overlay */}
         <div className="relative h-full flex flex-col">
-          <div className="flex-1 px-8 py-6 flex items-start justify-between">
-            {/* Left Section - Logo and Company Info */}
+          <div className="flex-1 px-8 py-6">
             <div className="flex items-start gap-6">
               {/* Company Logo */}
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center relative overflow-hidden">
                   {/* Placeholder logo - replace with actual logo */}
                   <div className="w-full h-full bg-gradient-to-br from-orange-500 to-primary-green flex flex-col items-center justify-center">
                     <div className="text-white font-bold text-lg">CSA</div>
                   </div>
-                  
-                  {/* Upload Icon Overlay */}
-                  <button className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary-green flex items-center justify-center border-2 border-white shadow-sm hover:bg-primary-green/90 transition-colors">
-                    <Camera className="h-4 w-4 text-white" />
-                  </button>
                 </div>
+                
+                {/* Upload Icon Overlay - positioned relative to parent container */}
+                <button className="absolute -bottom-1 -right-1 w-8 h-8 z-10 rounded-full bg-primary-green flex items-center justify-center border-2 border-white shadow-sm hover:bg-primary-green/90 transition-colors">
+                  <Camera className="h-4 w-4 text-white" />
+                </button>
               </div>
 
-              {/* Company Details */}
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-semibold text-white">
-                  {entrepreneur.companyName}
-                </h1>
-                <p className="text-[#B6BABC] text-sm">
-                  {entrepreneur.legalEntityType} • {entrepreneur.city}, {entrepreneur.country}
-                </p>
-              </div>
-            </div>
+              {/* Right side content - spans full width minus logo */}
+              <div className="flex-1 flex flex-col gap-1">
+                {/* Top row: Title and Action Buttons */}
+                <div className="flex items-start justify-between gap-4">
+                  {/* Company Details */}
+                  <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl text-white">
+                      {entrepreneur.companyName}
+                    </h1>
+                    <p className="text-[#B6BABC]">
+                      {entrepreneur.legalEntityType} • {entrepreneur.city}, {entrepreneur.country}
+                    </p>
+                  </div>
 
-            {/* Right Section - Progress and Actions */}
-            <div className="flex flex-col items-end gap-4">
-              {/* Profile Completion */}
-              <div className="flex items-center gap-3">
-                <div className="w-48 h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary-green transition-all duration-300"
-                    style={{ width: `${entrepreneur.profileCompletion}%` }}
-                  />
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0"
+                    >
+                      Resend Invite
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-transparent hover:bg-primaryGrey-50 text-white border-white"
+                    >
+                      Email User
+                    </Button>
+                  </div>
                 </div>
-                <span className="text-white text-sm font-medium whitespace-nowrap">
-                  {entrepreneur.profileCompletion}% profile completion
-                </span>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0"
-                >
-                  Resend Invite
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-transparent hover:bg-primaryGrey-50 text-white border-white"
-                >
-                  Email User
-                </Button>
+                {/* Progress Bar - spans full width minus logo space */}
+                <div className="">
+                <div className="text-white text-sm whitespace-nowrap text-right ml-auto">
+                    {entrepreneur.profileCompletion}% profile completion
+                  </div>
+                  <div className="flex-1 h-1.5 bg-white rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary-green transition-all duration-300 rounded-full"
+                      style={{ width: `${entrepreneur.profileCompletion}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Bottom Section - Detailed Info */}
-          <div className="px-8 pb-6">
-            <div className="grid grid-cols-5 gap-6 pt-6 border-t border-[#B6BABC]">
-              <div className="flex flex-col gap-1">
+          <div className="px-8">
+            <div className="grid grid-cols-5 gap-6 py-5 border-t border-[#B6BABC]">
+              <div className="flex flex-col gap-1 pr-6 border-r border-[#B6BABC]">
                 <p className="text-[#B6BABC] text-xs font-medium uppercase tracking-wide">
                   Member since
                 </p>
@@ -129,7 +131,7 @@ export function EntrepreneurHeader({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 px-6 border-r border-[#B6BABC]">
                 <p className="text-[#B6BABC] text-xs font-medium uppercase tracking-wide">
                   Last login
                 </p>
@@ -138,7 +140,7 @@ export function EntrepreneurHeader({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 px-6 border-r border-[#B6BABC]">
                 <p className="text-[#B6BABC] text-xs font-medium uppercase tracking-wide">
                   User Group
                 </p>
@@ -147,7 +149,7 @@ export function EntrepreneurHeader({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 px-6 border-r border-[#B6BABC]">
                 <p className="text-[#B6BABC] text-xs font-medium uppercase tracking-wide">
                   Sector(s)
                 </p>
@@ -156,7 +158,7 @@ export function EntrepreneurHeader({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 pl-6">
                 <p className="text-[#B6BABC] text-xs font-medium uppercase tracking-wide">
                   Status
                 </p>

@@ -9,6 +9,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-montreal)", "sans-serif"],
+        montreal: ["var(--font-montreal)", "sans-serif"],
+      },
       colors: {
         primaryGrey: {
           50: "#E8E9EA",

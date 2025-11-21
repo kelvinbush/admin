@@ -51,6 +51,7 @@ const montreal = localFont({
     },
   ],
   variable: "--font-montreal",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -65,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={montreal.variable}>
       <body className={cn(montreal.className)}>
         <Providers>
           <TitleProvider>
