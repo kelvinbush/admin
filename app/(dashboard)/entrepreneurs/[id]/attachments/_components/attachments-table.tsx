@@ -20,6 +20,7 @@ interface AttachmentsTableProps {
   onUpdate?: (document: AttachmentDocument) => void;
   onDownload?: (document: AttachmentDocument) => void;
   onUpload?: (document: AttachmentDocument) => void;
+  onUploadNew?: () => void; // For uploading unnamed documents
 }
 
 export function AttachmentsTable({
@@ -28,6 +29,7 @@ export function AttachmentsTable({
   onUpdate,
   onDownload,
   onUpload,
+  onUploadNew,
 }: AttachmentsTableProps) {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
 
@@ -125,6 +127,7 @@ export function AttachmentsTable({
                   <td className="px-6 py-4">
                     <DocumentActions
                       status={document.status}
+                      documentName={document.name}
                       onView={() => onView?.(document)}
                       onUpdate={() => onUpdate?.(document)}
                       onDownload={() => onDownload?.(document)}

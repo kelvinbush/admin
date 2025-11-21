@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AttachmentsHeader } from "../_components/attachments-header";
 import { AttachmentsTable, type AttachmentDocument } from "../_components/attachments-table";
 import { AttachmentsPagination } from "../_components/attachments-pagination";
+import { DocumentUploadModal } from "../_components/document-upload-modal";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
 type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
@@ -14,6 +15,10 @@ export default function EntrepreneurDocumentsPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
+  const [uploadNewModalOpen, setUploadNewModalOpen] = useState(false);
 
   // TODO: Fetch documents from API
   // Placeholder data matching the image
@@ -74,8 +79,7 @@ export default function EntrepreneurDocumentsPage() {
   );
 
   const handleUpload = () => {
-    // TODO: Implement upload functionality
-    console.log("Upload document");
+    setUploadNewModalOpen(true);
   };
 
   const handleView = (document: AttachmentDocument) => {
@@ -84,13 +88,28 @@ export default function EntrepreneurDocumentsPage() {
   };
 
   const handleUpdate = (document: AttachmentDocument) => {
-    // TODO: Implement update functionality
-    console.log("Update document:", document);
+    setSelectedDocument(document);
+    setUpdateModalOpen(true);
   };
 
   const handleDownload = (document: AttachmentDocument) => {
     // TODO: Implement download functionality
     console.log("Download document:", document);
+  };
+
+  const handleUploadSubmit = (fileUrl: string, documentName?: string) => {
+    // TODO: Submit to API
+    console.log("Upload document:", { fileUrl, documentName });
+    setUploadNewModalOpen(false);
+    // Refresh documents list
+  };
+
+  const handleUpdateSubmit = (fileUrl: string) => {
+    // TODO: Submit to API
+    console.log("Update document:", { documentId: selectedDocument?.id, fileUrl });
+    setUpdateModalOpen(false);
+    setSelectedDocument(null);
+    // Refresh documents list
   };
 
   return (
@@ -124,6 +143,28 @@ export default function EntrepreneurDocumentsPage() {
           totalItems={sortedDocuments.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
+        />
+      )}
+
+      {/* Upload New Document Modal (unnamed) */}
+      <DocumentUploadModal
+        open={uploadNewModalOpen}
+        onOpenChange={setUploadNewModalOpen}
+        onSubmit={handleUploadSubmit}
+        requireDocumentName={true}
+        acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
+        maxSizeMB={2}
+      />
+
+      {/* Update Document Modal (named) */}
+      {selectedDocument && (
+        <DocumentUploadModal
+          open={updateModalOpen}
+          onOpenChange={setUpdateModalOpen}
+          onSubmit={handleUpdateSubmit}
+          documentName={selectedDocument.name}
+          acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
+          maxSizeMB={2}
         />
       )}
     </div>

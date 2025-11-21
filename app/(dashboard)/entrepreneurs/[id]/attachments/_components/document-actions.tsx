@@ -9,6 +9,7 @@ type DocumentStatus = "uploaded" | "pending" | "rejected";
 
 interface DocumentActionsProps {
   status: DocumentStatus;
+  documentName?: string;
   onView?: () => void;
   onUpdate?: () => void;
   onDownload?: () => void;
@@ -17,6 +18,7 @@ interface DocumentActionsProps {
 
 export function DocumentActions({
   status,
+  documentName,
   onView,
   onUpdate,
   onDownload,
