@@ -43,7 +43,7 @@ export default function CompanyDetailsLayout({
   return (
     <div className="flex gap-8">
       {/* Vertical Tabs Sidebar */}
-      <aside className="w-56 flex-shrink-0">
+      <aside className="w-56 flex-shrink-0 border-r border-primaryGrey-100">
         <nav className="flex flex-col gap-1">
           {verticalTabs.map((tab) => {
             const active = isActive(tab.id);
