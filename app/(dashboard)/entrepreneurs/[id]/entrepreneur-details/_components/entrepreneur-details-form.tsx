@@ -98,8 +98,8 @@ export function EntrepreneurDetailsForm({ initialData }: EntrepreneurDetailsForm
   return (
     <div className="space-y-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* First Name */}
             <FormField
               control={form.control}
@@ -108,7 +108,7 @@ export function EntrepreneurDetailsForm({ initialData }: EntrepreneurDetailsForm
                 <FormItem>
                   <FormLabel className="text-primaryGrey-400">First name</FormLabel>
                   <FormControl>
-                    <Input
+                    <Input  
                       placeholder="Enter first name"
                       {...field}
                       className={cn(

@@ -38,7 +38,7 @@ export function SelectWithDescription({
   const [searchTerm, setSearchTerm] = React.useState("");
   const selectRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const [position, setPosition] = React.useState({ top: 0, left: 0, width: 0 });
+  const [position, setPosition] = React.useState({ top: 0, left: 0, width: 0, openAbove: false });
   const selectedOption = options.find(option => option.value === value);
 
   const filteredOptions = React.useMemo(() => {
@@ -57,12 +57,36 @@ export function SelectWithDescription({
       const updatePosition = () => {
         if (selectRef.current) {
           const rect = selectRef.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const dropdownMaxHeight = 240; // max-h-60 = 240px
+          const spaceBelow = viewportHeight - rect.bottom;
+          const spaceAbove = rect.top;
+          
+          // Check if we should open above or below
+          // Open above if there's not enough space below AND more space above
+          const openAbove = spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow;
+          
           // For fixed positioning, use viewport coordinates directly
-          setPosition({
-            top: rect.bottom + 4,
-            left: rect.left,
-            width: rect.width,
-          });
+          if (openAbove) {
+            // Position above: calculate from top of trigger minus dropdown height
+            const calculatedTop = rect.top - dropdownMaxHeight - 4;
+            // Ensure it doesn't go above viewport
+            const finalTop = Math.max(4, calculatedTop);
+            setPosition({
+              top: finalTop,
+              left: rect.left,
+              width: rect.width,
+              openAbove: true,
+            });
+          } else {
+            // Position below: normal behavior
+            setPosition({
+              top: rect.bottom + 4,
+              left: rect.left,
+              width: rect.width,
+              openAbove: false,
+            });
+          }
         }
       };
       
@@ -164,6 +188,7 @@ export function SelectWithDescription({
               top: `${position.top}px`,
               left: `${position.left}px`,
               width: `${position.width}px`,
+              maxHeight: position.openAbove ? `${position.top - 4}px` : '240px',
             }}
           >
             {/* Search Input */}
