@@ -7,6 +7,8 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from "@/component
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { SMESuccessModal } from "./sme-success-modal";
 
 const otherSupportingDocumentsSchema = z.object({
   businessPermit: z.string().min(1, "Business permit is required"),
@@ -17,6 +19,8 @@ type OtherSupportingDocumentsFormData = z.infer<typeof otherSupportingDocumentsS
 
 export function Step7OtherSupportingDocuments() {
   const router = useRouter();
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   const form = useForm<OtherSupportingDocumentsFormData>({
     resolver: zodResolver(otherSupportingDocumentsSchema),
@@ -32,7 +36,14 @@ export function Step7OtherSupportingDocuments() {
 
   const onSubmit = (data: OtherSupportingDocumentsFormData) => {
     console.log("Step 7 data:", data);
-    // TODO: Submit all form data and redirect to entrepreneurs list
+    // TODO: Submit all form data to API
+    // For now, using a placeholder email - replace with actual email from form data
+    setSubmittedEmail("johndoe@gmail.com"); // Replace with actual email from step 1
+    setSuccessModalOpen(true);
+  };
+
+  const handleCloseSuccessModal = () => {
+    setSuccessModalOpen(false);
     router.push("/entrepreneurs");
   };
 
@@ -138,6 +149,12 @@ export function Step7OtherSupportingDocuments() {
           </div>
         </form>
       </Form>
+
+      <SMESuccessModal
+        open={successModalOpen}
+        onOpenChange={handleCloseSuccessModal}
+        email={submittedEmail}
+      />
     </div>
   );
 }
