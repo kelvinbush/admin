@@ -55,6 +55,9 @@ export function SMEOnboardingProvider({ children }: SMEOnboardingProviderProps) 
       gender: userDetail.user.gender,
       position: userDetail.user.position,
       onboardingStatus: userDetail.user.onboardingStatus,
+      idNumber: userDetail.user.idNumber || undefined,
+      taxNumber: userDetail.user.taxNumber || undefined,
+      idType: userDetail.user.idType || undefined,
     },
     business: userDetail.business ? {
       id: userDetail.business.id,

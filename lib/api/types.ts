@@ -892,6 +892,9 @@ export interface SMEUserDetail {
     gender?: string;
     position?: string;
     onboardingStatus: SMEOnboardingStatus;
+    idNumber?: string | null;
+    taxNumber?: string | null;
+    idType?: string | null;
   };
   business: {
     id: string;
@@ -935,6 +938,9 @@ export interface SMEOnboardingState {
     gender?: string;
     position?: string;
     onboardingStatus: SMEOnboardingStatus;
+    idNumber?: string | null;
+    taxNumber?: string | null;
+    idType?: string | null;
   };
   business: {
     id: string;
@@ -1068,6 +1074,9 @@ export interface PersonalDocumentData {
 
 export interface SavePersonalDocumentsData {
   documents: PersonalDocumentData[];
+  idNumber?: string;
+  taxNumber?: string;
+  idType?: string;
 }
 
 // Step 5: Company Info Documents

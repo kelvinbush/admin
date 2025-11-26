@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
-import { useSavePersonalDocuments, useSMEPersonalDocuments } from "@/lib/api/hooks/sme";
+import { useSavePersonalDocuments, useSMEPersonalDocuments, useSMEUser } from "@/lib/api/hooks/sme";
 import { toast } from "@/hooks/use-toast";
 
 const entrepreneurDocumentsSchema = z.object({
@@ -28,6 +28,9 @@ const entrepreneurDocumentsSchema = z.object({
   passportPhoto: z.string().optional(),
   personalTaxIdNumber: z.string().min(1, "Personal tax identification number is required"),
   personalTaxCertificate: z.string().min(1, "Personal tax registration certificate is required"),
+  idNumber: z.string().optional(),
+  taxNumber: z.string().optional(),
+  idType: z.string().optional(),
 }).refine((data) => {
   // If has documents is "yes", document type is required
   if (data.hasIdentificationDocuments === "yes" && !data.documentType) {
@@ -82,6 +85,11 @@ export function Step4EntrepreneurDocuments() {
     enabled: !!userId,
   });
 
+  // Fetch user detail to get idNumber, taxNumber, idType
+  const { data: userDetail } = useSMEUser(userId || "", {
+    enabled: !!userId,
+  });
+
   const form = useForm<EntrepreneurDocumentsFormData>({
     resolver: zodResolver(entrepreneurDocumentsSchema),
     defaultValues: {
@@ -95,39 +103,87 @@ export function Step4EntrepreneurDocuments() {
       passportPhoto: "",
       personalTaxIdNumber: "",
       personalTaxCertificate: "",
+      idNumber: "",
+      taxNumber: "",
+      idType: "",
     },
   });
 
   // Load existing data if userId is present
   useEffect(() => {
-    if (userId && existingDocuments && existingDocuments.length > 0) {
-      // Map existing documents to form fields
-      const nationalIdFront = existingDocuments.find(d => d.docType === "national_id_front");
-      const nationalIdBack = existingDocuments.find(d => d.docType === "national_id_back");
-      const passportBio = existingDocuments.find(d => d.docType === "passport_bio_page");
-      const userPhoto = existingDocuments.find(d => d.docType === "user_photo");
-      const taxDoc = existingDocuments.find(d => d.docType === "personal_tax_document");
+    if (userId) {
+      // Use userDetail if available, otherwise fallback to onboardingState
+      const user = userDetail?.user || onboardingState?.user;
       
-      // Determine document type
-      if (nationalIdFront || nationalIdBack) {
-        setHasDocuments("yes");
-        setDocumentType("identity-card");
-        form.setValue("hasIdentificationDocuments", "yes");
-        form.setValue("documentType", "identity-card");
+      if (!user) return;
+      
+      // Load idNumber, taxNumber, idType from user detail
+      if (user.idNumber) {
+        form.setValue("idNumber", user.idNumber);
+      }
+      if (user.taxNumber) {
+        form.setValue("taxNumber", user.taxNumber);
+        form.setValue("personalTaxIdNumber", user.taxNumber);
+      }
+      if (user.idType) {
+        form.setValue("idType", user.idType);
+        
+        // Map idType to documentType and set related fields
+        if (user.idType === "national_id") {
+          form.setValue("documentType", "identity-card");
+          form.setValue("hasIdentificationDocuments", "yes");
+          setHasDocuments("yes");
+          setDocumentType("identity-card");
+          // Set identificationNumber from idNumber
+          if (user.idNumber) {
+            form.setValue("identificationNumber", user.idNumber);
+          }
+        } else if (user.idType === "passport") {
+          form.setValue("documentType", "passport");
+          form.setValue("hasIdentificationDocuments", "yes");
+          setHasDocuments("yes");
+          setDocumentType("passport");
+          // Set passportNumber from idNumber
+          if (user.idNumber) {
+            form.setValue("passportNumber", user.idNumber);
+          }
+        }
+      }
+
+      // Load documents if they exist (only if idType wasn't already set)
+      if (existingDocuments && existingDocuments.length > 0) {
+        // Map existing documents to form fields
+        const nationalIdFront = existingDocuments.find(d => d.docType === "national_id_front");
+        const nationalIdBack = existingDocuments.find(d => d.docType === "national_id_back");
+        const passportBio = existingDocuments.find(d => d.docType === "passport_bio_page");
+        const userPhoto = existingDocuments.find(d => d.docType === "user_photo");
+        const taxDoc = existingDocuments.find(d => d.docType === "personal_tax_document");
+        
+        // Only set document type from documents if idType wasn't already set
+        if (!user.idType) {
+          // Determine document type from documents
+          if (nationalIdFront || nationalIdBack) {
+            setHasDocuments("yes");
+            setDocumentType("identity-card");
+            form.setValue("hasIdentificationDocuments", "yes");
+            form.setValue("documentType", "identity-card");
+          } else if (passportBio) {
+            setHasDocuments("yes");
+            setDocumentType("passport");
+            form.setValue("hasIdentificationDocuments", "yes");
+            form.setValue("documentType", "passport");
+          }
+        }
+        
+        // Always load document URLs
         if (nationalIdFront) form.setValue("frontIdDocument", nationalIdFront.docUrl);
         if (nationalIdBack) form.setValue("backIdDocument", nationalIdBack.docUrl);
-      } else if (passportBio) {
-        setHasDocuments("yes");
-        setDocumentType("passport");
-        form.setValue("hasIdentificationDocuments", "yes");
-        form.setValue("documentType", "passport");
-        form.setValue("passportBioPage", passportBio.docUrl);
+        if (passportBio) form.setValue("passportBioPage", passportBio.docUrl);
+        if (userPhoto) form.setValue("passportPhoto", userPhoto.docUrl);
+        if (taxDoc) form.setValue("personalTaxCertificate", taxDoc.docUrl);
       }
-      
-      if (userPhoto) form.setValue("passportPhoto", userPhoto.docUrl);
-      if (taxDoc) form.setValue("personalTaxCertificate", taxDoc.docUrl);
     }
-  }, [userId, existingDocuments, form]);
+  }, [userId, userDetail, onboardingState, existingDocuments, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -201,9 +257,31 @@ export function Step4EntrepreneurDocuments() {
         return;
       }
 
+      // Determine idNumber and idType based on document type
+      let idNumber: string | undefined;
+      let idType: string | undefined;
+      
+      if (data.hasIdentificationDocuments === "yes" && data.documentType === "identity-card") {
+        idNumber = data.identificationNumber;
+        idType = "national_id";
+      } else if (data.hasIdentificationDocuments === "yes" && data.documentType === "passport") {
+        idNumber = data.passportNumber;
+        idType = "passport";
+      }
+      
+      // Use form values if provided, otherwise use derived values
+      const finalIdNumber = data.idNumber || idNumber;
+      const finalTaxNumber = data.taxNumber || data.personalTaxIdNumber;
+      const finalIdType = data.idType || idType;
+
       await saveDocumentsMutation.mutateAsync({
         userId,
-        data: { documents },
+        data: { 
+          documents,
+          ...(finalIdNumber && { idNumber: finalIdNumber }),
+          ...(finalTaxNumber && { taxNumber: finalTaxNumber }),
+          ...(finalIdType && { idType: finalIdType }),
+        },
       });
 
       toast({
@@ -250,8 +328,8 @@ export function Step4EntrepreneurDocuments() {
           <p className="text-sm text-primaryGrey-500">Loading entrepreneur documents...</p>
         </div>
       ) : (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Do you have identification documents? */}
           <FormField
             control={form.control}
