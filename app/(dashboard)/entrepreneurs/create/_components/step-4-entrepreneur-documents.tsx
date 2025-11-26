@@ -494,6 +494,7 @@ export function Step4EntrepreneurDocuments() {
                             errorMessage={form.formState.errors.frontIdDocument?.message}
                             acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                             maxSizeMB={5}
+                            showUploadedState={!!field.value}
                           />
                         </FormControl>
                         <FormMessage />
@@ -517,6 +518,7 @@ export function Step4EntrepreneurDocuments() {
                             errorMessage={form.formState.errors.backIdDocument?.message}
                             acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                             maxSizeMB={5}
+                            showUploadedState={!!field.value}
                           />
                         </FormControl>
                         <FormMessage />
@@ -537,6 +539,7 @@ export function Step4EntrepreneurDocuments() {
                             label="Upload passport photo (optional)"
                             acceptedFormats={["PNG", "JPG", "JPEG"]}
                             maxSizeMB={5}
+                            showUploadedState={!!field.value}
                           />
                         </FormControl>
                         <FormMessage />
@@ -565,6 +568,7 @@ export function Step4EntrepreneurDocuments() {
                             errorMessage={form.formState.errors.passportBioPage?.message}
                             acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                             maxSizeMB={5}
+                            showUploadedState={!!field.value}
                           />
                         </FormControl>
                         <FormMessage />
@@ -585,6 +589,7 @@ export function Step4EntrepreneurDocuments() {
                             label="Upload passport photo (optional)"
                             acceptedFormats={["PNG", "JPG", "JPEG"]}
                             maxSizeMB={5}
+                            showUploadedState={!!field.value}
                           />
                         </FormControl>
                         <FormMessage />
@@ -643,6 +648,7 @@ export function Step4EntrepreneurDocuments() {
                         errorMessage={form.formState.errors.personalTaxCertificate?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={5}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />

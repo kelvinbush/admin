@@ -481,6 +481,7 @@ export function Step6CompanyFinancialDocuments() {
                         errorMessage={form.formState.errors.businessPlan?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -501,6 +502,7 @@ export function Step6CompanyFinancialDocuments() {
                         label="Upload recent management accounts (e.g., income statement, balance sheet, cash flow etc.) (optional)"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />

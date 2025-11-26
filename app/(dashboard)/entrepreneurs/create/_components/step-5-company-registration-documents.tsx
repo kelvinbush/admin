@@ -237,8 +237,8 @@ export function Step5CompanyRegistrationDocuments() {
           <p className="text-sm text-primaryGrey-500">Loading company registration documents...</p>
         </div>
       ) : (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Proof of Registration Section */}
           <div className="space-y-6">
             <h3 className="text-lg font-medium text-midnight-blue">
@@ -262,6 +262,7 @@ export function Step5CompanyRegistrationDocuments() {
                         errorMessage={form.formState.errors.certificateOfRegistration?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -282,6 +283,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Upload copy of CR1"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -302,6 +304,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Upload copy of CR2"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -322,6 +325,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Upload copy of CR8"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -342,6 +346,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Upload the most recent CR12"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -362,6 +367,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Memorandum of association"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -382,6 +388,7 @@ export function Step5CompanyRegistrationDocuments() {
                         label="Articles of association"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -414,6 +421,7 @@ export function Step5CompanyRegistrationDocuments() {
                         errorMessage={form.formState.errors.companyTaxRegistrationCertificate?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -437,6 +445,7 @@ export function Step5CompanyRegistrationDocuments() {
                         errorMessage={form.formState.errors.companyTaxClearanceCertificate?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />

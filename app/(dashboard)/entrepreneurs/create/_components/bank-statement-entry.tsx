@@ -111,6 +111,7 @@ export function BankStatementEntry({
                 required
                 acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                 maxSizeMB={8}
+                showUploadedState={!!field.value}
               />
             </FormControl>
             <FormMessage />

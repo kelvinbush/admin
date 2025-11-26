@@ -199,6 +199,7 @@ export function Step7OtherSupportingDocuments() {
                         errorMessage={form.formState.errors.businessPermit?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
@@ -231,6 +232,7 @@ export function Step7OtherSupportingDocuments() {
                         errorMessage={form.formState.errors.companyPitchDeck?.message}
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
+                        showUploadedState={!!field.value}
                       />
                     </FormControl>
                     <FormMessage />
