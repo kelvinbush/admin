@@ -112,4 +112,14 @@ export const queryKeys = {
     loanApplications: (query: string) => [...queryKeys.search.all, 'loan-applications', query] as const,
     organizations: (query: string) => [...queryKeys.search.all, 'organizations', query] as const,
   },
+
+  // SME (Small and Medium-sized Enterprise) users
+  sme: {
+    all: ['sme'] as const,
+    lists: () => [...queryKeys.sme.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => [...queryKeys.sme.lists(), JSON.stringify(filters || {})] as const,
+    details: () => [...queryKeys.sme.all, 'detail'] as const,
+    detail: (userId: string) => [...queryKeys.sme.details(), userId] as const,
+    onboarding: (userId: string) => [...queryKeys.sme.detail(userId), 'onboarding'] as const,
+  },
 } as const;

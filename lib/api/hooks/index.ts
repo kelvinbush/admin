@@ -7,3 +7,4 @@ export * from "./partners";
 export * from "./dashboard";
 export * from "./documents";
 export * from "./internal-users";
+export * from "./sme";

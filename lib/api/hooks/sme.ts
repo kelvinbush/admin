@@ -1,0 +1,274 @@
+'use client';
+
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useClientApiQuery,
+  useClientApiMutation,
+  useClientApiPost,
+  useClientApiPut,
+} from '../hooks';
+import { queryKeys } from '../query-keys';
+import type {
+  SMEUser,
+  SMEUserDetail,
+  SMEOnboardingState,
+  ListSMEUsersResponse,
+  SMEUsersFilters,
+  CreateSMEUserData,
+  CreateSMEUserResponse,
+  SaveBusinessBasicInfoData,
+  SaveLocationInfoData,
+  SavePersonalDocumentsData,
+  SaveCompanyDocumentsData,
+  SaveFinancialDocumentsData,
+  SavePermitsData,
+  SendInvitationResponse,
+} from '../types';
+
+// ===== SME USER HOOKS =====
+
+/**
+ * List all SME users with optional filtering and pagination
+ */
+export function useSMEUsers(filters?: SMEUsersFilters) {
+  const params = new URLSearchParams();
+  
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.limit) params.append('limit', filters.limit.toString());
+  if (filters?.onboardingStatus) params.append('onboardingStatus', filters.onboardingStatus);
+  if (filters?.search) params.append('search', filters.search);
+
+  const queryString = params.toString();
+  const url = `/admin/sme/users${queryString ? `?${queryString}` : ''}`;
+
+  return useClientApiQuery<ListSMEUsersResponse>(
+    queryKeys.sme.list(filters),
+    url,
+    undefined,
+    {
+      enabled: true,
+    }
+  );
+}
+
+/**
+ * Get detailed information about a specific SME user
+ */
+export function useSMEUser(userId: string) {
+  return useClientApiQuery<SMEUserDetail>(
+    queryKeys.sme.detail(userId),
+    `/admin/sme/users/${userId}`,
+    undefined,
+    {
+      enabled: !!userId,
+    }
+  );
+}
+
+/**
+ * Get the current onboarding state for a user
+ */
+export function useSMEOnboardingState(userId: string) {
+  return useClientApiQuery<SMEOnboardingState>(
+    queryKeys.sme.onboarding(userId),
+    `/admin/sme/onboarding/${userId}`,
+    undefined,
+    {
+      enabled: !!userId,
+    }
+  );
+}
+
+// ===== ONBOARDING STEP HOOKS =====
+
+/**
+ * Create a new SME user and start the onboarding process (Step 1)
+ */
+export function useCreateSMEUser() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<CreateSMEUserResponse, CreateSMEUserData>(
+    (api, variables) => api.post('/admin/sme/onboarding/start', variables),
+    {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(data.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(data.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Update user information for an existing SME user (Step 1)
+ */
+export function useUpdateSMEUserStep1() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: CreateSMEUserData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/1`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Save business basic information (Step 2)
+ */
+export function useSaveBusinessBasicInfo() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SaveBusinessBasicInfoData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/2`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Save business location information (Step 3)
+ */
+export function useSaveLocationInfo() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SaveLocationInfoData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/3`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Upload personal documents (Step 4)
+ */
+export function useSavePersonalDocuments() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SavePersonalDocumentsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/4`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Upload company information documents (Step 5)
+ */
+export function useSaveCompanyDocuments() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SaveCompanyDocumentsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/5`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Upload financial documents (Step 6)
+ */
+export function useSaveFinancialDocuments() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SaveFinancialDocumentsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/6`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Upload permits and pitch deck documents (Step 7)
+ */
+export function useSavePermitsAndPitchDeck() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SavePermitsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/onboarding/${variables.userId}/step/7`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Send or resend an invitation to the SME user via Clerk
+ */
+export function useSendSMEInvitation() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<SendInvitationResponse, { userId: string }>(
+    (api, variables) =>
+      api.post(`/admin/sme/onboarding/${variables.userId}/invite`),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+

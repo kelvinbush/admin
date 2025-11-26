@@ -853,3 +853,194 @@ export interface AddDocumentsResponse {
   success: boolean;
   message: string;
 }
+
+// ===== SME (Small and Medium-sized Enterprise) TYPES =====
+
+export type SMEOnboardingStatus = 'draft' | 'pending_invitation' | 'active';
+
+export interface SMEUser {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  dob?: string;
+  gender?: string;
+  position?: string;
+  onboardingStatus: SMEOnboardingStatus;
+  onboardingStep?: number;
+  currentStep?: number;
+  completedSteps?: number[];
+  business?: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SMEUserDetail {
+  userId: string;
+  currentStep: number;
+  completedSteps: number[];
+  user: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    dob?: string;
+    gender?: string;
+    position?: string;
+    onboardingStatus: SMEOnboardingStatus;
+  };
+  business: {
+    id: string;
+    name: string;
+    entityType?: string;
+    logo?: string;
+    sectors?: string[];
+    description?: string;
+    yearOfIncorporation?: number;
+    city?: string;
+    country?: string;
+    companyHQ?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+}
+
+export interface SMEOnboardingState {
+  userId: string;
+  currentStep: number;
+  completedSteps: number[];
+  user: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    dob?: string;
+    gender?: string;
+    position?: string;
+    onboardingStatus: SMEOnboardingStatus;
+  };
+  business: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface ListSMEUsersResponse {
+  items: SMEUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface SMEUsersFilters {
+  page?: number;
+  limit?: number;
+  onboardingStatus?: SMEOnboardingStatus;
+  search?: string;
+}
+
+// Step 1: Create/Update User Info
+export interface CreateSMEUserData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  dob: string; // ISO date format: YYYY-MM-DD
+  gender: string;
+  position: string;
+}
+
+export interface CreateSMEUserResponse {
+  userId: string;
+  onboardingState: SMEOnboardingState;
+}
+
+// Step 2: Business Basic Info
+export interface VideoLink {
+  url: string;
+  source?: string;
+}
+
+export interface SaveBusinessBasicInfoData {
+  logo?: string;
+  name: string;
+  entityType: string;
+  year: number; // yearOfIncorporation
+  sectors: string[];
+  description?: string;
+  userGroupId?: string;
+  criteria?: string[];
+  noOfEmployees?: number;
+  website?: string;
+  videoLinks?: VideoLink[];
+  businessPhotos?: string[]; // Max 5 photo URLs
+}
+
+// Step 3: Location Info
+export interface SaveLocationInfoData {
+  countriesOfOperation: string[];
+  companyHQ?: string;
+  city?: string;
+  registeredOfficeAddress?: string;
+  registeredOfficeCity?: string;
+  registeredOfficeZipCode?: string;
+}
+
+// Step 4: Personal Documents
+export interface PersonalDocumentData {
+  docType: string;
+  docUrl: string;
+}
+
+export interface SavePersonalDocumentsData {
+  documents: PersonalDocumentData[];
+}
+
+// Step 5: Company Info Documents
+export interface CompanyDocumentData {
+  docType: string; // e.g., "CR1", "CR2", "CR8", "CR12", "certificate_of_incorporation"
+  docUrl: string;
+  isPasswordProtected?: boolean;
+  docPassword?: string;
+}
+
+export interface SaveCompanyDocumentsData {
+  documents: CompanyDocumentData[];
+}
+
+// Step 6: Financial Documents
+export interface FinancialDocumentData {
+  docType: string; // e.g., "annual_bank_statement", "audited_financial_statements"
+  docUrl: string;
+  docYear?: number;
+  docBankName?: string;
+  isPasswordProtected?: boolean;
+  docPassword?: string;
+}
+
+export interface SaveFinancialDocumentsData {
+  documents: FinancialDocumentData[];
+}
+
+// Step 7: Permits & Pitch Deck
+export interface PermitDocumentData {
+  docType: string; // e.g., "business_permit", "pitch_deck", "business_plan"
+  docUrl: string;
+  isPasswordProtected?: boolean;
+  docPassword?: string;
+}
+
+export interface SavePermitsData {
+  documents: PermitDocumentData[];
+}
+
+// Send Invitation
+export interface SendInvitationResponse {
+  success: boolean;
+  invitationId: string;
+  message: string;
+}
