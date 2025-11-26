@@ -12,6 +12,8 @@ import { MultiSelectDropdown, type MultiSelectOption } from "@/components/ui/mul
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { countries } from "@/lib/data/countries";
+import { useSaveLocationInfo } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const companyAddressSchema = z.object({
   countriesOfOperation: z.array(z.string()).min(1, "At least one country of operation is required"),
@@ -23,25 +25,28 @@ const companyAddressSchema = z.object({
 
 type CompanyAddressFormData = z.infer<typeof companyAddressSchema>;
 
-// Convert countries to options for dropdowns
+// Convert countries to options for dropdowns - using country names as values
 const countryOptions: SelectOption[] = countries.map((country) => ({
-  value: country.code,
+  value: country.name,
   label: country.name,
 }));
 
 const countryMultiSelectOptions: MultiSelectOption[] = countries.map((country) => ({
-  value: country.code,
+  value: country.name,
   label: country.name,
 }));
 
 interface CompanyAddressFormProps {
+  userId: string;
   initialData?: Partial<CompanyAddressFormData>;
 }
 
-export function CompanyAddressForm({ initialData }: CompanyAddressFormProps) {
+export function CompanyAddressForm({ userId, initialData }: CompanyAddressFormProps) {
   const [addressLength, setAddressLength] = useState(
     initialData?.registeredOfficeAddress?.length || 0
   );
+
+  const saveLocationMutation = useSaveLocationInfo();
 
   const form = useForm<CompanyAddressFormData>({
     resolver: zodResolver(companyAddressSchema),
@@ -54,9 +59,38 @@ export function CompanyAddressForm({ initialData }: CompanyAddressFormProps) {
     },
   });
 
-  const onSubmit = (data: CompanyAddressFormData) => {
-    console.log("Form data:", data);
-    // TODO: Submit form data to API
+  const onSubmit = async (data: CompanyAddressFormData) => {
+    try {
+      const countriesOfOperation = data.countriesOfOperation;
+      const companyHQ = data.companyHeadquarters;
+
+      await saveLocationMutation.mutateAsync({
+        userId,
+        data: {
+          countriesOfOperation,
+          companyHQ: companyHQ || undefined,
+          city: data.city || undefined,
+          registeredOfficeAddress: data.registeredOfficeAddress || undefined,
+          registeredOfficeCity: data.city || undefined,
+          registeredOfficeZipCode: data.zipCode || undefined,
+        },
+      });
+
+      toast({
+        title: "Success",
+        description: "Company address updated successfully.",
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update company address.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -212,12 +246,13 @@ export function CompanyAddressForm({ initialData }: CompanyAddressFormProps) {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveLocationMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save Changes
+              {saveLocationMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
