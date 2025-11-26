@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { useUpdateSMEUserStep1, useSavePersonalDocuments } from "@/lib/api/hooks/sme";
+import { useUpdateSMEUserStep1, useSavePersonalDocuments, useSMEPersonalDocuments } from "@/lib/api/hooks/sme";
 import { toast } from "@/hooks/use-toast";
 
 const entrepreneurDetailsSchema = z.object({
@@ -95,6 +95,9 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
 
   const updateUserMutation = useUpdateSMEUserStep1();
   const savePersonalDocsMutation = useSavePersonalDocuments();
+  const { data: existingPersonalDocs } = useSMEPersonalDocuments(userId, {
+    enabled: !!userId,
+  });
 
   const onSubmit = async (data: EntrepreneurDetailsFormData) => {
     try {
@@ -116,7 +119,7 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
         },
       });
 
-      // Update identification / tax numbers via Step 4 endpoint (no document changes)
+      // Update identification / tax numbers via Step 4 endpoint (preserving existing documents)
       const idNumber = data.identificationNumber || undefined;
       const taxNumber = data.taxIdentificationNumber || undefined;
       let idType: string | undefined;
@@ -127,10 +130,16 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
       }
 
       if (idNumber || taxNumber || idType) {
+        const documents =
+          existingPersonalDocs?.map((doc) => ({
+            docType: doc.docType,
+            docUrl: doc.docUrl,
+          })) ?? [];
+
         await savePersonalDocsMutation.mutateAsync({
           userId,
           data: {
-            documents: [],
+            documents,
             ...(idNumber && { idNumber }),
             ...(taxNumber && { taxNumber }),
             ...(idType && { idType }),

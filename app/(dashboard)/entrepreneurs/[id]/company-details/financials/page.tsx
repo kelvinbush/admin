@@ -28,8 +28,12 @@ export default function CompanyFinancialsPage() {
 
   const business = data.business;
 
-  const hasBorrowingHistory =
-    business.previousLoans === null ? undefined : (business.previousLoans ? "yes" : "no" as const);
+  const hasBorrowingHistory: "yes" | "no" | undefined =
+    business.previousLoans === null
+      ? undefined
+      : business.previousLoans
+      ? "yes"
+      : "no";
 
   const initialData = {
     averageMonthlyTurnover: business.averageMonthlyTurnover?.toString() || "",
