@@ -1047,6 +1047,37 @@ export interface EntrepreneursStatsResponse {
   smesWithLoans: EntrepreneursStatsMetric;
 }
 
+// Update Entrepreneur Details (Consolidated endpoint)
+export interface UpdateEntrepreneurDetailsData {
+  email: string; // Required
+  firstName: string; // Required
+  lastName: string; // Required
+  phone?: string; // Optional
+  dob?: string; // Optional (ISO date format: YYYY-MM-DD)
+  gender: string; // Required
+  position?: string; // Optional
+  idNumber?: string | null;
+  taxNumber?: string | null;
+  idType?: string | null;
+}
+
+export interface UpdateEntrepreneurDetailsResponse {
+  userId: string;
+  user: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    dob: Date | null;
+    gender: string | null;
+    position: string | null;
+    idNumber: string | null;
+    taxNumber: string | null;
+    idType: string | null;
+    onboardingStatus: string;
+  };
+}
+
 // Step 1: Create/Update User Info
 export interface CreateSMEUserData {
   email: string;

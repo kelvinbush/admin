@@ -417,13 +417,21 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
             <Button
               size="lg"
               type="submit"
+              disabled={
+                updateUserMutation.isPending ||
+                savePersonalDocsMutation.isPending ||
+                !form.formState.isValid ||
+                !form.formState.isDirty
+              }
               className="text-white border-0"
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save Changes
+              {updateUserMutation.isPending || savePersonalDocsMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </div>
         </form>
