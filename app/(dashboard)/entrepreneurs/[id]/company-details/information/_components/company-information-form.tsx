@@ -13,6 +13,9 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { VideoLinkInput } from "@/components/ui/video-link-input";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
+import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
+import { toast } from "@/hooks/use-toast";
 
 const companyInformationSchema = z.object({
   businessName: z.string().min(1, "Business name is required"),
@@ -57,14 +60,6 @@ const sectorOptions: MultiSelectOption[] = [
   { value: "transportation", label: "Transportation & Logistics" },
 ];
 
-const programUserGroupOptions: MultiSelectOption[] = [
-  { value: "tuungane", label: "Tuungane" },
-  { value: "giz-sais", label: "GIZ-SAIS" },
-  { value: "giz-cgiar", label: "GIZ-CGIAR" },
-  { value: "w4a", label: "W4A" },
-  { value: "ecobank-elevate", label: "Ecobank-Elevate" },
-];
-
 const twoXCriteriaOptions: MultiSelectOption[] = [
   { value: "founded-by-woman", label: "Founded by a woman" },
   { value: "led-by-women", label: "Led by women" },
@@ -83,10 +78,23 @@ const numberOfEmployeesOptions: SelectOption[] = [
 ];
 
 interface CompanyInformationFormProps {
+  userId: string;
   initialData?: Partial<CompanyInformationFormData>;
 }
 
-export function CompanyInformationForm({ initialData }: CompanyInformationFormProps) {
+export function CompanyInformationForm({ userId, initialData }: CompanyInformationFormProps) {
+  const saveBusinessMutation = useSaveBusinessBasicInfo();
+
+  // Fetch user groups from API for dynamic Program / user group options
+  const { data: userGroupsData } = useUserGroups(undefined, { page: 1, limit: 100 });
+  const userGroups = (userGroupsData as any)?.data || (userGroupsData as any) || [];
+  const programUserGroupOptions: MultiSelectOption[] = Array.isArray(userGroups)
+    ? userGroups.map((group: any) => ({
+        value: group.id,
+        label: group.name,
+      }))
+    : [];
+
   const [descriptionLength, setDescriptionLength] = useState(
     initialData?.businessDescription?.length || 0
   );
@@ -108,9 +116,63 @@ export function CompanyInformationForm({ initialData }: CompanyInformationFormPr
     },
   });
 
-  const onSubmit = (data: CompanyInformationFormData) => {
-    console.log("Form data:", data);
-    // TODO: Submit form data to API
+  const onSubmit = async (data: CompanyInformationFormData) => {
+    try {
+      // Parse year - handle "not-registered" case
+      const year =
+        data.yearOfRegistration === "not-registered"
+          ? new Date().getFullYear()
+          : parseInt(data.yearOfRegistration, 10);
+
+      // Parse number of employees from range string
+      const noOfEmployees = data.numberOfEmployees
+        ? parseInt(data.numberOfEmployees.split("-")[0] || "0", 10)
+        : undefined;
+
+      // Transform video links - assuming VideoLinkInput returns array of strings (URLs)
+      const videoLinks = (data.videoLinks || []).map((url) => {
+        let source = "other";
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+          source = "youtube";
+        } else if (url.includes("vimeo.com")) {
+          source = "vimeo";
+        }
+        return { url, source };
+      });
+
+      await saveBusinessMutation.mutateAsync({
+        userId,
+        data: {
+          logo: undefined,
+          name: data.businessName,
+          entityType: data.businessLegalEntityType,
+          year,
+          sectors: data.sector,
+          description: data.businessDescription || undefined,
+          userGroupId: data.programUserGroup[0] || undefined,
+          criteria: data.twoXCriteria || undefined,
+          noOfEmployees,
+          website: data.companyWebsite || undefined,
+          videoLinks: videoLinks.length > 0 ? videoLinks : undefined,
+          businessPhotos: data.businessPhotos || undefined,
+        },
+      });
+
+      toast({
+        title: "Success",
+        description: "Company information saved successfully.",
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to save company information.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
