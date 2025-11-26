@@ -16,6 +16,7 @@ import type {
   SMEUsersFilters,
   EntrepreneurListFilters,
   EntrepreneurListResponse,
+  EntrepreneursStatsResponse,
   CreateSMEUserData,
   CreateSMEUserResponse,
   SaveBusinessBasicInfoData,
@@ -51,6 +52,18 @@ export function useEntrepreneurs(filters?: EntrepreneurListFilters) {
     {
       enabled: true,
     }
+  );
+}
+
+/**
+ * Get aggregate statistics for entrepreneurs dashboard
+ */
+export function useEntrepreneursStats() {
+  return useClientApiQuery<EntrepreneursStatsResponse>(
+    queryKeys.entrepreneurs.stats(),
+    '/admin/sme/entrepreneurs/stats',
+    undefined,
+    { enabled: true }
   );
 }
 

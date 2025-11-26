@@ -128,5 +128,6 @@ export const queryKeys = {
     all: ['entrepreneurs'] as const,
     lists: () => [...queryKeys.entrepreneurs.all, 'list'] as const,
     list: (filters?: Record<string, any>) => [...queryKeys.entrepreneurs.lists(), JSON.stringify(filters || {})] as const,
+    stats: () => [...queryKeys.entrepreneurs.all, 'stats'] as const,
   },
 } as const;

@@ -9,16 +9,8 @@ import {
 } from "./_components/entrepreneurs-filters";
 import { EntrepreneursTabs, type EntrepreneurTab } from "./_components/entrepreneurs-tabs";
 import { EntrepreneursTable } from "./_components/entrepreneurs-table";
-import { useEntrepreneurs } from "@/lib/api/hooks/sme";
+import { useEntrepreneurs, useEntrepreneursStats } from "@/lib/api/hooks/sme";
 import type { SMEOnboardingStatus } from "@/lib/api/types";
-
-const statCards = [
-  { label: "Total SMEs", value: "0", delta: "0%" },
-  { label: "Complete Profiles", value: "0", delta: "0%" },
-  { label: "Incomplete Profiles", value: "0", delta: "0%" },
-  { label: "Pending Activation", value: "0", delta: "0%" },
-  { label: "SMEs with Loans", value: "0", delta: "0%" },
-];
 
 export default function EntrepreneursPage() {
   const router = useRouter();
@@ -51,6 +43,7 @@ export default function EntrepreneursPage() {
   }, [activeTab, page, limit, searchValue]);
 
   const { data, isLoading } = useEntrepreneurs(apiFilters);
+  const { data: stats } = useEntrepreneursStats();
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -107,6 +100,37 @@ export default function EntrepreneursPage() {
     }));
     setPage(1);
   };
+
+  const statCards = useMemo(
+    () => [
+      {
+        label: "Total SMEs",
+        value: stats ? stats.totalSMEs.value.toString() : "0",
+        delta: stats ? `${stats.totalSMEs.deltaPercent.toFixed(1)}%` : "0%",
+      },
+      {
+        label: "Complete Profiles",
+        value: stats ? stats.completeProfiles.value.toString() : "0",
+        delta: stats ? `${stats.completeProfiles.deltaPercent.toFixed(1)}%` : "0%",
+      },
+      {
+        label: "Incomplete Profiles",
+        value: stats ? stats.incompleteProfiles.value.toString() : "0",
+        delta: stats ? `${stats.incompleteProfiles.deltaPercent.toFixed(1)}%` : "0%",
+      },
+      {
+        label: "Pending Activation",
+        value: stats ? stats.pendingActivation.value.toString() : "0",
+        delta: stats ? `${stats.pendingActivation.deltaPercent.toFixed(1)}%` : "0%",
+      },
+      {
+        label: "SMEs with Loans",
+        value: stats ? stats.smesWithLoans.value.toString() : "0",
+        delta: stats ? `${stats.smesWithLoans.deltaPercent.toFixed(1)}%` : "0%",
+      },
+    ],
+    [stats]
+  );
 
   return (
     <div className="space-y-6">

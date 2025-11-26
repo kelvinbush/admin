@@ -1027,6 +1027,26 @@ export interface EntrepreneurListFilters {
   search?: string;
 }
 
+// Entrepreneurs dashboard stats
+export interface EntrepreneursStatsPeriod {
+  current: string; // e.g. "2025-02"
+  previous: string; // e.g. "2025-01"
+}
+
+export interface EntrepreneursStatsMetric {
+  value: number;
+  deltaPercent: number;
+}
+
+export interface EntrepreneursStatsResponse {
+  period: EntrepreneursStatsPeriod;
+  totalSMEs: EntrepreneursStatsMetric;
+  completeProfiles: EntrepreneursStatsMetric;
+  incompleteProfiles: EntrepreneursStatsMetric;
+  pendingActivation: EntrepreneursStatsMetric;
+  smesWithLoans: EntrepreneursStatsMetric;
+}
+
 // Step 1: Create/Update User Info
 export interface CreateSMEUserData {
   email: string;
