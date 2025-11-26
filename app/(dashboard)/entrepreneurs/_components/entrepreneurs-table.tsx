@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { EntrepreneurListItem } from "@/lib/api/types";
 import { ChevronLeft, ChevronRight, Eye, Trash2 } from "lucide-react";
+import { useSendSMEInvitation } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 type EntrepreneursTableProps = {
   items: EntrepreneurListItem[];
@@ -67,6 +69,7 @@ export function EntrepreneursTable({
   onRemove,
 }: EntrepreneursTableProps) {
   const router = useRouter();
+  const sendInvitationMutation = useSendSMEInvitation();
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -166,6 +169,30 @@ export function EntrepreneursTable({
                   }
                 };
 
+                const canResendInvite = item.onboardingStatus === "pending_invitation";
+
+                const handleResendInvite = async () => {
+                  if (!canResendInvite) return;
+
+                  try {
+                    await sendInvitationMutation.mutateAsync({ userId: item.userId });
+                    toast({
+                      title: "Invitation sent",
+                      description: "The entrepreneur has been re-invited successfully.",
+                    });
+                  } catch (error: any) {
+                    const errorMessage =
+                      error?.response?.data?.error ||
+                      error?.message ||
+                      "Failed to resend invitation.";
+                    toast({
+                      title: "Error",
+                      description: errorMessage,
+                      variant: "destructive",
+                    });
+                  }
+                };
+
                 return (
                   <TableRow
                     key={item.userId}
@@ -236,18 +263,20 @@ export function EntrepreneursTable({
                           <Eye className="h-4 w-4" />
                           <span>View Details</span>
                         </button>
-                        {/* Resend invite: only enabled when pending_invitation */}
                         <button
                           type="button"
-                          disabled={item.onboardingStatus === "active"}
+                          onClick={handleResendInvite}
+                          disabled={!canResendInvite || sendInvitationMutation.isPending}
                           className={cn(
                             "inline-flex items-center gap-1 text-xs",
-                            item.onboardingStatus === "active"
+                            !canResendInvite || sendInvitationMutation.isPending
                               ? "text-primaryGrey-300 cursor-not-allowed"
                               : "text-primaryGrey-600 hover:text-midnight-blue",
                           )}
                         >
-                          <span>Resend Invite</span>
+                          <span>
+                            {sendInvitationMutation.isPending ? "Resending..." : "Resend Invite"}
+                          </span>
                         </button>
                         {onRemove && (
                           <button
