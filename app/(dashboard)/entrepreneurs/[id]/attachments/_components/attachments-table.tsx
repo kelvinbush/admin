@@ -12,6 +12,8 @@ export interface AttachmentDocument {
   name: string;
   uploadedAt?: string | null;
   status: "uploaded" | "pending" | "rejected";
+  url?: string | null;
+  docType?: string;
 }
 
 interface AttachmentsTableProps {

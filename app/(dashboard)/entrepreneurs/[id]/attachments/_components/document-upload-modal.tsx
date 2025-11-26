@@ -356,7 +356,7 @@ export function DocumentUploadModal({
             <Button
               size="lg"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => !isLoading && !isUploading && onOpenChange(false)}
               disabled={isLoading || isUploading}
               className="bg-white border border-primaryGrey-200 text-midnight-blue hover:bg-primaryGrey-50"
             >
@@ -365,10 +365,22 @@ export function DocumentUploadModal({
             <Button
               size="lg"
               onClick={handleSubmit}
-              disabled={!uploadedFileUrl || isLoading || isUploading || (requireDocumentName && !inputDocumentName.trim())}
-              className="bg-primary-green hover:bg-primary-green/90 text-white border-0"
+              disabled={
+                !uploadedFileUrl ||
+                isLoading ||
+                isUploading ||
+                (requireDocumentName && !inputDocumentName.trim())
+              }
+              className="bg-primary-green hover:bg-primary-green/90 text-white border-0 flex items-center gap-2"
             >
-              {isLoading || isUploading ? "Uploading..." : "Submit"}
+              {(isUploading || isLoading) && (
+                <Upload className="h-4 w-4 animate-spin" />
+              )}
+              {isUploading
+                ? "Uploading..."
+                : isLoading
+                ? "Saving..."
+                : "Submit"}
             </Button>
           </div>
         </div>

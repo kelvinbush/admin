@@ -235,6 +235,7 @@ export function BankStatementUploadModal({
                     acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                     maxSizeMB={8}
                     error={false}
+                    showUploadedState={!!entry.statementFile}
                   />
                 </div>
 

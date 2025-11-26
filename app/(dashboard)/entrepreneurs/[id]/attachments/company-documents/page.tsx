@@ -1,157 +1,158 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { AttachmentsHeader } from "../_components/attachments-header";
 import { AttachmentsTable, type AttachmentDocument } from "../_components/attachments-table";
 import { AttachmentsPagination } from "../_components/attachments-pagination";
 import { DocumentUploadModal } from "../_components/document-upload-modal";
 import { BankStatementUploadModal, type BankStatementEntry } from "../_components/bank-statement-upload-modal";
 import { FinancialStatementUploadModal, type FinancialStatementEntry } from "../_components/financial-statement-upload-modal";
+import {
+  useSMEBusinessDocuments,
+  useSaveCompanyDocuments,
+  useSaveFinancialDocuments,
+  useSavePermitsAndPitchDeck,
+} from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
 type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
 
+const COMPANY_DOC_CONFIGS: {
+  id: string;
+  name: string;
+  docTypes: string[];
+  category: "company" | "financial" | "permits";
+}[] = [
+  {
+    id: "certificate_of_incorporation",
+    name: "Certificate of Incorporation",
+    docTypes: ["certificate_of_incorporation", "business_registration"],
+    category: "company",
+  },
+  {
+    id: "CR1",
+    name: "CR1 - Return of Allotment",
+    docTypes: ["CR1"],
+    category: "company",
+  },
+  {
+    id: "CR2",
+    name: "CR2 - Register of Members",
+    docTypes: ["CR2"],
+    category: "company",
+  },
+  {
+    id: "CR8",
+    name: "CR8 - Register of Directors",
+    docTypes: ["CR8"],
+    category: "company",
+  },
+  {
+    id: "CR12",
+    name: "CR12 - Annual Return",
+    docTypes: ["CR12"],
+    category: "company",
+  },
+  {
+    id: "memorandum_of_association",
+    name: "Memorandum of Association",
+    docTypes: ["memorandum_of_association"],
+    category: "company",
+  },
+  {
+    id: "articles_of_association",
+    name: "Articles of Association",
+    docTypes: ["articles_of_association"],
+    category: "company",
+  },
+  {
+    id: "tax_registration_certificate",
+    name: "Company Tax Registration Certificate",
+    docTypes: ["tax_registration_certificate"],
+    category: "company",
+  },
+  {
+    id: "tax_clearance_certificate",
+    name: "Company Tax Clearance Certificate",
+    docTypes: ["tax_clearance_certificate"],
+    category: "company",
+  },
+  {
+    id: "business_plan",
+    name: "Business Plan",
+    docTypes: ["business_plan"],
+    category: "financial",
+  },
+  {
+    id: "income_statements",
+    name: "Management Accounts",
+    docTypes: ["income_statements"],
+    category: "financial",
+  },
+  {
+    id: "business_permit",
+    name: "Business Permit",
+    docTypes: ["business_permit"],
+    category: "permits",
+  },
+  {
+    id: "pitch_deck",
+    name: "Company Pitch Deck / Company Profile",
+    docTypes: ["pitch_deck"],
+    category: "permits",
+  },
+  {
+    id: "annual_bank_statement",
+    name: "Bank Statements",
+    docTypes: ["annual_bank_statement"],
+    category: "financial",
+  },
+  {
+    id: "audited_financial_statements",
+    name: "Financial Statements",
+    docTypes: ["audited_financial_statements"],
+    category: "financial",
+  },
+];
+
 export default function CompanyDocumentsPage() {
+  const params = useParams();
+  const entrepreneurId = params.id as string;
+
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<SortOption>("date-desc");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
-  const [uploadNewModalOpen, setUploadNewModalOpen] = useState(false);
   const [bankStatementModalOpen, setBankStatementModalOpen] = useState(false);
   const [financialStatementModalOpen, setFinancialStatementModalOpen] = useState(false);
 
-  // TODO: Fetch documents from API
-  // Placeholder data for testing
-  const allDocuments: AttachmentDocument[] = [
-    {
-      id: "1",
-      name: "Certificate of Incorporation",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "2",
-      name: "Tax registration certificate",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "3",
-      name: "Tax clearance certificate",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "4",
-      name: "CR1 - Return of Allotment",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "5",
-      name: "CR2 - Register of Members",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "6",
-      name: "CR8 - Register of Directors",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "7",
-      name: "CR12 - Annual Return",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "8",
-      name: "Memorandum of Association",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "9",
-      name: "Articles of Association",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "10",
-      name: "Company Tax Registration Certificate",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "11",
-      name: "Company Tax Clearance Certificate",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "12",
-      name: "Business Plan",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "13",
-      name: "Management Accounts",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "14",
-      name: "Business Permit",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "15",
-      name: "Company Pitch Deck / Company Profile",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "16",
-      name: "Bank Statements",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "17",
-      name: "Financial Statements",
-      uploadedAt: "2024-06-20",
-      status: "uploaded",
-    },
-    {
-      id: "18",
-      name: "CR8 - Register of Directors",
-      status: "pending",
-    },
-    {
-      id: "19",
-      name: "Bank Statements",
-      status: "pending",
-    },
-    {
-      id: "20",
-      name: "Financial Statements",
-      status: "pending",
-    },
-    {
-      id: "21",
-      name: "Business Permit",
-      status: "rejected",
-    },
-  ];
+  const { data: businessDocuments, isLoading, isError } = useSMEBusinessDocuments(entrepreneurId, {
+    enabled: !!entrepreneurId,
+  });
 
-  // Filter and sort documents
+  const saveCompanyDocumentsMutation = useSaveCompanyDocuments();
+  const saveFinancialDocumentsMutation = useSaveFinancialDocuments();
+  const savePermitsMutation = useSavePermitsAndPitchDeck();
+
+  const allDocuments: AttachmentDocument[] = useMemo(() => {
+    return COMPANY_DOC_CONFIGS.map((config) => {
+      const found = businessDocuments?.find((d) => config.docTypes.includes(d.docType));
+      return {
+        id: config.id,
+        name: config.name,
+        uploadedAt: found?.createdAt ?? null,
+        status: found ? "uploaded" : "pending",
+        url: found?.docUrl ?? null,
+        docType: found?.docType ?? config.docTypes[0],
+      };
+    });
+  }, [businessDocuments]);
+
   const filteredDocuments = allDocuments.filter((doc) => {
     if (filterStatus !== "all" && doc.status !== filterStatus) return false;
     if (searchValue && !doc.name.toLowerCase().includes(searchValue.toLowerCase())) return false;
@@ -174,26 +175,15 @@ export default function CompanyDocumentsPage() {
     return 0;
   });
 
-  // Paginate
   const totalPages = Math.ceil(sortedDocuments.length / itemsPerPage);
   const paginatedDocuments = sortedDocuments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const handleUploadNew = () => {
-    setUploadNewModalOpen(true);
-  };
-
-  const handleView = (document: AttachmentDocument) => {
-    // TODO: Implement view functionality
-    console.log("View document:", document);
-  };
-
-  const handleUpdate = (document: AttachmentDocument) => {
+  const openForDocument = (document: AttachmentDocument) => {
     setSelectedDocument(document);
-    
-    // Check if it's a special document type
+
     if (document.name === "Bank Statements") {
       setBankStatementModalOpen(true);
     } else if (document.name === "Financial Statements") {
@@ -203,59 +193,205 @@ export default function CompanyDocumentsPage() {
     }
   };
 
-  const handleUpload = (document: AttachmentDocument) => {
-    setSelectedDocument(document);
-    
-    // Check if it's a special document type
-    if (document.name === "Bank Statements") {
-      setBankStatementModalOpen(true);
-    } else if (document.name === "Financial Statements") {
-      setFinancialStatementModalOpen(true);
+  const handleView = (document: AttachmentDocument) => {
+    if (document.url) {
+      window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      // For regular documents, use the update modal (same functionality)
-      setUpdateModalOpen(true);
+      toast({
+        title: "Document not available",
+        description: "This document has not been uploaded yet.",
+      });
     }
   };
 
   const handleDownload = (document: AttachmentDocument) => {
-    // TODO: Implement download functionality
-    console.log("Download document:", document);
+    if (document.url) {
+      window.open(document.url, "_blank", "noopener,noreferrer");
+    } else {
+      toast({
+        title: "Document not available",
+        description: "This document has not been uploaded yet.",
+      });
+    }
   };
 
-  const handleUploadSubmit = (fileUrl: string, documentName?: string) => {
-    // TODO: Submit to API
-    console.log("Upload document:", { fileUrl, documentName });
-    setUploadNewModalOpen(false);
-    // Refresh documents list
+  const handleUpdateSubmit = async (fileUrl: string) => {
+    if (!selectedDocument?.docType) return;
+
+    const config = COMPANY_DOC_CONFIGS.find((c) =>
+      c.docTypes.includes(selectedDocument.docType as string)
+    );
+
+    if (!config) return;
+
+    try {
+      if (config.category === "company") {
+        await saveCompanyDocumentsMutation.mutateAsync({
+          userId: entrepreneurId,
+          data: {
+            documents: [
+              {
+                docType: selectedDocument.docType,
+                docUrl: fileUrl,
+              },
+            ],
+          },
+        });
+      } else if (config.category === "financial") {
+        await saveFinancialDocumentsMutation.mutateAsync({
+          userId: entrepreneurId,
+          data: {
+            documents: [
+              {
+                docType: selectedDocument.docType,
+                docUrl: fileUrl,
+              },
+            ],
+          },
+        });
+      } else if (config.category === "permits") {
+        await savePermitsMutation.mutateAsync({
+          userId: entrepreneurId,
+          data: {
+            documents: [
+              {
+                docType: selectedDocument.docType,
+                docUrl: fileUrl,
+              },
+            ],
+          },
+        });
+      }
+
+      toast({
+        title: "Success",
+        description: "Document uploaded successfully.",
+      });
+
+      setUpdateModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error || error?.message || "Failed to upload document.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateSubmit = (fileUrl: string) => {
-    // TODO: Submit to API
-    console.log("Update document:", { documentId: selectedDocument?.id, fileUrl });
-    setUpdateModalOpen(false);
-    setSelectedDocument(null);
-    // Refresh documents list
+  const handleBankStatementSubmit = async (entries: BankStatementEntry[]) => {
+    try {
+      const documents = entries.map((entry) => {
+        const bankName =
+          entry.bankName === "other" ? entry.specifyBankName : entry.bankName;
+        return {
+          docType: "annual_bank_statement",
+          docUrl: entry.statementFile,
+          docBankName: bankName || undefined,
+          isPasswordProtected: !!entry.password,
+          docPassword: entry.password || undefined,
+        };
+      });
+
+      await saveFinancialDocumentsMutation.mutateAsync({
+        userId: entrepreneurId,
+        data: { documents },
+      });
+
+      toast({
+        title: "Success",
+        description: "Bank statements updated successfully.",
+      });
+
+      setBankStatementModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error || error?.message || "Failed to update bank statements.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleBankStatementSubmit = (entries: BankStatementEntry[]) => {
-    // TODO: Submit to API
-    console.log("Update bank statements:", entries);
-    setBankStatementModalOpen(false);
-    setSelectedDocument(null);
-    // Refresh documents list
+  const handleFinancialStatementSubmit = async (entries: FinancialStatementEntry[]) => {
+    try {
+      const documents = entries.map((entry) => ({
+        docType: "audited_financial_statements",
+        docUrl: entry.statementFile,
+        docYear: parseInt(entry.year, 10),
+        isPasswordProtected: false,
+      }));
+
+      await saveFinancialDocumentsMutation.mutateAsync({
+        userId: entrepreneurId,
+        data: { documents },
+      });
+
+      toast({
+        title: "Success",
+        description: "Financial statements updated successfully.",
+      });
+
+      setFinancialStatementModalOpen(false);
+      setSelectedDocument(null);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error || error?.message || "Failed to update financial statements.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleFinancialStatementSubmit = (entries: FinancialStatementEntry[]) => {
-    // TODO: Submit to API
-    console.log("Update financial statements:", entries);
-    setFinancialStatementModalOpen(false);
-    setSelectedDocument(null);
-    // Refresh documents list
-  };
+  const bankStatementInitialEntries: BankStatementEntry[] = useMemo(() => {
+    if (!businessDocuments) return [];
+    return businessDocuments
+      .filter((d) => d.docType === "annual_bank_statement")
+      .map((d) => ({
+        id: d.id,
+        bankName: "other",
+        specifyBankName: d.docBankName || "",
+        statementFile: d.docUrl,
+        password: d.docPassword || "",
+      }));
+  }, [businessDocuments]);
+
+  const financialStatementInitialEntries: FinancialStatementEntry[] = useMemo(() => {
+    if (!businessDocuments) return [];
+    return businessDocuments
+      .filter((d) => d.docType === "audited_financial_statements")
+      .map((d) => ({
+        id: d.id,
+        year: d.docYear ? d.docYear.toString() : "",
+        statementFile: d.docUrl,
+      }));
+  }, [businessDocuments]);
+
+  if (isLoading) {
+    return (
+      <div className="text-sm text-primaryGrey-500">
+        Loading company documents...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-sm text-red-500">
+        Failed to load company documents.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {/* Header with Filters */}
       <AttachmentsHeader
         searchValue={searchValue}
         onSearchChange={setSearchValue}
@@ -264,20 +400,17 @@ export default function CompanyDocumentsPage() {
         onSortChange={setSort}
         filterStatus={filterStatus}
         onFilterChange={setFilterStatus}
-        onUpload={handleUploadNew}
+        onUpload={() => {}} // uploads are triggered per-row
       />
 
-      {/* Table */}
       <AttachmentsTable
         documents={paginatedDocuments}
         onView={handleView}
-        onUpdate={handleUpdate}
+        onUpdate={openForDocument}
         onDownload={handleDownload}
-        onUpload={handleUpload}
-        onUploadNew={handleUpload}
+        onUpload={openForDocument}
       />
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <AttachmentsPagination
           currentPage={currentPage}
@@ -288,40 +421,38 @@ export default function CompanyDocumentsPage() {
         />
       )}
 
-      {/* Upload New Document Modal (unnamed) */}
-      <DocumentUploadModal
-        open={uploadNewModalOpen}
-        onOpenChange={setUploadNewModalOpen}
-        onSubmit={handleUploadSubmit}
-        requireDocumentName={true}
-        acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
-        maxSizeMB={2}
-      />
+      {selectedDocument &&
+        selectedDocument.name !== "Bank Statements" &&
+        selectedDocument.name !== "Financial Statements" && (
+          <DocumentUploadModal
+            open={updateModalOpen}
+            onOpenChange={setUpdateModalOpen}
+            onSubmit={handleUpdateSubmit}
+            documentName={selectedDocument.name}
+            acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
+            maxSizeMB={2}
+            isLoading={
+              saveCompanyDocumentsMutation.isPending ||
+              saveFinancialDocumentsMutation.isPending ||
+              savePermitsMutation.isPending
+            }
+          />
+        )}
 
-      {/* Update Document Modal (named) */}
-      {selectedDocument && selectedDocument.name !== "Bank Statements" && selectedDocument.name !== "Financial Statements" && (
-        <DocumentUploadModal
-          open={updateModalOpen}
-          onOpenChange={setUpdateModalOpen}
-          onSubmit={handleUpdateSubmit}
-          documentName={selectedDocument.name}
-          acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
-          maxSizeMB={2}
-        />
-      )}
-
-      {/* Bank Statement Upload Modal */}
       <BankStatementUploadModal
         open={bankStatementModalOpen}
         onOpenChange={setBankStatementModalOpen}
         onSubmit={handleBankStatementSubmit}
+        initialEntries={bankStatementInitialEntries}
+        isLoading={saveFinancialDocumentsMutation.isPending}
       />
 
-      {/* Financial Statement Upload Modal */}
       <FinancialStatementUploadModal
         open={financialStatementModalOpen}
         onOpenChange={setFinancialStatementModalOpen}
         onSubmit={handleFinancialStatementSubmit}
+        initialEntries={financialStatementInitialEntries}
+        isLoading={saveFinancialDocumentsMutation.isPending}
       />
     </div>
   );
