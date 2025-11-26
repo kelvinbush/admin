@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { useMemo, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { SMEOnboardingProvider, useSMEOnboarding } from "./_context/sme-onboarding-context";
 import { StepsSidebar, type StepId } from "./_components/steps-sidebar";
 import { Step1EntrepreneurDetails } from "./_components/step-1-entrepreneur-details";
 import { Step2CompanyInformation } from "./_components/step-2-company-information";
@@ -14,10 +14,12 @@ import { Step4EntrepreneurDocuments } from "./_components/step-4-entrepreneur-do
 import { Step5CompanyRegistrationDocuments } from "./_components/step-5-company-registration-documents";
 import { Step6CompanyFinancialDocuments } from "./_components/step-6-company-financial-documents";
 import { Step7OtherSupportingDocuments } from "./_components/step-7-other-supporting-documents";
+import { toast } from "@/hooks/use-toast";
 
-export default function CreateEntrepreneurPage() {
+function CreateEntrepreneurPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { userId, onboardingState, isError, isLoading } = useSMEOnboarding();
 
   // Get step from URL or default to 1
   const currentStep = useMemo<StepId>(() => {
@@ -26,13 +28,42 @@ export default function CreateEntrepreneurPage() {
     return (step >= 1 && step <= 7 ? step : 1) as StepId;
   }, [searchParams]);
 
+  // Validate userId for steps 2-7
+  useEffect(() => {
+    if (currentStep > 1 && !userId && !isLoading) {
+      toast({
+        title: "Error",
+        description: "Please complete Step 1 first to create the SME user.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+    }
+  }, [currentStep, userId, isLoading, router]);
+
+  // Handle invalid userId (404 error)
+  useEffect(() => {
+    if (isError && currentStep > 1) {
+      toast({
+        title: "Error",
+        description: "Invalid user ID. Please start from Step 1.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+    }
+  }, [isError, currentStep, router]);
+
   const handleStepChange = (step: StepId) => {
-    router.push(`/entrepreneurs/create?step=${step}`);
+    const urlUserId = searchParams.get("userId");
+    if (urlUserId) {
+      router.push(`/entrepreneurs/create?userId=${urlUserId}&step=${step}`);
+    } else {
+      router.push(`/entrepreneurs/create?step=${step}`);
+    }
   };
 
-  const handleCancel = () => {
-    router.push("/entrepreneurs");
-  };
+  // Determine which steps are completed
+  const completedSteps = onboardingState?.completedSteps || [];
+  const currentStepNumber = onboardingState?.currentStep || currentStep;
 
   return (
     <div className="space-y-6">
@@ -72,6 +103,7 @@ export default function CreateEntrepreneurPage() {
           {/* Steps Sidebar */}
           <StepsSidebar
             currentStep={currentStep}
+            completedSteps={completedSteps}
             onStepClick={handleStepChange}
           />
 
@@ -88,5 +120,13 @@ export default function CreateEntrepreneurPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateEntrepreneurPage() {
+  return (
+    <SMEOnboardingProvider>
+      <CreateEntrepreneurPageContent />
+    </SMEOnboardingProvider>
   );
 }

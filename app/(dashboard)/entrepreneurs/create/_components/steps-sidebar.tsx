@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 export type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -58,25 +59,35 @@ const steps: Step[] = [
 
 interface StepsSidebarProps {
   currentStep: StepId;
+  completedSteps?: number[];
   onStepClick?: (step: StepId) => void;
 }
 
-export function StepsSidebar({ currentStep, onStepClick }: StepsSidebarProps) {
+export function StepsSidebar({ currentStep, completedSteps = [], onStepClick }: StepsSidebarProps) {
   const isStepEnabled = (stepId: StepId) => {
-    // Allow navigation to current step and all previous steps
-    return stepId <= currentStep;
+    // Allow navigation to:
+    // 1. Current step
+    // 2. Any completed step (for editing)
+    // Don't allow skipping ahead to incomplete future steps
+    return stepId === currentStep || completedSteps.includes(stepId);
+  };
+
+  const isStepCompleted = (stepId: StepId) => {
+    return completedSteps.includes(stepId);
   };
 
   return (
     <div className="w-64 bg-white border-r border-t border-primaryGrey-50">
       {steps.map((step) => {
         const enabled = isStepEnabled(step.id);
+        const completed = isStepCompleted(step.id);
         return (
           <StepItem
             key={step.id}
             step={step}
             isActive={step.id === currentStep}
             isEnabled={enabled}
+            isCompleted={completed}
             onClick={() => {
               if (enabled) {
                 onStepClick?.(step.id);
@@ -93,10 +104,11 @@ interface StepItemProps {
   step: Step;
   isActive: boolean;
   isEnabled: boolean;
+  isCompleted: boolean;
   onClick?: () => void;
 }
 
-function StepItem({ step, isActive, isEnabled, onClick }: StepItemProps) {
+function StepItem({ step, isActive, isEnabled, isCompleted, onClick }: StepItemProps) {
   return (
     <button
       onClick={onClick}
@@ -108,18 +120,24 @@ function StepItem({ step, isActive, isEnabled, onClick }: StepItemProps) {
         isActive && "bg-primary-green/10"
       )}
     >
-      {/* Step Number */}
+      {/* Step Number / Checkmark */}
       <div
         className={cn(
           "flex-shrink-0 w-10 h-10 rounded-sm flex items-center justify-center text-sm",
-          isActive
+          isCompleted && !isActive
+            ? "bg-primary-green/20 border border-primary-green text-primary-green"
+            : isActive
             ? "bg-primary-green text-white"
             : isEnabled
             ? "bg-white border border-primaryGrey-200 text-primaryGrey-400"
             : "bg-primaryGrey-50 border border-primaryGrey-200 text-primaryGrey-300"
         )}
       >
-        {step.number}
+        {isCompleted && !isActive ? (
+          <Check className="h-5 w-5" />
+        ) : (
+          step.number
+        )}
       </div>
 
       {/* Step Content */}

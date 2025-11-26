@@ -12,7 +12,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSavePersonalDocuments, useSMEPersonalDocuments } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const entrepreneurDocumentsSchema = z.object({
   hasIdentificationDocuments: z.enum(["yes", "no"]),
@@ -66,8 +69,17 @@ const documentTypeOptions: SelectOption[] = [
 
 export function Step4EntrepreneurDocuments() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
   const [hasDocuments, setHasDocuments] = useState<"yes" | "no" | undefined>(undefined);
   const [documentType, setDocumentType] = useState<string>("");
+  const saveDocumentsMutation = useSavePersonalDocuments();
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(4);
+  
+  // Fetch existing personal documents if editing
+  const { data: existingDocuments } = useSMEPersonalDocuments(userId || "", {
+    enabled: isEditing && !!userId,
+  });
 
   const form = useForm<EntrepreneurDocumentsFormData>({
     resolver: zodResolver(entrepreneurDocumentsSchema),
@@ -85,13 +97,129 @@ export function Step4EntrepreneurDocuments() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && existingDocuments && existingDocuments.length > 0) {
+      // Map existing documents to form fields
+      const nationalIdFront = existingDocuments.find(d => d.docType === "national_id_front");
+      const nationalIdBack = existingDocuments.find(d => d.docType === "national_id_back");
+      const passportBio = existingDocuments.find(d => d.docType === "passport_bio_page");
+      const userPhoto = existingDocuments.find(d => d.docType === "user_photo");
+      const taxDoc = existingDocuments.find(d => d.docType === "personal_tax_document");
+      
+      // Determine document type
+      if (nationalIdFront || nationalIdBack) {
+        setHasDocuments("yes");
+        setDocumentType("identity-card");
+        form.setValue("hasIdentificationDocuments", "yes");
+        form.setValue("documentType", "identity-card");
+        if (nationalIdFront) form.setValue("frontIdDocument", nationalIdFront.docUrl);
+        if (nationalIdBack) form.setValue("backIdDocument", nationalIdBack.docUrl);
+      } else if (passportBio) {
+        setHasDocuments("yes");
+        setDocumentType("passport");
+        form.setValue("hasIdentificationDocuments", "yes");
+        form.setValue("documentType", "passport");
+        form.setValue("passportBioPage", passportBio.docUrl);
+      }
+      
+      if (userPhoto) form.setValue("passportPhoto", userPhoto.docUrl);
+      if (taxDoc) form.setValue("personalTaxCertificate", taxDoc.docUrl);
+    }
+  }, [isEditing, existingDocuments, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=3");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=3`);
+    } else {
+      router.push("/entrepreneurs/create?step=1");
+    }
   };
 
-  const onSubmit = (data: EntrepreneurDocumentsFormData) => {
-    console.log("Step 4 data:", data);
-    router.push("/entrepreneurs/create?step=5");
+  const onSubmit = async (data: EntrepreneurDocumentsFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete previous steps first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      const documents: Array<{ docType: string; docUrl: string }> = [];
+
+      // Add identification documents if available
+      if (data.hasIdentificationDocuments === "yes") {
+        if (data.documentType === "identity-card") {
+          if (data.frontIdDocument) {
+            documents.push({
+              docType: "national_id_front",
+              docUrl: data.frontIdDocument,
+            });
+          }
+          if (data.backIdDocument) {
+            documents.push({
+              docType: "national_id_back",
+              docUrl: data.backIdDocument,
+            });
+          }
+        } else if (data.documentType === "passport") {
+          if (data.passportBioPage) {
+            documents.push({
+              docType: "passport_bio_page",
+              docUrl: data.passportBioPage,
+            });
+          }
+        }
+        
+        // Add passport photo if available (optional)
+        if (data.passportPhoto) {
+          documents.push({
+            docType: "user_photo",
+            docUrl: data.passportPhoto,
+          });
+        }
+      }
+
+      // Add tax documents
+      if (data.personalTaxCertificate) {
+        documents.push({
+          docType: "personal_tax_document",
+          docUrl: data.personalTaxCertificate,
+        });
+      }
+
+      if (documents.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please upload at least one document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await saveDocumentsMutation.mutateAsync({
+        userId,
+        data: { documents },
+      });
+
+      toast({
+        title: "Success",
+        description: "Personal documents saved successfully.",
+      });
+
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${userId}&step=5`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const watchHasDocuments = form.watch("hasIdentificationDocuments");
@@ -100,7 +228,14 @@ export function Step4EntrepreneurDocuments() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 4/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 4/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Entrepreneur Documents
         </h2>
@@ -447,12 +582,13 @@ export function Step4EntrepreneurDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveDocumentsMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {saveDocumentsMutation.isPending ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
         </form>

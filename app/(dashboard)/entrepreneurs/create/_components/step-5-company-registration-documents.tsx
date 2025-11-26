@@ -7,6 +7,10 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from "@/component
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSaveCompanyDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const companyRegistrationDocumentsSchema = z.object({
   certificateOfRegistration: z.string().min(1, "Certificate of registration/incorporation is required"),
@@ -24,6 +28,15 @@ type CompanyRegistrationDocumentsFormData = z.infer<typeof companyRegistrationDo
 
 export function Step5CompanyRegistrationDocuments() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
+  const saveDocumentsMutation = useSaveCompanyDocuments();
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(5);
+  
+  // Fetch existing business documents if editing
+  const { data: existingDocuments } = useSMEBusinessDocuments(userId || "", {
+    enabled: isEditing && !!userId,
+  });
 
   const form = useForm<CompanyRegistrationDocumentsFormData>({
     resolver: zodResolver(companyRegistrationDocumentsSchema),
@@ -40,19 +53,176 @@ export function Step5CompanyRegistrationDocuments() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && existingDocuments) {
+      // Map existing documents to form fields
+      const certificateOfReg = existingDocuments.find(d => 
+        d.docType === "certificate_of_incorporation" || d.docType === "business_registration"
+      );
+      const cr1 = existingDocuments.find(d => d.docType === "CR1");
+      const cr2 = existingDocuments.find(d => d.docType === "CR2");
+      const cr8 = existingDocuments.find(d => d.docType === "CR8");
+      const cr12 = existingDocuments.find(d => d.docType === "CR12");
+      const memorandum = existingDocuments.find(d => d.docType === "memorandum_of_association");
+      const articles = existingDocuments.find(d => d.docType === "articles_of_association");
+      const taxReg = existingDocuments.find(d => d.docType === "tax_registration_certificate");
+      const taxClearance = existingDocuments.find(d => d.docType === "tax_clearance_certificate");
+      
+      form.reset({
+        certificateOfRegistration: certificateOfReg?.docUrl || "",
+        cr1: cr1?.docUrl || "",
+        cr2: cr2?.docUrl || "",
+        cr8: cr8?.docUrl || "",
+        cr12: cr12?.docUrl || "",
+        memorandumOfAssociation: memorandum?.docUrl || "",
+        articlesOfAssociation: articles?.docUrl || "",
+        companyTaxRegistrationCertificate: taxReg?.docUrl || "",
+        companyTaxClearanceCertificate: taxClearance?.docUrl || "",
+      });
+    }
+  }, [isEditing, existingDocuments, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=4");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=4`);
+    } else {
+      router.push("/entrepreneurs/create?step=1");
+    }
   };
 
-  const onSubmit = (data: CompanyRegistrationDocumentsFormData) => {
-    console.log("Step 5 data:", data);
-    router.push("/entrepreneurs/create?step=6");
+  const onSubmit = async (data: CompanyRegistrationDocumentsFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete previous steps first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      const documents: Array<{
+        docType: string;
+        docUrl: string;
+        isPasswordProtected?: boolean;
+        docPassword?: string;
+      }> = [];
+
+      // Add certificate of registration/incorporation
+      if (data.certificateOfRegistration) {
+        documents.push({
+          docType: "certificate_of_incorporation",
+          docUrl: data.certificateOfRegistration,
+          isPasswordProtected: false,
+        });
+      }
+
+      // Add CR documents
+      if (data.cr1) {
+        documents.push({
+          docType: "CR1",
+          docUrl: data.cr1,
+          isPasswordProtected: false,
+        });
+      }
+      if (data.cr2) {
+        documents.push({
+          docType: "CR2",
+          docUrl: data.cr2,
+          isPasswordProtected: false,
+        });
+      }
+      if (data.cr8) {
+        documents.push({
+          docType: "CR8",
+          docUrl: data.cr8,
+          isPasswordProtected: false,
+        });
+      }
+      if (data.cr12) {
+        documents.push({
+          docType: "CR12",
+          docUrl: data.cr12,
+          isPasswordProtected: false,
+        });
+      }
+
+      // Add memorandum and articles
+      if (data.memorandumOfAssociation) {
+        documents.push({
+          docType: "memorandum_of_association",
+          docUrl: data.memorandumOfAssociation,
+          isPasswordProtected: false,
+        });
+      }
+      if (data.articlesOfAssociation) {
+        documents.push({
+          docType: "articles_of_association",
+          docUrl: data.articlesOfAssociation,
+          isPasswordProtected: false,
+        });
+      }
+
+      // Add tax certificates
+      if (data.companyTaxRegistrationCertificate) {
+        documents.push({
+          docType: "tax_registration_certificate",
+          docUrl: data.companyTaxRegistrationCertificate,
+          isPasswordProtected: false,
+        });
+      }
+      if (data.companyTaxClearanceCertificate) {
+        documents.push({
+          docType: "tax_clearance_certificate",
+          docUrl: data.companyTaxClearanceCertificate,
+          isPasswordProtected: false,
+        });
+      }
+
+      if (documents.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please upload at least the required documents.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await saveDocumentsMutation.mutateAsync({
+        userId,
+        data: { documents },
+      });
+
+      toast({
+        title: "Success",
+        description: "Company registration documents saved successfully.",
+      });
+
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${userId}&step=6`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 5/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 5/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Company Registration Documents
         </h2>
@@ -284,12 +454,13 @@ export function Step5CompanyRegistrationDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveDocumentsMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {saveDocumentsMutation.isPending ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
         </form>

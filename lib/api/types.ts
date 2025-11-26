@@ -896,16 +896,29 @@ export interface SMEUserDetail {
   business: {
     id: string;
     name: string;
-    entityType?: string;
-    logo?: string;
-    sectors?: string[];
-    description?: string;
-    yearOfIncorporation?: number;
-    city?: string;
-    country?: string;
-    companyHQ?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    entityType: string | null;
+    logo: string | null;
+    sectors: string[] | null;
+    description: string | null;
+    yearOfIncorporation: number | null;
+    city: string | null;
+    country: string | null;
+    companyHQ: string | null;
+    // Step 2 extensions
+    noOfEmployees: number | null;
+    website: string | null;
+    selectionCriteria: string[] | null;
+    userGroupIds: string[]; // all linked programs
+    // Step 3 extensions
+    countriesOfOperation: string[] | null;
+    registeredOfficeAddress: string | null;
+    registeredOfficeCity: string | null;
+    registeredOfficeZipCode: string | null;
+    // Media
+    videoLinks: { url: string; source: string | null }[];
+    businessPhotos: string[];
+    createdAt: string | null;
+    updatedAt: string | null;
   };
 }
 
@@ -926,6 +939,12 @@ export interface SMEOnboardingState {
   business: {
     id: string;
     name: string;
+    countriesOfOperation?: string[];
+    companyHQ?: string;
+    city?: string;
+    registeredOfficeAddress?: string;
+    registeredOfficeCity?: string;
+    registeredOfficeZipCode?: string;
   } | null;
 }
 

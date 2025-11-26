@@ -11,8 +11,11 @@ import { SelectWithDescription, type SelectOption } from "@/components/ui/select
 import { MultiSelectDropdown, type MultiSelectOption } from "@/components/ui/multi-select-dropdown";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { countries } from "@/lib/data/countries";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSMEUser, useSaveLocationInfo } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const businessLocationSchema = z.object({
   countriesOfOperation: z.array(z.string()).min(1, "At least one country of operation is required"),
@@ -24,20 +27,30 @@ const businessLocationSchema = z.object({
 
 type BusinessLocationFormData = z.infer<typeof businessLocationSchema>;
 
-// Convert countries to options for dropdowns
+// Convert countries to options for dropdowns - using country names as values
 const countryOptions: SelectOption[] = countries.map((country) => ({
-  value: country.code,
+  value: country.name,
   label: country.name,
 }));
 
 const countryMultiSelectOptions: MultiSelectOption[] = countries.map((country) => ({
-  value: country.code,
+  value: country.name,
   label: country.name,
 }));
 
 export function Step3BusinessLocation() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
   const [addressLength, setAddressLength] = useState(0);
+  const saveLocationMutation = useSaveLocationInfo();
+  
+  // Fetch full user details if editing
+  const { data: userDetail } = useSMEUser(userId || "", {
+    enabled: !!userId && onboardingState?.completedSteps?.includes(3),
+  });
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(3);
+  const businessData = userDetail?.business || onboardingState?.business;
 
   const form = useForm<BusinessLocationFormData>({
     resolver: zodResolver(businessLocationSchema),
@@ -50,19 +63,95 @@ export function Step3BusinessLocation() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && businessData) {
+      // API returns country names, form now uses country names directly
+      const countriesOfOperation = businessData.countriesOfOperation || [];
+      
+      // companyHQ is just the country name (one string)
+      const companyHQCountry = businessData.companyHQ || "";
+      
+      form.reset({
+        countriesOfOperation: countriesOfOperation,
+        companyHeadquarters: companyHQCountry,
+        city: businessData.city || businessData.registeredOfficeCity || "",
+        registeredOfficeAddress: businessData.registeredOfficeAddress || "",
+        zipCode: businessData.registeredOfficeZipCode || "",
+      });
+      
+      if (businessData.registeredOfficeAddress) {
+        setAddressLength(businessData.registeredOfficeAddress.length);
+      }
+    }
+  }, [isEditing, businessData, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=2");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=2`);
+    } else {
+      router.push("/entrepreneurs/create?step=1");
+    }
   };
 
-  const onSubmit = (data: BusinessLocationFormData) => {
-    console.log("Step 3 data:", data);
-    router.push("/entrepreneurs/create?step=4");
+  const onSubmit = async (data: BusinessLocationFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete previous steps first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      // Form now uses country names directly, so no mapping needed
+      const countriesOfOperation = data.countriesOfOperation;
+
+      // companyHQ is just the country name (one string)
+      const companyHQ = data.companyHeadquarters;
+
+      await saveLocationMutation.mutateAsync({
+        userId,
+        data: {
+          countriesOfOperation,
+          companyHQ: companyHQ || undefined,
+          city: data.city || undefined,
+          registeredOfficeAddress: data.registeredOfficeAddress || undefined,
+          registeredOfficeCity: data.city || undefined,
+          registeredOfficeZipCode: data.zipCode || undefined,
+        },
+      });
+
+      toast({
+        title: "Success",
+        description: "Business location information saved successfully.",
+      });
+
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${userId}&step=4`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save business location.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 3/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 3/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Business Location
         </h2>
@@ -223,12 +312,13 @@ export function Step3BusinessLocation() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveLocationMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {saveLocationMutation.isPending ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
         </form>

@@ -15,6 +15,10 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useCreateSMEUser, useUpdateSMEUserStep1 } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const entrepreneurDetailsSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -68,6 +72,10 @@ const positionOptions: SelectOption[] = [
 
 export function Step1EntrepreneurDetails() {
   const router = useRouter();
+  const { userId, onboardingState, setUserId, refreshState } = useSMEOnboarding();
+  const createUserMutation = useCreateSMEUser();
+  const updateUserMutation = useUpdateSMEUserStep1();
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(1);
 
   const form = useForm<EntrepreneurDetailsFormData>({
     resolver: zodResolver(entrepreneurDetailsSchema),
@@ -83,12 +91,83 @@ export function Step1EntrepreneurDetails() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && onboardingState?.user) {
+      const user = onboardingState.user;
+      form.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phoneNumber: user.phone || "",
+        gender: user.gender || "",
+        dateOfBirth: user.dob ? new Date(user.dob) : undefined,
+        positionHeld: user.position || "",
+        specifyPosition: user.position || "",
+      });
+    }
+  }, [isEditing, onboardingState, form]);
+
   const positionHeld = form.watch("positionHeld");
 
-  const onSubmit = (data: EntrepreneurDetailsFormData) => {
-    console.log("Form data:", data);
-    // Navigate to next step
-    router.push("/entrepreneurs/create?step=2");
+  const onSubmit = async (data: EntrepreneurDetailsFormData) => {
+    try {
+      // Format date for API (YYYY-MM-DD)
+      const dob = data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : "";
+      const position = data.positionHeld === "other" ? data.specifyPosition : data.positionHeld;
+
+      let newUserId = userId;
+
+      if (userId && isEditing) {
+        // Update existing user
+        await updateUserMutation.mutateAsync({
+          userId,
+          data: {
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phoneNumber || "",
+            dob,
+            gender: data.gender,
+            position: position || "",
+          },
+        });
+        toast({
+          title: "Success",
+          description: "Entrepreneur details updated successfully.",
+        });
+      } else {
+        // Create new user
+        const response = await createUserMutation.mutateAsync({
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phoneNumber || "",
+          dob,
+          gender: data.gender,
+          position: position || "",
+        });
+        
+        // Set userId and update URL
+        newUserId = response.userId;
+        setUserId(newUserId);
+        toast({
+          title: "Success",
+          description: "Entrepreneur created successfully. Proceeding to next step.",
+        });
+      }
+
+      // Refresh state and navigate to next step
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${newUserId}&step=2`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save entrepreneur details.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -98,7 +177,14 @@ export function Step1EntrepreneurDetails() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 1/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 1/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Entrepreneur Details
         </h2>
@@ -325,15 +411,18 @@ export function Step1EntrepreneurDetails() {
               Cancel
             </Button>
             <Button
-            size="lg"
+              size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={createUserMutation.isPending || updateUserMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {createUserMutation.isPending || updateUserMutation.isPending
+                ? "Saving..."
+                : "Save & Continue"}
             </Button>
           </div>
         </form>

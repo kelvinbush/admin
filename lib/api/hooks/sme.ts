@@ -54,13 +54,16 @@ export function useSMEUsers(filters?: SMEUsersFilters) {
 /**
  * Get detailed information about a specific SME user
  */
-export function useSMEUser(userId: string) {
+export function useSMEUser(
+  userId: string,
+  options?: { enabled?: boolean }
+) {
   return useClientApiQuery<SMEUserDetail>(
     queryKeys.sme.detail(userId),
     `/admin/sme/users/${userId}`,
     undefined,
     {
-      enabled: !!userId,
+      enabled: options?.enabled !== false && !!userId,
     }
   );
 }
@@ -68,13 +71,16 @@ export function useSMEUser(userId: string) {
 /**
  * Get the current onboarding state for a user
  */
-export function useSMEOnboardingState(userId: string) {
+export function useSMEOnboardingState(
+  userId: string,
+  options?: { enabled?: boolean }
+) {
   return useClientApiQuery<SMEOnboardingState>(
     queryKeys.sme.onboarding(userId),
     `/admin/sme/onboarding/${userId}`,
     undefined,
     {
-      enabled: !!userId,
+      enabled: options?.enabled !== false && !!userId,
     }
   );
 }
@@ -267,6 +273,76 @@ export function useSendSMEInvitation() {
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+// ===== DOCUMENT HOOKS =====
+
+export interface PersonalDocument {
+  id: string;
+  docType: string;
+  docUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessDocument {
+  id: string;
+  docType: string;
+  docUrl: string;
+  isPasswordProtected?: boolean;
+  docPassword?: string | null;
+  docBankName?: string | null;
+  docYear?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Get all personal documents for an SME user
+ */
+export function useSMEPersonalDocuments(
+  userId: string,
+  options?: { enabled?: boolean }
+) {
+  return useClientApiQuery<PersonalDocument[]>(
+    [...queryKeys.sme.detail(userId), 'documents', 'personal'],
+    `/admin/sme/users/${userId}/documents/personal`,
+    undefined,
+    {
+      enabled: options?.enabled !== false && !!userId,
+      select: (data: any) => {
+        // Handle API response wrapper
+        if (data?.success && data?.data) {
+          return data.data as PersonalDocument[];
+        }
+        return data as PersonalDocument[];
+      },
+    }
+  );
+}
+
+/**
+ * Get all business documents for an SME user
+ */
+export function useSMEBusinessDocuments(
+  userId: string,
+  options?: { enabled?: boolean }
+) {
+  return useClientApiQuery<BusinessDocument[]>(
+    [...queryKeys.sme.detail(userId), 'documents', 'business'],
+    `/admin/sme/users/${userId}/documents/business`,
+    undefined,
+    {
+      enabled: options?.enabled !== false && !!userId,
+      select: (data: any) => {
+        // Handle API response wrapper
+        if (data?.success && data?.data) {
+          return data.data as BusinessDocument[];
+        }
+        return data as BusinessDocument[];
       },
     }
   );

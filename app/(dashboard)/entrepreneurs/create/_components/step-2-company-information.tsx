@@ -13,7 +13,11 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { VideoLinkInput } from "@/components/ui/video-link-input";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSMEUser, useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
+import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
+import { toast } from "@/hooks/use-toast";
 
 const companyInformationSchema = z.object({
   companyLogo: z.string().optional(),
@@ -59,13 +63,7 @@ const sectorOptions: MultiSelectOption[] = [
   { value: "transportation", label: "Transportation & Logistics" },
 ];
 
-const programUserGroupOptions: MultiSelectOption[] = [
-  { value: "tuungane", label: "Tuungane" },
-  { value: "giz-sais", label: "GIZ-SAIS" },
-  { value: "giz-cgiar", label: "GIZ-CGIAR" },
-  { value: "w4a", label: "W4A" },
-  { value: "ecobank-elevate", label: "Ecobank-Elevate" },
-];
+// User groups will be fetched from API
 
 const twoXCriteriaOptions: MultiSelectOption[] = [
   { value: "founded-by-woman", label: "Founded by a woman" },
@@ -86,7 +84,29 @@ const numberOfEmployeesOptions: SelectOption[] = [
 
 export function Step2CompanyInformation() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
   const [descriptionLength, setDescriptionLength] = useState(0);
+  const saveBusinessMutation = useSaveBusinessBasicInfo();
+  
+  // Fetch user groups from API
+  const { data: userGroupsData } = useUserGroups(undefined, { page: 1, limit: 100 });
+  // Handle both PaginatedResponse and direct array responses
+  const userGroups = (userGroupsData as any)?.data || (userGroupsData as any) || [];
+  const userGroupOptions: MultiSelectOption[] = Array.isArray(userGroups) 
+    ? userGroups.map((group: any) => ({
+        value: group.id,
+        label: group.name,
+      }))
+    : [];
+  
+  // Fetch full user details if editing
+  const { data: userDetail } = useSMEUser(userId || "", {
+    enabled: !!userId && onboardingState?.completedSteps?.includes(2),
+  });
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(2);
+  // Use userDetail business data which has all fields, fallback to onboardingState for basic name
+  const businessData = userDetail?.business;
 
   const form = useForm<CompanyInformationFormData>({
     resolver: zodResolver(companyInformationSchema),
@@ -106,19 +126,134 @@ export function Step2CompanyInformation() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && businessData) {
+      // Map number of employees to form format (range string)
+      const mapNoOfEmployees = (count: number | null): string => {
+        if (!count) return "";
+        if (count <= 10) return "1-10";
+        if (count <= 50) return "11-50";
+        if (count <= 100) return "51-100";
+        if (count <= 500) return "101-500";
+        if (count <= 1000) return "501-1000";
+        return "1001-plus";
+      };
+
+      // Map video links from API format to form format (array of strings)
+      // API returns: { url: string; source: string | null }[]
+      // Form expects: string[]
+      const videoLinksForm = businessData.videoLinks?.map(v => v.url) || [];
+
+      form.reset({
+        companyLogo: businessData.logo || "",
+        businessName: businessData.name || "",
+        businessLegalEntityType: businessData.entityType || "",
+        yearOfRegistration: businessData.yearOfIncorporation?.toString() || "",
+        sector: businessData.sectors || [],
+        businessDescription: businessData.description || "",
+        programUserGroup: businessData.userGroupIds || [],
+        twoXCriteria: businessData.selectionCriteria || [],
+        numberOfEmployees: mapNoOfEmployees(businessData.noOfEmployees),
+        companyWebsite: businessData.website || "",
+        businessPhotos: businessData.businessPhotos || [],
+        videoLinks: videoLinksForm,
+      });
+      if (businessData.description) {
+        setDescriptionLength(businessData.description.length);
+      }
+    }
+  }, [isEditing, businessData, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=1");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=1`);
+    } else {
+      router.push("/entrepreneurs/create?step=1");
+    }
   };
 
-  const onSubmit = (data: CompanyInformationFormData) => {
-    console.log("Step 2 data:", data);
-    router.push("/entrepreneurs/create?step=3");
+  const onSubmit = async (data: CompanyInformationFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete Step 1 first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      // Parse year - handle "not-registered" case
+      const year = data.yearOfRegistration === "not-registered" 
+        ? new Date().getFullYear() 
+        : parseInt(data.yearOfRegistration, 10);
+
+      // Parse number of employees from range string
+      const noOfEmployees = data.numberOfEmployees 
+        ? parseInt(data.numberOfEmployees.split("-")[0] || "0", 10)
+        : undefined;
+
+      // Transform video links - assuming VideoLinkInput returns array of strings (URLs)
+      // We'll need to extract source from URL or set default
+      const videoLinks = (data.videoLinks || []).map((url) => {
+        // Try to detect source from URL
+        let source = "other";
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+          source = "youtube";
+        } else if (url.includes("vimeo.com")) {
+          source = "vimeo";
+        }
+        return { url, source };
+      });
+
+      await saveBusinessMutation.mutateAsync({
+        userId,
+        data: {
+          logo: data.companyLogo || undefined,
+          name: data.businessName,
+          entityType: data.businessLegalEntityType,
+          year,
+          sectors: data.sector,
+          description: data.businessDescription || undefined,
+          userGroupId: data.programUserGroup[0] || undefined, // Take first if multiple
+          criteria: data.twoXCriteria || undefined,
+          noOfEmployees,
+          website: data.companyWebsite || undefined,
+          videoLinks: videoLinks.length > 0 ? videoLinks : undefined,
+          businessPhotos: data.businessPhotos || undefined,
+        },
+      });
+
+      toast({
+        title: "Success",
+        description: "Company information saved successfully.",
+      });
+
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${userId}&step=3`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save company information.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 2/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 2/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Company Information
         </h2>
@@ -306,7 +441,7 @@ export function Step2CompanyInformation() {
                   </FormLabel>
                   <FormControl>
                     <MultiSelectDropdown
-                      options={programUserGroupOptions}
+                      options={userGroupOptions}
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Select program/user group"
@@ -468,12 +603,13 @@ export function Step2CompanyInformation() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveBusinessMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {saveBusinessMutation.isPending ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
         </form>

@@ -13,6 +13,10 @@ import { BankStatementEntry } from "./bank-statement-entry";
 import { FinancialStatementEntry } from "./financial-statement-entry";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { useEffect } from "react";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSaveFinancialDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const bankStatementSchema = z.object({
   bankName: z.string().min(1, "Bank name is required"),
@@ -79,7 +83,16 @@ const generateYearOptions = (): SelectOption[] => {
 
 export function Step6CompanyFinancialDocuments() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
   const yearOptions = generateYearOptions();
+  const saveDocumentsMutation = useSaveFinancialDocuments();
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(6);
+  
+  // Fetch existing business documents if editing
+  const { data: existingDocuments } = useSMEBusinessDocuments(userId || "", {
+    enabled: isEditing && !!userId,
+  });
 
   const form = useForm<CompanyFinancialDocumentsFormData>({
     resolver: zodResolver(companyFinancialDocumentsSchema),
@@ -113,13 +126,162 @@ export function Step6CompanyFinancialDocuments() {
   const watchHasBankStatements = form.watch("hasBankStatements");
   const watchFinancialStatements = form.watch("financialStatements");
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && existingDocuments) {
+      // Map existing documents to form fields
+      const bankStatements = existingDocuments.filter(d => d.docType === "annual_bank_statement");
+      const financialStatements = existingDocuments.filter(d => d.docType === "audited_financial_statements");
+      const businessPlan = existingDocuments.find(d => d.docType === "business_plan");
+      const managementAccounts = existingDocuments.find(d => d.docType === "income_statements");
+      
+      // Set has bank statements
+      if (bankStatements.length > 0) {
+        form.setValue("hasBankStatements", "yes");
+        // Populate bank statements
+        bankStatements.forEach((stmt, index) => {
+          if (index === 0) {
+            form.setValue("bankStatements", [{
+              bankName: stmt.docBankName || "other",
+              specifyBankName: stmt.docBankName || "",
+              statementFile: stmt.docUrl,
+              password: stmt.docPassword || "",
+            }]);
+          } else {
+            const current = form.getValues("bankStatements") || [];
+            form.setValue("bankStatements", [...current, {
+              bankName: stmt.docBankName || "other",
+              specifyBankName: stmt.docBankName || "",
+              statementFile: stmt.docUrl,
+              password: stmt.docPassword || "",
+            }]);
+          }
+        });
+      }
+      
+      // Populate financial statements
+      if (financialStatements.length > 0) {
+        const statements = financialStatements.map(stmt => ({
+          year: stmt.docYear?.toString() || "",
+          statementFile: stmt.docUrl,
+        }));
+        form.setValue("financialStatements", statements);
+      }
+      
+      if (businessPlan) form.setValue("businessPlan", businessPlan.docUrl);
+      if (managementAccounts) form.setValue("managementAccounts", managementAccounts.docUrl);
+    }
+  }, [isEditing, existingDocuments, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=5");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=5`);
+    } else {
+      router.push("/entrepreneurs/create?step=5");
+    }
   };
 
-  const onSubmit = (data: CompanyFinancialDocumentsFormData) => {
-    console.log("Step 6 data:", data);
-    router.push("/entrepreneurs/create?step=7");
+  const onSubmit = async (data: CompanyFinancialDocumentsFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete previous steps first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      const documents: Array<{
+        docType: string;
+        docUrl: string;
+        docYear?: number;
+        docBankName?: string;
+        isPasswordProtected?: boolean;
+        docPassword?: string;
+      }> = [];
+
+      // Add bank statements
+      if (data.hasBankStatements === "yes" && data.bankStatements) {
+        data.bankStatements.forEach((statement) => {
+          if (statement.statementFile) {
+            const bankName = statement.bankName === "other" 
+              ? statement.specifyBankName 
+              : statement.bankName;
+            
+            documents.push({
+              docType: "annual_bank_statement",
+              docUrl: statement.statementFile,
+              docBankName: bankName || undefined,
+              isPasswordProtected: !!statement.password,
+              docPassword: statement.password || undefined,
+            });
+          }
+        });
+      }
+
+      // Add financial statements
+      if (data.financialStatements) {
+        data.financialStatements.forEach((statement) => {
+          if (statement.statementFile && statement.year) {
+            documents.push({
+              docType: "audited_financial_statements",
+              docUrl: statement.statementFile,
+              docYear: parseInt(statement.year, 10),
+              isPasswordProtected: false,
+            });
+          }
+        });
+      }
+
+      // Add business plan (goes to Step 7, but we can save it here if provided)
+      if (data.businessPlan) {
+        documents.push({
+          docType: "business_plan",
+          docUrl: data.businessPlan,
+          isPasswordProtected: false,
+        });
+      }
+
+      // Add management accounts (income statements)
+      if (data.managementAccounts) {
+        documents.push({
+          docType: "income_statements",
+          docUrl: data.managementAccounts,
+          isPasswordProtected: false,
+        });
+      }
+
+      if (documents.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please upload at least one financial document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await saveDocumentsMutation.mutateAsync({
+        userId,
+        data: { documents },
+      });
+
+      toast({
+        title: "Success",
+        description: "Financial documents saved successfully.",
+      });
+
+      refreshState();
+      router.push(`/entrepreneurs/create?userId=${userId}&step=7`);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save financial documents.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddBankStatement = () => {
@@ -148,7 +310,14 @@ export function Step6CompanyFinancialDocuments() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 6/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 6/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Financial Documents
         </h2>
@@ -349,12 +518,13 @@ export function Step6CompanyFinancialDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveDocumentsMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {saveDocumentsMutation.isPending ? "Saving..." : "Save & Continue"}
             </Button>
           </div>
         </form>

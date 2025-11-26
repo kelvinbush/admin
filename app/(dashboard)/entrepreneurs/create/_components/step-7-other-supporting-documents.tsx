@@ -7,8 +7,11 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from "@/component
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SMESuccessModal } from "./sme-success-modal";
+import { useSMEOnboarding } from "../_context/sme-onboarding-context";
+import { useSMEUser, useSavePermitsAndPitchDeck, useSendSMEInvitation, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const otherSupportingDocumentsSchema = z.object({
   businessPermit: z.string().min(1, "Business permit is required"),
@@ -19,8 +22,25 @@ type OtherSupportingDocumentsFormData = z.infer<typeof otherSupportingDocumentsS
 
 export function Step7OtherSupportingDocuments() {
   const router = useRouter();
+  const { userId, onboardingState, refreshState } = useSMEOnboarding();
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  
+  const savePermitsMutation = useSavePermitsAndPitchDeck();
+  const sendInvitationMutation = useSendSMEInvitation();
+  
+  // Fetch full user details if editing
+  const { data: userDetail } = useSMEUser(userId || "", {
+    enabled: !!userId && onboardingState?.completedSteps?.includes(7),
+  });
+  
+  const isEditing = !!userId && onboardingState?.completedSteps?.includes(7);
+  const userEmail = onboardingState?.user?.email || userDetail?.user?.email || "";
+  
+  // Fetch existing business documents if editing
+  const { data: existingDocuments } = useSMEBusinessDocuments(userId || "", {
+    enabled: isEditing && !!userId,
+  });
 
   const form = useForm<OtherSupportingDocumentsFormData>({
     resolver: zodResolver(otherSupportingDocumentsSchema),
@@ -30,16 +50,98 @@ export function Step7OtherSupportingDocuments() {
     },
   });
 
+  // Load existing data if editing
+  useEffect(() => {
+    if (isEditing && existingDocuments) {
+      // Map existing documents to form fields
+      const businessPermit = existingDocuments.find(d => d.docType === "business_permit");
+      const pitchDeck = existingDocuments.find(d => d.docType === "pitch_deck");
+      const businessPlan = existingDocuments.find(d => d.docType === "business_plan");
+      
+      form.reset({
+        businessPermit: businessPermit?.docUrl || "",
+        companyPitchDeck: pitchDeck?.docUrl || "",
+      });
+    }
+  }, [isEditing, existingDocuments, form]);
+
   const handleCancel = () => {
-    router.push("/entrepreneurs/create?step=6");
+    if (userId) {
+      router.push(`/entrepreneurs/create?userId=${userId}&step=6`);
+    } else {
+      router.push("/entrepreneurs/create?step=6");
+    }
   };
 
-  const onSubmit = (data: OtherSupportingDocumentsFormData) => {
-    console.log("Step 7 data:", data);
-    // TODO: Submit all form data to API
-    // For now, using a placeholder email - replace with actual email from form data
-    setSubmittedEmail("johndoe@gmail.com"); // Replace with actual email from step 1
-    setSuccessModalOpen(true);
+  const onSubmit = async (data: OtherSupportingDocumentsFormData) => {
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "Please complete previous steps first.",
+        variant: "destructive",
+      });
+      router.push("/entrepreneurs/create?step=1");
+      return;
+    }
+
+    try {
+      // Map form data to API format
+      const documents: Array<{
+        docType: string;
+        docUrl: string;
+        isPasswordProtected?: boolean;
+        docPassword?: string;
+      }> = [];
+
+      if (data.businessPermit) {
+        documents.push({
+          docType: "business_permit",
+          docUrl: data.businessPermit,
+          isPasswordProtected: false,
+        });
+      }
+
+      if (data.companyPitchDeck) {
+        documents.push({
+          docType: "pitch_deck",
+          docUrl: data.companyPitchDeck,
+          isPasswordProtected: false,
+        });
+      }
+
+      // Save Step 7 documents
+      await savePermitsMutation.mutateAsync({
+        userId,
+        data: { documents },
+      });
+
+      // Automatically send invitation after Step 7 is complete
+      try {
+        await sendInvitationMutation.mutateAsync({ userId });
+        setSubmittedEmail(userEmail);
+        setSuccessModalOpen(true);
+        refreshState();
+      } catch (inviteError: any) {
+        // If invitation fails, still show success for Step 7
+        const inviteErrorMessage = inviteError?.response?.data?.error || inviteError?.message || "Failed to send invitation.";
+        toast({
+          title: "Warning",
+          description: `Documents saved, but invitation failed: ${inviteErrorMessage}`,
+          variant: "destructive",
+        });
+        // Still show success modal
+        setSubmittedEmail(userEmail);
+        setSuccessModalOpen(true);
+        refreshState();
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCloseSuccessModal = () => {
@@ -50,7 +152,14 @@ export function Step7OtherSupportingDocuments() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm text-primary-green mb-2">STEP 7/7</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-primary-green">STEP 7/7</div>
+          {isEditing && (
+            <div className="text-xs text-primaryGrey-400 bg-primaryGrey-50 px-2 py-1 rounded">
+              Editing existing data
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-midnight-blue mb-2">
           Other Supporting Documents
         </h2>
@@ -139,12 +248,15 @@ export function Step7OtherSupportingDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={savePermitsMutation.isPending || sendInvitationMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save & Continue
+              {savePermitsMutation.isPending || sendInvitationMutation.isPending
+                ? "Saving & Sending Invitation..."
+                : "Save & Send Invitation"}
             </Button>
           </div>
         </form>
