@@ -160,13 +160,8 @@ export function EntrepreneursTable({
                 const registeredUserPhone = item.phone;
 
                 const handleViewDetails = () => {
-                  if (item.onboardingStatus === "active") {
-                    // Active SME → go to read-only details page
-                    router.push(`/entrepreneurs/${item.userId}`);
-                  } else {
-                    // Draft or pending invitation → go to create flow with prefilled data
-                    router.push(`/entrepreneurs/create?userId=${item.userId}&step=1`);
-                  }
+                  // Temporarily always go to the entrepreneurs detail page
+                  router.push(`/entrepreneurs/${item.userId}`);
                 };
 
                 const canResendInvite = item.onboardingStatus === "pending_invitation";

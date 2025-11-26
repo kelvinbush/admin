@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useUpdateSMEUserStep1, useSavePersonalDocuments } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const entrepreneurDetailsSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -68,10 +70,11 @@ const positionOptions: SelectOption[] = [
 ];
 
 interface EntrepreneurDetailsFormProps {
+  userId: string;
   initialData?: Partial<EntrepreneurDetailsFormData>;
 }
 
-export function EntrepreneurDetailsForm({ initialData }: EntrepreneurDetailsFormProps) {
+export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDetailsFormProps) {
   const form = useForm<EntrepreneurDetailsFormData>({
     resolver: zodResolver(entrepreneurDetailsSchema),
     defaultValues: {
@@ -90,9 +93,66 @@ export function EntrepreneurDetailsForm({ initialData }: EntrepreneurDetailsForm
 
   const positionHeld = form.watch("positionHeld");
 
-  const onSubmit = (data: EntrepreneurDetailsFormData) => {
-    console.log("Form data:", data);
-    // TODO: Submit form data to API
+  const updateUserMutation = useUpdateSMEUserStep1();
+  const savePersonalDocsMutation = useSavePersonalDocuments();
+
+  const onSubmit = async (data: EntrepreneurDetailsFormData) => {
+    try {
+      const dob = data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : "";
+      const position =
+        data.positionHeld === "other" ? data.specifyPosition : data.positionHeld;
+
+      // Update core user details (Step 1)
+      await updateUserMutation.mutateAsync({
+        userId,
+        data: {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phoneNumber || "",
+          dob,
+          gender: data.gender,
+          position: position || "",
+        },
+      });
+
+      // Update identification / tax numbers via Step 4 endpoint (no document changes)
+      const idNumber = data.identificationNumber || undefined;
+      const taxNumber = data.taxIdentificationNumber || undefined;
+      let idType: string | undefined;
+
+      if (idNumber) {
+        // For now, default to national_id; can be refined later if multiple ID types are supported
+        idType = "national_id";
+      }
+
+      if (idNumber || taxNumber || idType) {
+        await savePersonalDocsMutation.mutateAsync({
+          userId,
+          data: {
+            documents: [],
+            ...(idNumber && { idNumber }),
+            ...(taxNumber && { taxNumber }),
+            ...(idType && { idType }),
+          },
+        });
+      }
+
+      toast({
+        title: "Success",
+        description: "Entrepreneur details updated successfully.",
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update entrepreneur details.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
