@@ -962,6 +962,57 @@ export interface SMEUsersFilters {
   search?: string;
 }
 
+// ===== ENTREPRENEUR LIST TYPES =====
+
+export interface EntrepreneurListItem {
+  // Identity
+  userId: string;
+  createdAt: string;
+
+  // Registered user
+  imageUrl: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  phone: string | null;
+
+  // Onboarding / status
+  onboardingStatus: SMEOnboardingStatus;
+  businessProfileProgress: number;
+
+  // Business summary
+  business: {
+    id: string;
+    name: string;
+    sectors: string[];
+    country: string | null;
+  } | null;
+
+  // User groups (programs)
+  userGroups: {
+    id: string;
+    name: string;
+  }[];
+
+  // Aggregated flags
+  hasCompleteProfile: boolean;
+  hasPendingActivation: boolean;
+}
+
+export interface EntrepreneurListResponse {
+  items: EntrepreneurListItem[];
+  total: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface EntrepreneurListFilters {
+  page?: number;
+  limit?: number;
+  onboardingStatus?: SMEOnboardingStatus;
+  search?: string;
+}
+
 // Step 1: Create/Update User Info
 export interface CreateSMEUserData {
   email: string;

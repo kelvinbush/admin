@@ -14,6 +14,8 @@ import type {
   SMEOnboardingState,
   ListSMEUsersResponse,
   SMEUsersFilters,
+  EntrepreneurListFilters,
+  EntrepreneurListResponse,
   CreateSMEUserData,
   CreateSMEUserResponse,
   SaveBusinessBasicInfoData,
@@ -25,7 +27,31 @@ import type {
   SendInvitationResponse,
 } from '../types';
 
-// ===== SME USER HOOKS =====
+// ===== SME USER / ENTREPRENEUR LIST HOOKS =====
+
+/**
+ * List entrepreneurs for the main table view
+ */
+export function useEntrepreneurs(filters?: EntrepreneurListFilters) {
+  const params = new URLSearchParams();
+
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.limit) params.append('limit', filters.limit.toString());
+  if (filters?.onboardingStatus) params.append('onboardingStatus', filters.onboardingStatus);
+  if (filters?.search) params.append('search', filters.search);
+
+  const queryString = params.toString();
+  const url = `/admin/sme/entrepreneurs${queryString ? `?${queryString}` : ''}`;
+
+  return useClientApiQuery<EntrepreneurListResponse>(
+    queryKeys.entrepreneurs.list(filters),
+    url,
+    undefined,
+    {
+      enabled: true,
+    }
+  );
+}
 
 /**
  * List all SME users with optional filtering and pagination

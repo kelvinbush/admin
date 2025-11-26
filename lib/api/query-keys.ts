@@ -122,4 +122,11 @@ export const queryKeys = {
     detail: (userId: string) => [...queryKeys.sme.details(), userId] as const,
     onboarding: (userId: string) => [...queryKeys.sme.detail(userId), 'onboarding'] as const,
   },
+
+  // Entrepreneurs list (for main table)
+  entrepreneurs: {
+    all: ['entrepreneurs'] as const,
+    lists: () => [...queryKeys.entrepreneurs.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => [...queryKeys.entrepreneurs.lists(), JSON.stringify(filters || {})] as const,
+  },
 } as const;

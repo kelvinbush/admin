@@ -1,6 +1,6 @@
 "use client";
 import { ArrowUpRight } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EntrepreneursHeader, type EntrepreneurSort } from "./_components/entrepreneurs-header";
 import {
@@ -8,7 +8,9 @@ import {
   type EntrepreneurFiltersState,
 } from "./_components/entrepreneurs-filters";
 import { EntrepreneursTabs, type EntrepreneurTab } from "./_components/entrepreneurs-tabs";
-import { EntrepreneursEmptyState } from "./_components/entrepreneurs-empty-state";
+import { EntrepreneursTable } from "./_components/entrepreneurs-table";
+import { useEntrepreneurs } from "@/lib/api/hooks/sme";
+import type { SMEOnboardingStatus } from "@/lib/api/types";
 
 const statCards = [
   { label: "Total SMEs", value: "0", delta: "0%" },
@@ -28,6 +30,68 @@ export default function EntrepreneursPage() {
   });
   const [filters, setFilters] = useState<EntrepreneurFiltersState>({});
   const [activeTab, setActiveTab] = useState<EntrepreneurTab>("all");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  // Build filters for API
+  const apiFilters = useMemo(() => {
+    let onboardingStatus: SMEOnboardingStatus | undefined;
+    if (activeTab === "pending") {
+      onboardingStatus = "pending_invitation";
+    } else if (activeTab === "complete") {
+      onboardingStatus = "active";
+    }
+
+    return {
+      page,
+      limit,
+      onboardingStatus,
+      search: searchValue || undefined,
+    };
+  }, [activeTab, page, limit, searchValue]);
+
+  const { data, isLoading } = useEntrepreneurs(apiFilters);
+
+  const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // Apply status filter (tabs already mapped for API, but also consider local filters.status)
+      if (filters.status && filters.status !== "all") {
+        if (filters.status === "complete" && !item.hasCompleteProfile) {
+          return false;
+        }
+        if (filters.status === "incomplete" && item.hasCompleteProfile) {
+          return false;
+        }
+        if (filters.status === "pending" && !item.hasPendingActivation) {
+          return false;
+        }
+      }
+
+      // Apply progress filter (client-side) using businessProfileProgress
+      if (filters.progress && filters.progress !== "all") {
+        const progress = item.businessProfileProgress ?? 0;
+        switch (filters.progress) {
+          case "0-25":
+            if (!(progress >= 0 && progress < 25)) return false;
+            break;
+          case "25-50":
+            if (!(progress >= 25 && progress < 50)) return false;
+            break;
+          case "50-75":
+            if (!(progress >= 50 && progress < 75)) return false;
+            break;
+          case "75-100":
+            if (!(progress >= 75)) return false;
+            break;
+        }
+      }
+
+      return true;
+    });
+  }, [items, filters.status, filters.progress]);
 
   const handleAddEntrepreneur = () => {
     router.push("/entrepreneurs/create");
@@ -41,6 +105,7 @@ export default function EntrepreneursPage() {
       ...prev,
       [key]: value === "all" ? undefined : value,
     }));
+    setPage(1);
   };
 
   return (
@@ -66,7 +131,7 @@ export default function EntrepreneursPage() {
 
       <section className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex flex-col gap-6">
         <EntrepreneursHeader
-          total={0}
+          total={total}
           searchValue={searchValue}
           filtersVisible={filtersVisible}
           sort={sort}
@@ -95,8 +160,13 @@ export default function EntrepreneursPage() {
         />
 
         <div className="flex-1 min-h-[320px]">
-          <EntrepreneursEmptyState
-            onAddEntrepreneur={handleAddEntrepreneur}
+          <EntrepreneursTable
+            items={filteredItems}
+            page={page}
+            limit={limit}
+            total={total}
+            isLoading={isLoading}
+            onPageChange={setPage}
           />
         </div>
       </section>
