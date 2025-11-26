@@ -19,6 +19,8 @@ import type {
   EntrepreneursStatsResponse,
   CreateSMEUserData,
   CreateSMEUserResponse,
+  UpdateEntrepreneurDetailsData,
+  UpdateEntrepreneurDetailsResponse,
   SaveBusinessBasicInfoData,
   SaveLocationInfoData,
   SavePersonalDocumentsData,
@@ -162,6 +164,30 @@ export function useUpdateSMEUserStep1() {
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Update entrepreneur details (consolidated endpoint)
+ * Updates all entrepreneur personal details including core user info and metadata fields in a single atomic transaction
+ */
+export function useUpdateEntrepreneurDetails() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    UpdateEntrepreneurDetailsResponse,
+    { userId: string; data: UpdateEntrepreneurDetailsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/users/${variables.userId}/details`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.entrepreneurs.lists() });
       },
     }
   );

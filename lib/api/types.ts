@@ -1068,7 +1068,7 @@ export interface UpdateEntrepreneurDetailsResponse {
     firstName: string;
     lastName: string;
     phone: string | null;
-    dob: Date | null;
+    dob: string | null; // ISO date format: YYYY-MM-DD
     gender: string | null;
     position: string | null;
     idNumber: string | null;

@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { useUpdateSMEUserStep1, useSavePersonalDocuments, useSMEPersonalDocuments } from "@/lib/api/hooks/sme";
+import { useUpdateEntrepreneurDetails } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
 
 const entrepreneurDetailsSchema = z.object({
@@ -93,59 +93,38 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
 
   const positionHeld = form.watch("positionHeld");
 
-  const updateUserMutation = useUpdateSMEUserStep1();
-  const savePersonalDocsMutation = useSavePersonalDocuments();
-  const { data: existingPersonalDocs } = useSMEPersonalDocuments(userId, {
-    enabled: !!userId,
-  });
+  const updateEntrepreneurDetailsMutation = useUpdateEntrepreneurDetails();
 
   const onSubmit = async (data: EntrepreneurDetailsFormData) => {
     try {
-      const dob = data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : "";
+      const dob = data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : undefined;
       const position =
         data.positionHeld === "other" ? data.specifyPosition : data.positionHeld;
-
-      // Update core user details (Step 1)
-      await updateUserMutation.mutateAsync({
-        userId,
-        data: {
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phoneNumber || "",
-          dob,
-          gender: data.gender,
-          position: position || "",
-        },
-      });
-
-      // Update identification / tax numbers via Step 4 endpoint (preserving existing documents)
-      const idNumber = data.identificationNumber || undefined;
-      const taxNumber = data.taxIdentificationNumber || undefined;
-      let idType: string | undefined;
+      const idNumber = data.identificationNumber || null;
+      const taxNumber = data.taxIdentificationNumber || null;
+      let idType: string | null = null;
 
       if (idNumber) {
         // For now, default to national_id; can be refined later if multiple ID types are supported
         idType = "national_id";
       }
 
-      if (idNumber || taxNumber || idType) {
-        const documents =
-          existingPersonalDocs?.map((doc) => ({
-            docType: doc.docType,
-            docUrl: doc.docUrl,
-          })) ?? [];
-
-        await savePersonalDocsMutation.mutateAsync({
-          userId,
-          data: {
-            documents,
-            ...(idNumber && { idNumber }),
-            ...(taxNumber && { taxNumber }),
-            ...(idType && { idType }),
-          },
-        });
-      }
+      // Single consolidated API call
+      await updateEntrepreneurDetailsMutation.mutateAsync({
+        userId,
+        data: {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phoneNumber || undefined,
+          dob,
+          gender: data.gender,
+          position: position || undefined,
+          idNumber,
+          taxNumber,
+          idType,
+        },
+      });
 
       toast.success("Entrepreneur details updated successfully.");
     } catch (error: any) {
@@ -418,8 +397,7 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
               size="lg"
               type="submit"
               disabled={
-                updateUserMutation.isPending ||
-                savePersonalDocsMutation.isPending ||
+                updateEntrepreneurDetailsMutation.isPending ||
                 !form.formState.isValid ||
                 !form.formState.isDirty
               }
@@ -429,7 +407,7 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {updateUserMutation.isPending || savePersonalDocsMutation.isPending
+              {updateEntrepreneurDetailsMutation.isPending
                 ? "Saving..."
                 : "Save Changes"}
             </Button>
