@@ -917,6 +917,14 @@ export interface SMEUserDetail {
     registeredOfficeAddress: string | null;
     registeredOfficeCity: string | null;
     registeredOfficeZipCode: string | null;
+    // Financial details
+    averageMonthlyTurnover: number | null;
+    averageYearlyTurnover: number | null;
+    previousLoans: boolean | null;
+    loanAmount: number | null;
+    defaultCurrency: string | null;
+    recentLoanStatus: string | null;
+    defaultReason: string | null;
     // Media
     videoLinks: { url: string; source: string | null }[];
     businessPhotos: string[];
@@ -1103,6 +1111,17 @@ export interface FinancialDocumentData {
 
 export interface SaveFinancialDocumentsData {
   documents: FinancialDocumentData[];
+}
+
+// Financial details (Company Details → Financials tab)
+export interface SaveFinancialDetailsData {
+  averageMonthlyTurnover?: number | null;
+  averageYearlyTurnover?: number | null;
+  previousLoans?: boolean | null;
+  loanAmount?: number | null;
+  defaultCurrency?: string | null;
+  recentLoanStatus?: "fully_repaid" | "currently_repaying" | "defaulted" | null;
+  defaultReason?: string | null;
 }
 
 // Step 7: Permits & Pitch Deck

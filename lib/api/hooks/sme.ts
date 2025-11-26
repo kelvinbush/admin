@@ -23,6 +23,7 @@ import type {
   SavePersonalDocumentsData,
   SaveCompanyDocumentsData,
   SaveFinancialDocumentsData,
+  SaveFinancialDetailsData,
   SavePermitsData,
   SendInvitationResponse,
 } from '../types';
@@ -253,6 +254,28 @@ export function useSaveFinancialDocuments() {
   >(
     (api, variables) =>
       api.put(`/admin/sme/onboarding/${variables.userId}/step/6`, variables.data),
+    {
+      onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.detail(variables.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sme.onboarding(variables.userId) });
+      },
+    }
+  );
+}
+
+/**
+ * Save or update financial details (Financial Details tab)
+ */
+export function useSaveFinancialDetails() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    SMEOnboardingState,
+    { userId: string; data: SaveFinancialDetailsData }
+  >(
+    (api, variables) =>
+      api.put(`/admin/sme/users/${variables.userId}/financial-details`, variables.data),
     {
       onSuccess: (data, variables) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.sme.lists() });

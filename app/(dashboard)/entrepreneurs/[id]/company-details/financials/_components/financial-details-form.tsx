@@ -11,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSaveFinancialDetails } from "@/lib/api/hooks/sme";
+import { toast } from "@/hooks/use-toast";
 
 const financialDetailsSchema = z.object({
   averageMonthlyTurnover: z.string().optional(),
@@ -20,7 +22,7 @@ const financialDetailsSchema = z.object({
   hasBorrowingHistory: z.enum(["yes", "no"]).optional(),
   amountBorrowed: z.string().optional(),
   amountBorrowedCurrency: z.string().optional(),
-  loanStatus: z.enum(["fully-repaid", "currently-repaying", "defaulted"]).optional(),
+  loanStatus: z.enum(["fullyRepaid", "currently_repaying", "defaulted"]).optional(),
   defaultReason: z.string().max(100, "Reason must be 100 characters or less").optional(),
 }).refine((data) => {
   // If hasBorrowingHistory is "yes", amountBorrowed is required
@@ -45,16 +47,19 @@ const financialDetailsSchema = z.object({
 type FinancialDetailsFormData = z.infer<typeof financialDetailsSchema>;
 
 interface FinancialDetailsFormProps {
+  userId: string;
   initialData?: Partial<FinancialDetailsFormData>;
 }
 
-export function FinancialDetailsForm({ initialData }: FinancialDetailsFormProps) {
+export function FinancialDetailsForm({ userId, initialData }: FinancialDetailsFormProps) {
   const [defaultReasonLength, setDefaultReasonLength] = useState(
     initialData?.defaultReason?.length || 0
   );
   
   // Synchronized currency state - all currency inputs share the same value
   const [currency, setCurrency] = useState(initialData?.averageMonthlyTurnoverCurrency || "KES");
+
+  const saveFinancialDetailsMutation = useSaveFinancialDetails();
 
   const form = useForm<FinancialDetailsFormData>({
     resolver: zodResolver(financialDetailsSchema),
@@ -82,9 +87,51 @@ export function FinancialDetailsForm({ initialData }: FinancialDetailsFormProps)
     form.setValue("amountBorrowedCurrency", newCurrency);
   };
 
-  const onSubmit = (data: FinancialDetailsFormData) => {
-    console.log("Form data:", data);
-    // TODO: Submit form data to API
+  const onSubmit = async (data: FinancialDetailsFormData) => {
+    try {
+      const avgMonthly = data.averageMonthlyTurnover
+        ? Number(data.averageMonthlyTurnover.replace(/,/g, ""))
+        : null;
+      const avgYearly = data.averageYearlyTurnover
+        ? Number(data.averageYearlyTurnover.replace(/,/g, ""))
+        : null;
+      const loanAmount = data.amountBorrowed
+        ? Number(data.amountBorrowed.replace(/,/g, ""))
+        : null;
+
+      const payload = {
+        averageMonthlyTurnover: isNaN(avgMonthly as any) ? null : avgMonthly,
+        averageYearlyTurnover: isNaN(avgYearly as any) ? null : avgYearly,
+        previousLoans:
+          data.hasBorrowingHistory === undefined
+            ? null
+            : data.hasBorrowingHistory === "yes",
+        loanAmount: isNaN(loanAmount as any) ? null : loanAmount,
+        defaultCurrency: currency || null,
+        recentLoanStatus: (data.loanStatus as any) || null,
+        defaultReason: data.defaultReason || null,
+      };
+
+      await saveFinancialDetailsMutation.mutateAsync({
+        userId,
+        data: payload,
+      });
+
+      toast({
+        title: "Success",
+        description: "Financial details updated successfully.",
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update financial details.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -227,13 +274,13 @@ export function FinancialDetailsForm({ initialData }: FinancialDetailsFormProps)
                       className="flex flex-col gap-3"
                     >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="fully-repaid" id="status-repaid" />
+                        <RadioGroupItem value="fully_repaid" id="status-repaid" />
                         <Label htmlFor="status-repaid" className="text-primaryGrey-400 font-normal cursor-pointer">
                           Fully repaid
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="currently-repaying" id="status-repaying" />
+                        <RadioGroupItem value="currently_repaying" id="status-repaying" />
                         <Label htmlFor="status-repaying" className="text-primaryGrey-400 font-normal cursor-pointer">
                           Currently being repaid
                         </Label>
@@ -294,12 +341,13 @@ export function FinancialDetailsForm({ initialData }: FinancialDetailsFormProps)
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveFinancialDetailsMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save Changes
+              {saveFinancialDetailsMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
