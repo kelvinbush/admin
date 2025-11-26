@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { SMESuccessModal } from "./sme-success-modal";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSMEUser, useSavePermitsAndPitchDeck, useSendSMEInvitation, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const otherSupportingDocumentsSchema = z.object({
   businessPermit: z.string().min(1, "Business permit is required"),
@@ -76,11 +76,7 @@ export function Step7OtherSupportingDocuments() {
 
   const onSubmit = async (data: OtherSupportingDocumentsFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete previous steps first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete previous steps first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -125,11 +121,7 @@ export function Step7OtherSupportingDocuments() {
       } catch (inviteError: any) {
         // If invitation fails, still show success for Step 7
         const inviteErrorMessage = inviteError?.response?.data?.error || inviteError?.message || "Failed to send invitation.";
-        toast({
-          title: "Warning",
-          description: `Documents saved, but invitation failed: ${inviteErrorMessage}`,
-          variant: "destructive",
-        });
+        toast.error(`Documents saved, but invitation failed: ${inviteErrorMessage}`);
         // Still show success modal
         setSubmittedEmail(userEmail);
         setSuccessModalOpen(true);
@@ -137,11 +129,7 @@ export function Step7OtherSupportingDocuments() {
       }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

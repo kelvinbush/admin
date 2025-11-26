@@ -17,7 +17,7 @@ import { useState, useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSMEUser, useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const companyInformationSchema = z.object({
   companyLogo: z.string().optional(),
@@ -176,11 +176,7 @@ export function Step2CompanyInformation() {
 
   const onSubmit = async (data: CompanyInformationFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete Step 1 first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete Step 1 first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -227,20 +223,13 @@ export function Step2CompanyInformation() {
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Company information saved successfully.",
-      });
+      toast.success("Company information saved successfully.");
 
       refreshState();
       router.push(`/entrepreneurs/create?userId=${userId}&step=3`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save company information.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

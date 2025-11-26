@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
+import { toast } from "sonner";
 
 interface EntrepreneurData {
   id: string;
@@ -19,6 +22,15 @@ interface EntrepreneurData {
   userGroup: string;
   sectors: string[];
   status: string;
+  logo?: string | null;
+  yearOfIncorporation?: number | null;
+  description?: string | null;
+  userGroupIds?: string[];
+  selectionCriteria?: string[] | null;
+  noOfEmployees?: number | null;
+  website?: string | null;
+  videoLinks?: { url: string; source: string | null }[];
+  businessPhotos?: string[];
 }
 
 interface EntrepreneurHeaderProps {
@@ -28,6 +40,11 @@ interface EntrepreneurHeaderProps {
 export function EntrepreneurHeader({
   entrepreneur,
 }: EntrepreneurHeaderProps) {
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { startUpload: startImageUpload } = useUploadThing("imageUploader");
+  const saveBusinessBasicInfo = useSaveBusinessBasicInfo();
+
   const getStatusColor = (status: string) => {
     if (status.toLowerCase().includes("pending")) {
       return "bg-[#FFE5B0] text-[#8C5E00]";
@@ -36,6 +53,85 @@ export function EntrepreneurHeader({
       return "bg-green-100 text-green-500";
     }
     return "bg-gray-100 text-gray-500";
+  };
+
+  const handleLogoClick = () => {
+    if (isUploadingLogo) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleLogoChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const fileSizeMB = file.size / (1024 * 1024);
+    const fileExtension = file.name.split(".").pop()?.toUpperCase();
+    const allowed = ["PNG", "JPG", "JPEG"];
+
+    if (fileSizeMB > 5) {
+      toast.error("Logo must be 5MB or less.");
+      return;
+    }
+
+    if (!fileExtension || !allowed.includes(fileExtension)) {
+      toast.error("Logo must be PNG or JPG.");
+      return;
+    }
+
+    try {
+      setIsUploadingLogo(true);
+      const uploaded = await startImageUpload([file]);
+
+      if (!uploaded || !uploaded[0]?.url) {
+        throw new Error("Upload failed");
+      }
+
+      const logoUrl = uploaded[0].url;
+
+      const year =
+        entrepreneur.yearOfIncorporation ??
+        new Date().getFullYear();
+
+      await saveBusinessBasicInfo.mutateAsync({
+        userId: entrepreneur.id,
+        data: {
+          logo: logoUrl,
+          name: entrepreneur.companyName,
+          entityType: entrepreneur.legalEntityType,
+          year,
+          sectors: entrepreneur.sectors ?? [],
+          description: entrepreneur.description ?? undefined,
+          userGroupId: entrepreneur.userGroupIds?.[0] ?? undefined,
+          criteria: entrepreneur.selectionCriteria ?? undefined,
+          noOfEmployees: entrepreneur.noOfEmployees ?? undefined,
+          website: entrepreneur.website ?? undefined,
+          videoLinks:
+            entrepreneur.videoLinks && entrepreneur.videoLinks.length > 0
+              ? entrepreneur.videoLinks.map((v) => ({
+                  url: v.url,
+                  source: v.source ?? undefined,
+                }))
+              : undefined,
+          businessPhotos: entrepreneur.businessPhotos && entrepreneur.businessPhotos.length > 0 ? entrepreneur.businessPhotos : undefined,
+        },
+      });
+
+      toast.success("Company logo has been updated successfully.");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update logo.";
+      toast.error(message);
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   return (
@@ -58,14 +154,43 @@ export function EntrepreneurHeader({
               {/* Company Logo */}
               <div className="relative flex-shrink-0">
                 <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center relative overflow-hidden">
-                  {/* Placeholder logo - replace with actual logo */}
-                  <div className="w-full h-full bg-gradient-to-br from-orange-500 to-primary-green flex flex-col items-center justify-center">
-                    <div className="text-white font-bold text-lg">CSA</div>
-                  </div>
+                  {entrepreneur.logo ? (
+                    <Image
+                      src={entrepreneur.logo}
+                      alt={`${entrepreneur.companyName} logo`}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-orange-500 to-primary-green flex flex-col items-center justify-center">
+                      <div className="text-white font-bold text-lg">
+                        {entrepreneur.companyName
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 3)
+                          .toUpperCase()}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
-                {/* Upload Icon Overlay - positioned relative to parent container */}
-                <button className="absolute -bottom-1 -right-1 w-8 h-8 z-10 rounded-full bg-primary-green flex items-center justify-center border-2 border-white shadow-sm hover:bg-primary-green/90 transition-colors">
+
+                {/* Hidden file input for logo upload */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+
+                {/* Upload Icon Overlay */}
+                <button
+                  type="button"
+                  onClick={handleLogoClick}
+                  className="absolute -bottom-1 -right-1 w-8 h-8 z-10 rounded-full bg-primary-green flex items-center justify-center border-2 border-white shadow-sm hover:bg-primary-green/90 transition-colors disabled:opacity-70"
+                  disabled={isUploadingLogo}
+                >
                   <Camera className="h-4 w-4 text-white" />
                 </button>
               </div>

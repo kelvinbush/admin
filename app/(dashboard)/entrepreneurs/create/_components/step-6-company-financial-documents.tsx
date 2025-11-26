@@ -16,7 +16,7 @@ import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSaveFinancialDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const bankStatementSchema = z.object({
   bankName: z.string().min(1, "Bank name is required"),
@@ -184,11 +184,7 @@ export function Step6CompanyFinancialDocuments() {
 
   const onSubmit = async (data: CompanyFinancialDocumentsFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete previous steps first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete previous steps first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -255,11 +251,7 @@ export function Step6CompanyFinancialDocuments() {
       }
 
       if (documents.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please upload at least one financial document.",
-          variant: "destructive",
-        });
+        toast.error("Please upload at least one financial document.");
         return;
       }
 
@@ -268,20 +260,13 @@ export function Step6CompanyFinancialDocuments() {
         data: { documents },
       });
 
-      toast({
-        title: "Success",
-        description: "Financial documents saved successfully.",
-      });
+      toast.success("Financial documents saved successfully.");
 
       refreshState();
       router.push(`/entrepreneurs/create?userId=${userId}&step=7`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save financial documents.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

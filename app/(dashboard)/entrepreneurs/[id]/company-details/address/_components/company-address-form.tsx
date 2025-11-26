@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { countries } from "@/lib/data/countries";
 import { useSaveLocationInfo } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const companyAddressSchema = z.object({
   countriesOfOperation: z.array(z.string()).min(1, "At least one country of operation is required"),
@@ -76,20 +76,13 @@ export function CompanyAddressForm({ userId, initialData }: CompanyAddressFormPr
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Company address updated successfully.",
-      });
+      toast.success("Company address updated successfully.");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error ||
         error?.message ||
         "Failed to update company address.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

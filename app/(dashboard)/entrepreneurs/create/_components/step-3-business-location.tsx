@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import { countries } from "@/lib/data/countries";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSMEUser, useSaveLocationInfo } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const businessLocationSchema = z.object({
   countriesOfOperation: z.array(z.string()).min(1, "At least one country of operation is required"),
@@ -97,11 +97,7 @@ export function Step3BusinessLocation() {
 
   const onSubmit = async (data: BusinessLocationFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete previous steps first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete previous steps first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -125,20 +121,13 @@ export function Step3BusinessLocation() {
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Business location information saved successfully.",
-      });
+      toast.success("Business location information saved successfully.");
 
       refreshState();
       router.push(`/entrepreneurs/create?userId=${userId}&step=4`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save business location.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import type { EntrepreneurListItem } from "@/lib/api/types";
 import { ChevronLeft, ChevronRight, Eye, Trash2 } from "lucide-react";
 import { useSendSMEInvitation } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 type EntrepreneursTableProps = {
   items: EntrepreneurListItem[];
@@ -171,20 +171,13 @@ export function EntrepreneursTable({
 
                   try {
                     await sendInvitationMutation.mutateAsync({ userId: item.userId });
-                    toast({
-                      title: "Invitation sent",
-                      description: "The entrepreneur has been re-invited successfully.",
-                    });
+                    toast.success("The entrepreneur has been re-invited successfully.");
                   } catch (error: any) {
                     const errorMessage =
                       error?.response?.data?.error ||
                       error?.message ||
                       "Failed to resend invitation.";
-                    toast({
-                      title: "Error",
-                      description: errorMessage,
-                      variant: "destructive",
-                    });
+                    toast.error(errorMessage);
                   }
                 };
 

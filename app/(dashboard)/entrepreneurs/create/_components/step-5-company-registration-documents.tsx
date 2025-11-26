@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSaveCompanyDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const companyRegistrationDocumentsSchema = z.object({
   certificateOfRegistration: z.string().min(1, "Certificate of registration/incorporation is required"),
@@ -94,11 +94,7 @@ export function Step5CompanyRegistrationDocuments() {
 
   const onSubmit = async (data: CompanyRegistrationDocumentsFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete previous steps first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete previous steps first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -183,11 +179,7 @@ export function Step5CompanyRegistrationDocuments() {
       }
 
       if (documents.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please upload at least the required documents.",
-          variant: "destructive",
-        });
+        toast.error("Please upload at least the required documents.");
         return;
       }
 
@@ -196,20 +188,13 @@ export function Step5CompanyRegistrationDocuments() {
         data: { documents },
       });
 
-      toast({
-        title: "Success",
-        description: "Company registration documents saved successfully.",
-      });
+      toast.success("Company registration documents saved successfully.");
 
       refreshState();
       router.push(`/entrepreneurs/create?userId=${userId}&step=6`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

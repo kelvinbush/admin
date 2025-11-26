@@ -14,7 +14,7 @@ import { Step4EntrepreneurDocuments } from "./_components/step-4-entrepreneur-do
 import { Step5CompanyRegistrationDocuments } from "./_components/step-5-company-registration-documents";
 import { Step6CompanyFinancialDocuments } from "./_components/step-6-company-financial-documents";
 import { Step7OtherSupportingDocuments } from "./_components/step-7-other-supporting-documents";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 function CreateEntrepreneurPageContent() {
   const router = useRouter();
@@ -33,11 +33,7 @@ function CreateEntrepreneurPageContent() {
   useEffect(() => {
     const urlUserId = searchParams.get("userId");
     if (currentStep > 1 && !userId && !urlUserId && !isLoading) {
-      toast({
-        title: "Error",
-        description: "Please complete Step 1 first to create the SME user.",
-        variant: "destructive",
-      });
+      toast.error("Please complete Step 1 first to create the SME user.");
       router.push("/entrepreneurs/create?step=1");
     }
   }, [currentStep, userId, isLoading, router, searchParams]);
@@ -45,11 +41,7 @@ function CreateEntrepreneurPageContent() {
   // Handle invalid userId (404 error)
   useEffect(() => {
     if (isError && currentStep > 1) {
-      toast({
-        title: "Error",
-        description: "Invalid user ID. Please start from Step 1.",
-        variant: "destructive",
-      });
+      toast.error("Invalid user ID. Please start from Step 1.");
       router.push("/entrepreneurs/create?step=1");
     }
   }, [isError, currentStep, router]);
@@ -76,11 +68,7 @@ function CreateEntrepreneurPageContent() {
       router.push(`/entrepreneurs/create?userId=${finalUserId}&step=${step}`);
     } else {
       // If no userId and trying to go to step 2+, show error
-      toast({
-        title: "Error",
-        description: "Please complete Step 1 first to create the SME user.",
-        variant: "destructive",
-      });
+      toast.error("Please complete Step 1 first to create the SME user.");
     }
   };
 

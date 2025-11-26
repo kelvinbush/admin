@@ -56,6 +56,7 @@ export default function CompanyInformationPage() {
     <CompanyInformationForm
       userId={entrepreneurId}
       initialData={initialData}
+      logo={business.logo}
     />
   );
 }

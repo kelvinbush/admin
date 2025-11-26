@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useUpdateSMEUserStep1, useSavePersonalDocuments, useSMEPersonalDocuments } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const entrepreneurDetailsSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -147,20 +147,13 @@ export function EntrepreneurDetailsForm({ userId, initialData }: EntrepreneurDet
         });
       }
 
-      toast({
-        title: "Success",
-        description: "Entrepreneur details updated successfully.",
-      });
+      toast.success("Entrepreneur details updated successfully.");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error ||
         error?.message ||
         "Failed to update entrepreneur details.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

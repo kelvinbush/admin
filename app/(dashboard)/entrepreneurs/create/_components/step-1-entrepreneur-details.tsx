@@ -17,7 +17,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useCreateSMEUser, useUpdateSMEUserStep1, useSMEUser } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useEffect } from "react";
 
 const entrepreneurDetailsSchema = z.object({
@@ -139,10 +139,7 @@ export function Step1EntrepreneurDetails() {
             position: position || "",
           },
         });
-        toast({
-          title: "Success",
-          description: "Entrepreneur details updated successfully.",
-        });
+        toast.success("Entrepreneur details updated successfully.");
       } else {
         // Create new user
         const response = await createUserMutation.mutateAsync({
@@ -158,10 +155,7 @@ export function Step1EntrepreneurDetails() {
         // Set userId and update URL
         newUserId = response.userId;
         setUserId(newUserId);
-        toast({
-          title: "Success",
-          description: "Entrepreneur created successfully. Proceeding to next step.",
-        });
+        toast.success("Entrepreneur created successfully. Proceeding to next step.");
       }
 
       // Refresh state and navigate to next step
@@ -169,11 +163,7 @@ export function Step1EntrepreneurDetails() {
       router.push(`/entrepreneurs/create?userId=${newUserId}&step=2`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save entrepreneur details.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

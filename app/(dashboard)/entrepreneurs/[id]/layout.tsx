@@ -2,9 +2,11 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import { format } from "date-fns";
 import { EntrepreneurBreadcrumb } from "./_components/entrepreneur-breadcrumb";
 import { EntrepreneurHeader } from "./_components/entrepreneur-header";
 import { EntrepreneurTabs } from "./_components/entrepreneur-tabs";
+import { useSMEUser } from "@/lib/api/hooks/sme";
 
 export default function EntrepreneurDetailLayout({
   children,
@@ -14,20 +16,55 @@ export default function EntrepreneurDetailLayout({
   const params = useParams();
   const entrepreneurId = params.id as string;
 
-  // TODO: Fetch entrepreneur data using the ID
-  // For now, using placeholder data
+  const { data, isLoading, isError } = useSMEUser(entrepreneurId);
+
+  if (isLoading) {
+    return (
+      <div className="text-sm text-primaryGrey-500">
+        Loading entrepreneur...
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="text-sm text-red-500">
+        Failed to load entrepreneur.
+      </div>
+    );
+  }
+
+  const business = data.business;
+
+  const profileCompletion = data.completedSteps?.length
+    ? Math.round((data.completedSteps.length / 7) * 100)
+    : 0;
+
+  const memberSince = business?.createdAt
+    ? format(new Date(business.createdAt), "dd/MMMM/yyyy")
+    : "-";
+
   const entrepreneurData = {
-    id: entrepreneurId,
-    companyName: "Cesha Investments Ltd",
-    legalEntityType: "Public Limited Company",
-    city: "Nairobi",
-    country: "Kenya",
-    profileCompletion: 50,
-    memberSince: "08/April/2023",
+    id: data.userId,
+    companyName: business?.name || "-",
+    legalEntityType: business?.entityType || "-",
+    city: business?.city || "-",
+    country: business?.country || business?.companyHQ || "-",
+    profileCompletion,
+    memberSince,
     lastLogin: "-",
-    userGroup: "Tuungane2xna Absa",
-    sectors: ["Agriculture", "Technology"],
-    status: "Pending Activation",
+    userGroup: "-", // could be resolved from userGroupIds + useUserGroups if needed
+    sectors: business?.sectors || [],
+    status: data.user.onboardingStatus,
+    logo: business?.logo || null,
+    yearOfIncorporation: business?.yearOfIncorporation ?? null,
+    description: business?.description ?? null,
+    userGroupIds: business?.userGroupIds ?? [],
+    selectionCriteria: business?.selectionCriteria ?? null,
+    noOfEmployees: business?.noOfEmployees ?? null,
+    website: business?.website ?? null,
+    videoLinks: business?.videoLinks ?? [],
+    businessPhotos: business?.businessPhotos ?? [],
   };
 
   return (

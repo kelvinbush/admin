@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSaveFinancialDetails } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const financialDetailsSchema = z.object({
   averageMonthlyTurnover: z.string().optional(),
@@ -117,20 +117,13 @@ export function FinancialDetailsForm({ userId, initialData }: FinancialDetailsFo
         data: payload,
       });
 
-      toast({
-        title: "Success",
-        description: "Financial details updated successfully.",
-      });
+      toast.success("Financial details updated successfully.");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error ||
         error?.message ||
         "Failed to update financial details.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSavePersonalDocuments, useSMEPersonalDocuments, useSMEUser } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const entrepreneurDocumentsSchema = z.object({
   hasIdentificationDocuments: z.enum(["yes", "no"]),
@@ -195,11 +195,7 @@ export function Step4EntrepreneurDocuments() {
 
   const onSubmit = async (data: EntrepreneurDocumentsFormData) => {
     if (!userId) {
-      toast({
-        title: "Error",
-        description: "Please complete previous steps first.",
-        variant: "destructive",
-      });
+      toast.error("Please complete previous steps first.");
       router.push("/entrepreneurs/create?step=1");
       return;
     }
@@ -249,11 +245,7 @@ export function Step4EntrepreneurDocuments() {
       }
 
       if (documents.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please upload at least one document.",
-          variant: "destructive",
-        });
+        toast.error("Please upload at least one document.");
         return;
       }
 
@@ -284,20 +276,13 @@ export function Step4EntrepreneurDocuments() {
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Personal documents saved successfully.",
-      });
+      toast.success("Personal documents saved successfully.");
 
       refreshState();
       router.push(`/entrepreneurs/create?userId=${userId}&step=5`);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || "Failed to save documents.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

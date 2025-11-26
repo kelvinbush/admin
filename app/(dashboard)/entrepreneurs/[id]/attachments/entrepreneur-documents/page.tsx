@@ -7,7 +7,7 @@ import { AttachmentsTable, type AttachmentDocument } from "../_components/attach
 import { AttachmentsPagination } from "../_components/attachments-pagination";
 import { DocumentUploadModal } from "../_components/document-upload-modal";
 import { useSMEPersonalDocuments, useSavePersonalDocuments } from "@/lib/api/hooks/sme";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
 type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
@@ -89,10 +89,7 @@ export default function EntrepreneurDocumentsPage() {
     if (document.url) {
       window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      toast({
-        title: "Document not available",
-        description: "This document has not been uploaded yet.",
-      });
+      toast.error("Document not available. This document has not been uploaded yet.");
     }
   };
 
@@ -100,10 +97,7 @@ export default function EntrepreneurDocumentsPage() {
     if (document.url) {
       window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      toast({
-        title: "Document not available",
-        description: "This document has not been uploaded yet.",
-      });
+      toast.error("Document not available. This document has not been uploaded yet.");
     }
   };
 
@@ -123,21 +117,14 @@ export default function EntrepreneurDocumentsPage() {
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully.",
-      });
+      toast.success("Document uploaded successfully.");
 
       setUpdateModalOpen(false);
       setSelectedDocument(null);
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error || error?.message || "Failed to upload document.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

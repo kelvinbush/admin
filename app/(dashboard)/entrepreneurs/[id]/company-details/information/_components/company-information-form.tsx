@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const companyInformationSchema = z.object({
   businessName: z.string().min(1, "Business name is required"),
@@ -80,9 +80,10 @@ const numberOfEmployeesOptions: SelectOption[] = [
 interface CompanyInformationFormProps {
   userId: string;
   initialData?: Partial<CompanyInformationFormData>;
+  logo?: string | null;
 }
 
-export function CompanyInformationForm({ userId, initialData }: CompanyInformationFormProps) {
+export function CompanyInformationForm({ userId, initialData, logo }: CompanyInformationFormProps) {
   const saveBusinessMutation = useSaveBusinessBasicInfo();
 
   // Fetch user groups from API for dynamic Program / user group options
@@ -143,7 +144,7 @@ export function CompanyInformationForm({ userId, initialData }: CompanyInformati
       await saveBusinessMutation.mutateAsync({
         userId,
         data: {
-          logo: undefined,
+          logo: logo || undefined,
           name: data.businessName,
           entityType: data.businessLegalEntityType,
           year,
@@ -158,20 +159,13 @@ export function CompanyInformationForm({ userId, initialData }: CompanyInformati
         },
       });
 
-      toast({
-        title: "Success",
-        description: "Company information saved successfully.",
-      });
+      toast.success("Company information saved successfully.");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error ||
         error?.message ||
         "Failed to save company information.";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 
@@ -489,12 +483,13 @@ export function CompanyInformationForm({ userId, initialData }: CompanyInformati
               size="lg"
               type="submit"
               className="text-white border-0"
+              disabled={saveBusinessMutation.isPending}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              Save Changes
+              {saveBusinessMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
