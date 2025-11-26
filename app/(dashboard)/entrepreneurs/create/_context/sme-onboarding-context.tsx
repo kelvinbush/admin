@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSMEOnboardingState } from '@/lib/api/hooks/sme';
-import type { SMEOnboardingState } from '@/lib/api/types';
+import { useSMEUser } from '@/lib/api/hooks/sme';
+import type { SMEUserDetail, SMEOnboardingState } from '@/lib/api/types';
 
 interface SMEOnboardingContextValue {
   userId: string | null;
@@ -30,16 +30,43 @@ export function SMEOnboardingProvider({ children }: SMEOnboardingProviderProps) 
   // Get userId from URL
   const urlUserId = searchParams.get('userId');
   
-  // Fetch onboarding state if userId exists
+  // Fetch user detail (which includes onboarding state) if userId exists
   const {
-    data: onboardingState,
+    data: userDetail,
     isLoading,
     isError,
     error,
     refetch,
-  } = useSMEOnboardingState(urlUserId || '', {
+  } = useSMEUser(urlUserId || '', {
     enabled: !!urlUserId,
   });
+
+  // Convert SMEUserDetail to SMEOnboardingState format
+  const onboardingState: SMEOnboardingState | null = userDetail ? {
+    userId: userDetail.userId,
+    currentStep: userDetail.currentStep,
+    completedSteps: userDetail.completedSteps,
+    user: {
+      email: userDetail.user.email,
+      firstName: userDetail.user.firstName,
+      lastName: userDetail.user.lastName,
+      phone: userDetail.user.phone,
+      dob: userDetail.user.dob,
+      gender: userDetail.user.gender,
+      position: userDetail.user.position,
+      onboardingStatus: userDetail.user.onboardingStatus,
+    },
+    business: userDetail.business ? {
+      id: userDetail.business.id,
+      name: userDetail.business.name,
+      countriesOfOperation: userDetail.business.countriesOfOperation || undefined,
+      companyHQ: userDetail.business.companyHQ || undefined,
+      city: userDetail.business.city || undefined,
+      registeredOfficeAddress: userDetail.business.registeredOfficeAddress || undefined,
+      registeredOfficeCity: userDetail.business.registeredOfficeCity || undefined,
+      registeredOfficeZipCode: userDetail.business.registeredOfficeZipCode || undefined,
+    } : null,
+  } : null;
 
   // Sync userId from URL to state
   useEffect(() => {

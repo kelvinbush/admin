@@ -67,9 +67,10 @@ export function StepsSidebar({ currentStep, completedSteps = [], onStepClick }: 
   const isStepEnabled = (stepId: StepId) => {
     // Allow navigation to:
     // 1. Current step
-    // 2. Any completed step (for editing)
+    // 2. Step 1 (always enabled, doesn't require userId)
+    // 3. Any completed step (for editing)
     // Don't allow skipping ahead to incomplete future steps
-    return stepId === currentStep || completedSteps.includes(stepId);
+    return stepId === currentStep || stepId === 1 || completedSteps.includes(stepId);
   };
 
   const isStepCompleted = (stepId: StepId) => {

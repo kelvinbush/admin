@@ -29,17 +29,18 @@ export function Step7OtherSupportingDocuments() {
   const savePermitsMutation = useSavePermitsAndPitchDeck();
   const sendInvitationMutation = useSendSMEInvitation();
   
-  // Fetch full user details if editing
-  const { data: userDetail } = useSMEUser(userId || "", {
-    enabled: !!userId && onboardingState?.completedSteps?.includes(7),
+  // Fetch full user details if userId is present
+  const { data: userDetail, isLoading: isLoadingUser } = useSMEUser(userId || "", {
+    enabled: !!userId,
   });
   
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(7);
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
   const userEmail = onboardingState?.user?.email || userDetail?.user?.email || "";
   
-  // Fetch existing business documents if editing
-  const { data: existingDocuments } = useSMEBusinessDocuments(userId || "", {
-    enabled: isEditing && !!userId,
+  // Fetch existing business documents if userId is present
+  const { data: existingDocuments, isLoading: isLoadingDocuments } = useSMEBusinessDocuments(userId || "", {
+    enabled: !!userId,
   });
 
   const form = useForm<OtherSupportingDocumentsFormData>({
@@ -50,9 +51,9 @@ export function Step7OtherSupportingDocuments() {
     },
   });
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && existingDocuments) {
+    if (userId && existingDocuments) {
       // Map existing documents to form fields
       const businessPermit = existingDocuments.find(d => d.docType === "business_permit");
       const pitchDeck = existingDocuments.find(d => d.docType === "pitch_deck");
@@ -63,7 +64,7 @@ export function Step7OtherSupportingDocuments() {
         companyPitchDeck: pitchDeck?.docUrl || "",
       });
     }
-  }, [isEditing, existingDocuments, form]);
+  }, [userId, existingDocuments, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -168,8 +169,13 @@ export function Step7OtherSupportingDocuments() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {(isLoadingUser || isLoadingDocuments) && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading supporting documents...</p>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Regulatory Documents Section */}
           <div className="space-y-6">
             <h3 className="text-lg font-medium text-midnight-blue">
@@ -248,19 +254,22 @@ export function Step7OtherSupportingDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={savePermitsMutation.isPending || sendInvitationMutation.isPending}
+              disabled={savePermitsMutation.isPending || sendInvitationMutation.isPending || isLoadingUser || isLoadingDocuments}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {savePermitsMutation.isPending || sendInvitationMutation.isPending
+              {isLoadingUser || isLoadingDocuments
+                ? "Loading..."
+                : savePermitsMutation.isPending || sendInvitationMutation.isPending
                 ? "Saving & Sending Invitation..."
                 : "Save & Send Invitation"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
 
       <SMESuccessModal
         open={successModalOpen}

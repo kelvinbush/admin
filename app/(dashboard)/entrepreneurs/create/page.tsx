@@ -29,8 +29,10 @@ function CreateEntrepreneurPageContent() {
   }, [searchParams]);
 
   // Validate userId for steps 2-7
+  // Only redirect if we're not loading and there's no userId in URL either
   useEffect(() => {
-    if (currentStep > 1 && !userId && !isLoading) {
+    const urlUserId = searchParams.get("userId");
+    if (currentStep > 1 && !userId && !urlUserId && !isLoading) {
       toast({
         title: "Error",
         description: "Please complete Step 1 first to create the SME user.",
@@ -38,7 +40,7 @@ function CreateEntrepreneurPageContent() {
       });
       router.push("/entrepreneurs/create?step=1");
     }
-  }, [currentStep, userId, isLoading, router]);
+  }, [currentStep, userId, isLoading, router, searchParams]);
 
   // Handle invalid userId (404 error)
   useEffect(() => {
@@ -53,11 +55,32 @@ function CreateEntrepreneurPageContent() {
   }, [isError, currentStep, router]);
 
   const handleStepChange = (step: StepId) => {
+    // Use userId from multiple sources in priority order:
+    // 1. Context userId (from state)
+    // 2. onboardingState userId (from API response)
+    // 3. URL userId (from query params)
     const urlUserId = searchParams.get("userId");
-    if (urlUserId) {
-      router.push(`/entrepreneurs/create?userId=${urlUserId}&step=${step}`);
+    const contextUserId = userId;
+    const stateUserId = onboardingState?.userId;
+    const finalUserId = contextUserId || stateUserId || urlUserId;
+    
+    if (step === 1) {
+      // Step 1 doesn't require userId - preserve userId if it exists for easy navigation back
+      if (finalUserId) {
+        router.push(`/entrepreneurs/create?userId=${finalUserId}&step=${step}`);
+      } else {
+        router.push(`/entrepreneurs/create?step=${step}`);
+      }
+    } else if (finalUserId) {
+      // Steps 2-7 require userId
+      router.push(`/entrepreneurs/create?userId=${finalUserId}&step=${step}`);
     } else {
-      router.push(`/entrepreneurs/create?step=${step}`);
+      // If no userId and trying to go to step 2+, show error
+      toast({
+        title: "Error",
+        description: "Please complete Step 1 first to create the SME user.",
+        variant: "destructive",
+      });
     }
   };
 

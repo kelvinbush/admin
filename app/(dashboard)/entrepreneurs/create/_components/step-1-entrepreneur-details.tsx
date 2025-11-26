@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
-import { useCreateSMEUser, useUpdateSMEUserStep1 } from "@/lib/api/hooks/sme";
+import { useCreateSMEUser, useUpdateSMEUserStep1, useSMEUser } from "@/lib/api/hooks/sme";
 import { toast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
@@ -75,7 +75,14 @@ export function Step1EntrepreneurDetails() {
   const { userId, onboardingState, setUserId, refreshState } = useSMEOnboarding();
   const createUserMutation = useCreateSMEUser();
   const updateUserMutation = useUpdateSMEUserStep1();
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(1);
+  
+  // Fetch full user details if userId is present
+  const { data: userDetail, isLoading: isLoadingUser } = useSMEUser(userId || "", {
+    enabled: !!userId,
+  });
+
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
 
   const form = useForm<EntrepreneurDetailsFormData>({
     resolver: zodResolver(entrepreneurDetailsSchema),
@@ -91,10 +98,10 @@ export function Step1EntrepreneurDetails() {
     },
   });
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && onboardingState?.user) {
-      const user = onboardingState.user;
+    if (userId && userDetail?.user) {
+      const user = userDetail.user;
       form.reset({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
@@ -106,7 +113,7 @@ export function Step1EntrepreneurDetails() {
         specifyPosition: user.position || "",
       });
     }
-  }, [isEditing, onboardingState, form]);
+  }, [userId, userDetail, form]);
 
   const positionHeld = form.watch("positionHeld");
 
@@ -118,8 +125,8 @@ export function Step1EntrepreneurDetails() {
 
       let newUserId = userId;
 
-      if (userId && isEditing) {
-        // Update existing user
+      if (userId) {
+        // Update existing user (edit mode)
         await updateUserMutation.mutateAsync({
           userId,
           data: {
@@ -193,7 +200,12 @@ export function Step1EntrepreneurDetails() {
         </p>
       </div>
 
-      <Form {...form}>
+      {isLoadingUser && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading entrepreneur data...</p>
+        </div>
+      ) : (
+        <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* First Name */}
@@ -419,19 +431,22 @@ export function Step1EntrepreneurDetails() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={createUserMutation.isPending || updateUserMutation.isPending}
+              disabled={createUserMutation.isPending || updateUserMutation.isPending || isLoadingUser}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {createUserMutation.isPending || updateUserMutation.isPending
+              {isLoadingUser
+                ? "Loading..."
+                : createUserMutation.isPending || updateUserMutation.isPending
                 ? "Saving..."
                 : "Save & Continue"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
     </div>
   );
 }

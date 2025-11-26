@@ -10,7 +10,6 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { EntrepreneurListItem } from "@/lib/api/types";
@@ -153,9 +152,19 @@ export function EntrepreneursTable({
                     ? item.business.sectors.join(", ")
                     : "—";
 
-                const registeredUserName = `${item.firstName} ${item.lastName}`.trim();
+                const registeredUserName = `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim();
                 const registeredUserEmail = item.email;
                 const registeredUserPhone = item.phone;
+
+                const handleViewDetails = () => {
+                  if (item.onboardingStatus === "active") {
+                    // Active SME → go to read-only details page
+                    router.push(`/entrepreneurs/${item.userId}`);
+                  } else {
+                    // Draft or pending invitation → go to create flow with prefilled data
+                    router.push(`/entrepreneurs/create?userId=${item.userId}&step=1`);
+                  }
+                };
 
                 return (
                   <TableRow
@@ -193,18 +202,18 @@ export function EntrepreneursTable({
                         ? item.userGroups.map((g) => g.name).join(", ")
                         : "—"}
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-sm text-primaryGrey-500">
+                    <TableCell className="px-6 py-4 text-sm text-primaryGrey-500 capitalize">
                       {sector}
                     </TableCell>
                     <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="">
+                      <p className="text-xs text-primaryGrey-500 text-right">
+                          {progress}%
+                        </p>
                         <Progress
                           value={progress}
-                          className="h-2 w-32 bg-primaryGrey-100"
+                          className="h-1.5 w-full bg-primary-green"
                         />
-                        <span className="text-xs text-primaryGrey-500 min-w-[40px] text-right">
-                          {progress}%
-                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
@@ -221,9 +230,7 @@ export function EntrepreneursTable({
                       <div className="flex items-center justify-end gap-4">
                         <button
                           type="button"
-                          onClick={() =>
-                            router.push(`/entrepreneurs/${item.userId}`)
-                          }
+                          onClick={handleViewDetails}
                           className="inline-flex items-center gap-1 text-xs text-primaryGrey-600 hover:text-midnight-blue"
                         >
                           <Eye className="h-4 w-4" />

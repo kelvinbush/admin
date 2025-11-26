@@ -74,11 +74,12 @@ export function Step4EntrepreneurDocuments() {
   const [documentType, setDocumentType] = useState<string>("");
   const saveDocumentsMutation = useSavePersonalDocuments();
   
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(4);
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
   
-  // Fetch existing personal documents if editing
-  const { data: existingDocuments } = useSMEPersonalDocuments(userId || "", {
-    enabled: isEditing && !!userId,
+  // Fetch existing personal documents if userId is present
+  const { data: existingDocuments, isLoading: isLoadingDocuments } = useSMEPersonalDocuments(userId || "", {
+    enabled: !!userId,
   });
 
   const form = useForm<EntrepreneurDocumentsFormData>({
@@ -97,9 +98,9 @@ export function Step4EntrepreneurDocuments() {
     },
   });
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && existingDocuments && existingDocuments.length > 0) {
+    if (userId && existingDocuments && existingDocuments.length > 0) {
       // Map existing documents to form fields
       const nationalIdFront = existingDocuments.find(d => d.docType === "national_id_front");
       const nationalIdBack = existingDocuments.find(d => d.docType === "national_id_back");
@@ -126,7 +127,7 @@ export function Step4EntrepreneurDocuments() {
       if (userPhoto) form.setValue("passportPhoto", userPhoto.docUrl);
       if (taxDoc) form.setValue("personalTaxCertificate", taxDoc.docUrl);
     }
-  }, [isEditing, existingDocuments, form]);
+  }, [userId, existingDocuments, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -244,8 +245,13 @@ export function Step4EntrepreneurDocuments() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {isLoadingDocuments && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading entrepreneur documents...</p>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Do you have identification documents? */}
           <FormField
             control={form.control}
@@ -582,17 +588,22 @@ export function Step4EntrepreneurDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={saveDocumentsMutation.isPending}
+              disabled={saveDocumentsMutation.isPending || isLoadingDocuments}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {saveDocumentsMutation.isPending ? "Saving..." : "Save & Continue"}
+              {isLoadingDocuments
+                ? "Loading..."
+                : saveDocumentsMutation.isPending
+                ? "Saving..."
+                : "Save & Continue"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
     </div>
   );
 }

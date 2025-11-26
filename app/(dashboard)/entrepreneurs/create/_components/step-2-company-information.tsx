@@ -99,12 +99,13 @@ export function Step2CompanyInformation() {
       }))
     : [];
   
-  // Fetch full user details if editing
-  const { data: userDetail } = useSMEUser(userId || "", {
-    enabled: !!userId && onboardingState?.completedSteps?.includes(2),
+  // Fetch full user details if userId is present
+  const { data: userDetail, isLoading: isLoadingUser } = useSMEUser(userId || "", {
+    enabled: !!userId,
   });
   
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(2);
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
   // Use userDetail business data which has all fields, fallback to onboardingState for basic name
   const businessData = userDetail?.business;
 
@@ -126,9 +127,9 @@ export function Step2CompanyInformation() {
     },
   });
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && businessData) {
+    if (userId && businessData) {
       // Map number of employees to form format (range string)
       const mapNoOfEmployees = (count: number | null): string => {
         if (!count) return "";
@@ -163,7 +164,7 @@ export function Step2CompanyInformation() {
         setDescriptionLength(businessData.description.length);
       }
     }
-  }, [isEditing, businessData, form]);
+  }, [userId, businessData, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -262,8 +263,13 @@ export function Step2CompanyInformation() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {isLoadingUser && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading company information...</p>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Company Logo - with border */}
           <FormField
             control={form.control}
@@ -603,17 +609,22 @@ export function Step2CompanyInformation() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={saveBusinessMutation.isPending}
+              disabled={saveBusinessMutation.isPending || isLoadingUser}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {saveBusinessMutation.isPending ? "Saving..." : "Save & Continue"}
+              {isLoadingUser
+                ? "Loading..."
+                : saveBusinessMutation.isPending
+                ? "Saving..."
+                : "Save & Continue"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
     </div>
   );
 }

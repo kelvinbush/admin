@@ -87,11 +87,12 @@ export function Step6CompanyFinancialDocuments() {
   const yearOptions = generateYearOptions();
   const saveDocumentsMutation = useSaveFinancialDocuments();
   
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(6);
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
   
-  // Fetch existing business documents if editing
-  const { data: existingDocuments } = useSMEBusinessDocuments(userId || "", {
-    enabled: isEditing && !!userId,
+  // Fetch existing business documents if userId is present
+  const { data: existingDocuments, isLoading: isLoadingDocuments } = useSMEBusinessDocuments(userId || "", {
+    enabled: !!userId,
   });
 
   const form = useForm<CompanyFinancialDocumentsFormData>({
@@ -126,9 +127,9 @@ export function Step6CompanyFinancialDocuments() {
   const watchHasBankStatements = form.watch("hasBankStatements");
   const watchFinancialStatements = form.watch("financialStatements");
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && existingDocuments) {
+    if (userId && existingDocuments) {
       // Map existing documents to form fields
       const bankStatements = existingDocuments.filter(d => d.docType === "annual_bank_statement");
       const financialStatements = existingDocuments.filter(d => d.docType === "audited_financial_statements");
@@ -171,7 +172,7 @@ export function Step6CompanyFinancialDocuments() {
       if (businessPlan) form.setValue("businessPlan", businessPlan.docUrl);
       if (managementAccounts) form.setValue("managementAccounts", managementAccounts.docUrl);
     }
-  }, [isEditing, existingDocuments, form]);
+  }, [userId, existingDocuments, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -326,8 +327,13 @@ export function Step6CompanyFinancialDocuments() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {isLoadingDocuments && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading financial documents...</p>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Do you have bank statements? */}
           <FormField
             control={form.control}
@@ -518,17 +524,22 @@ export function Step6CompanyFinancialDocuments() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={saveDocumentsMutation.isPending}
+              disabled={saveDocumentsMutation.isPending || isLoadingDocuments}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {saveDocumentsMutation.isPending ? "Saving..." : "Save & Continue"}
+              {isLoadingDocuments
+                ? "Loading..."
+                : saveDocumentsMutation.isPending
+                ? "Saving..."
+                : "Save & Continue"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
     </div>
   );
 }

@@ -44,12 +44,13 @@ export function Step3BusinessLocation() {
   const [addressLength, setAddressLength] = useState(0);
   const saveLocationMutation = useSaveLocationInfo();
   
-  // Fetch full user details if editing
-  const { data: userDetail } = useSMEUser(userId || "", {
-    enabled: !!userId && onboardingState?.completedSteps?.includes(3),
+  // Fetch full user details if userId is present
+  const { data: userDetail, isLoading: isLoadingUser } = useSMEUser(userId || "", {
+    enabled: !!userId,
   });
   
-  const isEditing = !!userId && onboardingState?.completedSteps?.includes(3);
+  // Determine if we're editing (userId exists, regardless of completion status)
+  const isEditing = !!userId;
   const businessData = userDetail?.business || onboardingState?.business;
 
   const form = useForm<BusinessLocationFormData>({
@@ -63,9 +64,9 @@ export function Step3BusinessLocation() {
     },
   });
 
-  // Load existing data if editing
+  // Load existing data if userId is present
   useEffect(() => {
-    if (isEditing && businessData) {
+    if (userId && businessData) {
       // API returns country names, form now uses country names directly
       const countriesOfOperation = businessData.countriesOfOperation || [];
       
@@ -84,7 +85,7 @@ export function Step3BusinessLocation() {
         setAddressLength(businessData.registeredOfficeAddress.length);
       }
     }
-  }, [isEditing, businessData, form]);
+  }, [userId, businessData, form]);
 
   const handleCancel = () => {
     if (userId) {
@@ -160,8 +161,13 @@ export function Step3BusinessLocation() {
         </p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {isLoadingUser && userId ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-primaryGrey-500">Loading business location information...</p>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Countries of Operation */}
           <FormField
             control={form.control}
@@ -312,17 +318,22 @@ export function Step3BusinessLocation() {
               size="lg"
               type="submit"
               className="text-white border-0"
-              disabled={saveLocationMutation.isPending}
+              disabled={saveLocationMutation.isPending || isLoadingUser}
               style={{
                 background:
                   "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
               }}
             >
-              {saveLocationMutation.isPending ? "Saving..." : "Save & Continue"}
+              {isLoadingUser
+                ? "Loading..."
+                : saveLocationMutation.isPending
+                ? "Saving..."
+                : "Save & Continue"}
             </Button>
           </div>
         </form>
       </Form>
+      )}
     </div>
   );
 }
