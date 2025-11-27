@@ -29,6 +29,8 @@ import type {
   SaveFinancialDetailsData,
   SavePermitsData,
   SendInvitationResponse,
+  SMEAuditTrailResponse,
+  SMEAuditTrailFilters,
 } from '../types';
 
 // ===== SME USER / ENTREPRENEUR LIST HOOKS =====
@@ -432,6 +434,32 @@ export function useSMEBusinessDocuments(
         }
         return data as BusinessDocument[];
       },
+    }
+  );
+}
+
+/**
+ * Get audit trail for an SME user
+ */
+export function useSMEAuditTrail(
+  userId: string,
+  filters?: SMEAuditTrailFilters,
+  options?: { enabled?: boolean }
+) {
+  const params = new URLSearchParams();
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.limit) params.append('limit', filters.limit.toString());
+  if (filters?.action) params.append('action', filters.action);
+
+  const queryString = params.toString();
+  const url = `/admin/sme/users/${userId}/audit-trail${queryString ? `?${queryString}` : ''}`;
+
+  return useClientApiQuery<SMEAuditTrailResponse>(
+    queryKeys.sme.auditTrail(userId, filters),
+    url,
+    undefined,
+    {
+      enabled: options?.enabled !== false && !!userId,
     }
   );
 }

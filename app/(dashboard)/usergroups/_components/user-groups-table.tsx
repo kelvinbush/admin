@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { EyeIcon, EditIcon } from "@/components/icons/document-icons";
 import type { UserGroup } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
 import { useDeleteUserGroupMutation } from "@/lib/api/hooks/useUserGroups";
@@ -142,31 +143,36 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
                     <div className="text-sm text-primaryGrey-400">{(group as any).updatedAt ? new Date((group as any).updatedAt).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "-"}</div>
                   </TableCell>
                   <TableCell className="py-4 whitespace-nowrap">
-                    <button
-                      className="text-blue-700 hover:underline inline-flex items-center mr-4"
-                      onClick={(e) => { e.stopPropagation(); onViewGroup(group); }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" /> View
-                    </button>
-                    <button
-                      className="text-emerald-600 hover:underline inline-flex items-center mr-4"
-                      onClick={(e) => { e.stopPropagation(); router.push(`/usergroups/${group.id}/edit`); }}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" /> Edit
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline inline-flex items-center"
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (deleteMutation.isPending) return;
-                        const proceed = window.confirm("Delete this user group?");
-                        if (!proceed) return;
-                        await deleteMutation.mutateAsync({ id: (group as any).id });
-                        if (onDeleted) onDeleted((group as any).id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" /> Delete
-                    </button>
+                    <div className="flex items-center gap-4">
+                      <button
+                        className="flex items-center gap-1.5 text-[#01337F] hover:text-[#01337F]/80 transition-colors text-sm font-medium"
+                        onClick={(e) => { e.stopPropagation(); onViewGroup(group); }}
+                      >
+                        <EyeIcon />
+                        View
+                      </button>
+                      <button
+                        className="flex items-center gap-1.5 text-[#00CC99] hover:text-[#00CC99]/80 transition-colors text-sm font-medium"
+                        onClick={(e) => { e.stopPropagation(); router.push(`/usergroups/${group.id}`); }}
+                      >
+                        <EditIcon />
+                        Edit
+                      </button>
+                      <button
+                        className="flex items-center gap-1.5 text-red-600 hover:text-red-600/80 transition-colors text-sm font-medium"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (deleteMutation.isPending) return;
+                          const proceed = window.confirm("Delete this user group?");
+                          if (!proceed) return;
+                          await deleteMutation.mutateAsync({ id: (group as any).id });
+                          if (onDeleted) onDeleted((group as any).id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

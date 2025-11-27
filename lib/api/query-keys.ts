@@ -121,6 +121,7 @@ export const queryKeys = {
     details: () => [...queryKeys.sme.all, 'detail'] as const,
     detail: (userId: string) => [...queryKeys.sme.details(), userId] as const,
     onboarding: (userId: string) => [...queryKeys.sme.detail(userId), 'onboarding'] as const,
+    auditTrail: (userId: string, filters?: Record<string, any>) => [...queryKeys.sme.detail(userId), 'audit-trail', JSON.stringify(filters || {})] as const,
   },
 
   // Entrepreneurs list (for main table)

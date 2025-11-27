@@ -1,262 +1,143 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { AuditTrailHeader } from "./_components/audit-trail-header";
 import { AuditTrailTable, type AuditLogEntry } from "./_components/audit-trail-table";
 import { AuditTrailPagination } from "./_components/audit-trail-pagination";
+import { useSMEAuditTrail } from "@/lib/api/hooks/sme";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortOption = "date-asc" | "date-desc";
 type FilterUser = "all" | string;
 
 export default function AuditLogsPage() {
+  const params = useParams<{ id: string }>();
+  const userId = params?.id as string;
+
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<SortOption>("date-desc");
   const [filterUser, setFilterUser] = useState<FilterUser>("all");
+  const [filterAction, setFilterAction] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 50;
 
-  // TODO: Fetch audit logs and users from API
-  // Placeholder data for testing
-  const allEntries: AuditLogEntry[] = [
+  // Fetch audit trail from API
+  const { data, isLoading, error } = useSMEAuditTrail(
+    userId,
     {
-      id: "1",
-      changeSummary: "Updated Business Sector from 'Agriculture' to 'Retail'.",
-      initiatedBy: {
-        id: "user1",
-        name: "Robert Mugabe",
-        email: "robert.mugabe@gmail.com",
-      },
-      timestamp: "2025-10-11T16:15:45Z",
+      page: currentPage,
+      limit: itemsPerPage,
+      action: filterAction !== "all" ? filterAction : undefined,
     },
-    {
-      id: "2",
-      changeSummary: "Changed Legal Entity Type from 'Sole Proprietorship' to 'Private Limited Company'.",
-      initiatedBy: {
-        id: "user2",
-        name: "Linet Adani",
-        email: "linet.adani@gmail.com",
-      },
-      timestamp: "2025-10-12T17:30:12Z",
-    },
-    {
-      id: "3",
-      changeSummary: "Deleted uploaded document: 'Business Plan.docx'.",
-      initiatedBy: {
-        id: "user3",
-        name: "Tracey Marie",
-        email: "tracey.marie@gmail.com",
-      },
-      timestamp: "2025-10-13T18:45:33Z",
-    },
-    {
-      id: "4",
-      changeSummary: "Changed Bank Statement Name from 'Equity Bank' to 'KCB Bank'.",
-      initiatedBy: {
-        id: "user4",
-        name: "Shem Minjire",
-        email: "shem.minjire@gmail.com",
-      },
-      timestamp: "2025-10-14T19:00:29Z",
-    },
-    {
-      id: "5",
-      changeSummary: "Added new business photo: 'storefront.jpg'.",
-      initiatedBy: {
-        id: "user5",
-        name: "Cecile Soul",
-        email: "cecile.soul@gmail.com",
-      },
-      timestamp: "2025-10-15T20:15:11Z",
-    },
-    {
-      id: "6",
-      changeSummary: "Updated company website from 'https://old-site.com' to 'https://new-site.com'.",
-      initiatedBy: {
-        id: "user1",
-        name: "Robert Mugabe",
-        email: "robert.mugabe@gmail.com",
-      },
-      timestamp: "2025-10-16T09:20:00Z",
-    },
-    {
-      id: "7",
-      changeSummary: "Changed number of employees from '10-50' to '51-100'.",
-      initiatedBy: {
-        id: "user2",
-        name: "Linet Adani",
-        email: "linet.adani@gmail.com",
-      },
-      timestamp: "2025-10-17T10:30:15Z",
-    },
-    {
-      id: "8",
-      changeSummary: "Updated registered office address.",
-      initiatedBy: {
-        id: "user3",
-        name: "Tracey Marie",
-        email: "tracey.marie@gmail.com",
-      },
-      timestamp: "2025-10-18T11:45:22Z",
-    },
-    {
-      id: "9",
-      changeSummary: "Uploaded new financial statement for year 2024.",
-      initiatedBy: {
-        id: "user4",
-        name: "Shem Minjire",
-        email: "shem.minjire@gmail.com",
-      },
-      timestamp: "2025-10-19T12:00:30Z",
-    },
-    {
-      id: "10",
-      changeSummary: "Updated entrepreneur's date of birth.",
-      initiatedBy: {
-        id: "user5",
-        name: "Cecile Soul",
-        email: "cecile.soul@gmail.com",
-      },
-      timestamp: "2025-10-20T13:15:45Z",
-    },
-    {
-      id: "11",
-      changeSummary: "Changed company headquarters from 'Nairobi' to 'Mombasa'.",
-      initiatedBy: {
-        id: "user1",
-        name: "Robert Mugabe",
-        email: "robert.mugabe@gmail.com",
-      },
-      timestamp: "2025-10-21T14:20:10Z",
-    },
-    {
-      id: "12",
-      changeSummary: "Added new video link: 'https://youtube.com/watch?v=example'.",
-      initiatedBy: {
-        id: "user2",
-        name: "Linet Adani",
-        email: "linet.adani@gmail.com",
-      },
-      timestamp: "2025-10-22T15:30:25Z",
-    },
-    {
-      id: "13",
-      changeSummary: "Updated business description.",
-      initiatedBy: {
-        id: "user3",
-        name: "Tracey Marie",
-        email: "tracey.marie@gmail.com",
-      },
-      timestamp: "2025-10-23T16:45:40Z",
-    },
-    {
-      id: "14",
-      changeSummary: "Changed average monthly turnover from 'KES 500,000' to 'KES 750,000'.",
-      initiatedBy: {
-        id: "user4",
-        name: "Shem Minjire",
-        email: "shem.minjire@gmail.com",
-      },
-      timestamp: "2025-10-24T17:00:55Z",
-    },
-    {
-      id: "15",
-      changeSummary: "Uploaded new bank statement for 'Equity Bank'.",
-      initiatedBy: {
-        id: "user5",
-        name: "Cecile Soul",
-        email: "cecile.soul@gmail.com",
-      },
-      timestamp: "2025-10-25T18:15:10Z",
-    },
-    {
-      id: "16",
-      changeSummary: "Updated entrepreneur's position from 'CEO' to 'Managing Director'.",
-      initiatedBy: {
-        id: "user1",
-        name: "Robert Mugabe",
-        email: "robert.mugabe@gmail.com",
-      },
-      timestamp: "2025-10-26T19:20:25Z",
-    },
-    {
-      id: "17",
-      changeSummary: "Changed program/user group from 'Tuungane2xna Absa' to 'Tuungane2xna Standard'.",
-      initiatedBy: {
-        id: "user2",
-        name: "Linet Adani",
-        email: "linet.adani@gmail.com",
-      },
-      timestamp: "2025-10-27T20:30:40Z",
-    },
-    {
-      id: "18",
-      changeSummary: "Updated company tax identification number.",
-      initiatedBy: {
-        id: "user3",
-        name: "Tracey Marie",
-        email: "tracey.marie@gmail.com",
-      },
-      timestamp: "2025-10-28T21:45:55Z",
-    },
-    {
-      id: "19",
-      changeSummary: "Added new country of operation: 'Tanzania'.",
-      initiatedBy: {
-        id: "user4",
-        name: "Shem Minjire",
-        email: "shem.minjire@gmail.com",
-      },
-      timestamp: "2025-10-29T22:00:10Z",
-    },
-    {
-      id: "20",
-      changeSummary: "Updated entrepreneur's phone number.",
-      initiatedBy: {
-        id: "user5",
-        name: "Cecile Soul",
-        email: "cecile.soul@gmail.com",
-      },
-      timestamp: "2025-10-30T23:15:25Z",
-    },
-  ];
+    { enabled: !!userId }
+  );
+
+  // Map API response to component format
+  const allEntries: AuditLogEntry[] = useMemo(() => {
+    if (!data?.items) return [];
+
+    return data.items.map((entry) => {
+      // Generate change summary from description or action details
+      let changeSummary = entry.description || "";
+      
+      if (!changeSummary && entry.action) {
+        // Format action name
+        changeSummary = entry.action
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        
+        // Add details if available
+        if (entry.details) {
+          const detailsStr = Object.entries(entry.details)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ");
+          if (detailsStr) {
+            changeSummary += ` - ${detailsStr}`;
+          }
+        }
+      }
+
+      // Get admin user name
+      const adminName = entry.adminUser.firstName && entry.adminUser.lastName
+        ? `${entry.adminUser.firstName} ${entry.adminUser.lastName}`
+        : entry.adminUser.email || "Unknown User";
+
+      return {
+        id: entry.id,
+        changeSummary,
+        initiatedBy: {
+          id: entry.adminUser.id,
+          name: adminName,
+          email: entry.adminUser.email,
+        },
+        timestamp: entry.createdAt,
+      };
+    });
+  }, [data]);
 
   // Extract unique users for filter dropdown
-  const availableUsers = Array.from(
-    new Map(
-      allEntries.map((entry) => [
-        entry.initiatedBy.id,
-        {
+  const availableUsers = useMemo(() => {
+    const userMap = new Map<string, { id: string; name: string; email: string }>();
+    allEntries.forEach((entry) => {
+      if (!userMap.has(entry.initiatedBy.id)) {
+        userMap.set(entry.initiatedBy.id, {
           id: entry.initiatedBy.id,
           name: entry.initiatedBy.name,
           email: entry.initiatedBy.email,
-        },
-      ])
-    ).values()
-  );
+        });
+      }
+    });
+    return Array.from(userMap.values());
+  }, [allEntries]);
 
-  // Filter and sort entries
-  const filteredEntries = allEntries.filter((entry) => {
-    if (filterUser !== "all" && entry.initiatedBy.id !== filterUser) return false;
-    if (searchValue && !entry.changeSummary.toLowerCase().includes(searchValue.toLowerCase())) return false;
-    return true;
-  });
+  // Filter entries by user and search (client-side filtering)
+  const filteredEntries = useMemo(() => {
+    return allEntries.filter((entry) => {
+      if (filterUser !== "all" && entry.initiatedBy.id !== filterUser) return false;
+      if (searchValue && !entry.changeSummary.toLowerCase().includes(searchValue.toLowerCase())) return false;
+      return true;
+    });
+  }, [allEntries, filterUser, searchValue]);
 
-  const sortedEntries = [...filteredEntries].sort((a, b) => {
-    if (sort === "date-asc") {
-      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-    }
-    if (sort === "date-desc") {
+  // Sort entries (client-side sorting)
+  const sortedEntries = useMemo(() => {
+    return [...filteredEntries].sort((a, b) => {
+      if (sort === "date-asc") {
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      }
+      // date-desc (default)
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    }
-    return 0;
-  });
+    });
+  }, [filteredEntries, sort]);
 
-  // Paginate
-  const totalPages = Math.ceil(sortedEntries.length / itemsPerPage);
-  const paginatedEntries = sortedEntries.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-midnight-blue">Audit Trail</h1>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-red-600 font-medium">Failed to load audit trail</p>
+          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalPages = data?.pagination?.totalPages || 1;
+  const totalItems = data?.pagination?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -276,16 +157,20 @@ export default function AuditLogsPage() {
       />
 
       {/* Table */}
-      <AuditTrailTable entries={paginatedEntries} />
+      <AuditTrailTable entries={sortedEntries} />
 
       {/* Pagination */}
       {totalPages > 1 && (
         <AuditTrailPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={sortedEntries.length}
+          totalItems={totalItems}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            // Scroll to top when page changes
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
         />
       )}
     </div>

@@ -1047,6 +1047,41 @@ export interface EntrepreneursStatsResponse {
   smesWithLoans: EntrepreneursStatsMetric;
 }
 
+// SME Audit Trail
+export interface SMEAuditTrailEntry {
+  id: string;
+  action: string;
+  description: string | null;
+  details: Record<string, any> | null;
+  beforeData: Record<string, any> | null;
+  afterData: Record<string, any> | null;
+  adminUser: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface SMEAuditTrailResponse {
+  items: SMEAuditTrailEntry[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SMEAuditTrailFilters {
+  page?: number;
+  limit?: number;
+  action?: string;
+}
+
 // Update Entrepreneur Details (Consolidated endpoint)
 export interface UpdateEntrepreneurDetailsData {
   email: string; // Required
