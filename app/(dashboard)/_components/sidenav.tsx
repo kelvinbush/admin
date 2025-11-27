@@ -5,41 +5,59 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Database } from "lucide-react";
+import { ChevronDown, ChevronRight, Bell, Settings, LogOut, Moon } from "lucide-react";
 import Link from "next/link";
+import { SvgIcon } from "@/components/ui/svg-icon";
 
 const sidenavLinks = [
   {
     title: "Dashboard",
     href: "/",
-    icon: <Icons.dashboard />,
+    icon: <SvgIcon src="/dashboard.svg" width={20} height={20} />,
   },
   {
-    title: "Funding",
+    title: "User Management",
     href: "/#",
-    icon: <Icons.funding className="h-5 w-5" />,
+    icon: <SvgIcon src="/user-management.svg" width={20} height={20} />,
     children: [
       {
-        title: "Investor Opportunities",
-        href: "/investor-opportunities",
-        icon: <Database className="h-4 w-4" />,
+        title: "Organizations",
+        href: "/organizations",
+        icon: <SvgIcon src="/organisations.svg" width={16} height={16} />,
       },
       {
-        title: "Loan Products",
-        href: "/loan-products",
-        icon: <Icons.moneyBag className="h-4 w-4" />,
+        title: "System Users",
+        href: "/internal-users",
+        icon: <SvgIcon src="/system-users.svg" width={16} height={16} />,
+      },
+      {
+        title: "User Groups",
+        href: "/usergroups",
+        icon: <SvgIcon src="/user-groups.svg" width={16} height={16} />,
       },
     ],
   },
   {
-    title: "Loan Applications",
-    href: "/loan-applications",
-    icon: <Icons.moneyBag className="h-5 w-5" />,
+    title: "Entrepreneurs",
+    href: "/entrepreneurs",
+    icon: <SvgIcon src="/entrepreneurs.svg" width={20} height={20} />,
   },
   {
-    title: "User Management",
-    href: "/usergroups",
-    icon: <Icons.businessProfile className="h-5 w-5" />,
+    title: "Funding",
+    href: "/#",
+    icon: <SvgIcon src="/funding.svg" width={20} height={20} />,
+    children: [
+      {
+        title: "Investor Opportunities",
+        href: "/investor-opportunities",
+        icon: <SvgIcon src="/investor-opportunities.svg" width={16} height={16} />,
+      },
+      {
+        title: "Loan Products",
+        href: "/loan-products",
+        icon: <SvgIcon src="/loan-products.svg" width={16} height={16} />,
+      },
+    ],
   },
 ];
 
@@ -68,16 +86,19 @@ const Sidenav = () => {
       />
       <div className={"relative flex-1 flex flex-col"}>
         <div className="px-4 pb-4 gradient-border">
-          <Image
-            src="/images/logo-white.svg"
-            alt="Melanin Kapital Logo"
-            className="w-max"
-            width={200}
-            height={36}
-          />
+          <div className="flex items-center gap-2">
+            <Image
+              src="/mklogo.svg"
+              alt="Melanin Kapital Logo"
+              className="w-8 h-8"
+              width={32}
+              height={32}
+            />
+            <span className="text-white font-medium">melanin kapital</span>
+          </div>
         </div>
         <div className={"px-4 mt-4"}>
-          <h3 className="py-2.5 text-sm font-medium">MENU</h3>
+          <h3 className="py-2.5 text-sm font-medium text-primaryGrey-200">MENU</h3>
           <div className="space-y-2">
             {sidenavLinks.map((link) => (
               <SidenavItem
@@ -88,14 +109,51 @@ const Sidenav = () => {
             ))}
           </div>
         </div>
-        <div className="mt-auto px-4">
+        <div className="mt-auto px-4 space-y-2">
+          {/* Notifications */}
           <Button
             variant="ghost"
-            className="flex w-full cursor-pointer items-center justify-start gap-2 px-4 py-2.5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-white/5"
           >
-            <Icons.logout />
-            <p>Logout</p>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <p>Notifications</p>
+            </div>
+            <span className="bg-primary-green text-black text-xs font-medium px-2 py-0.5 rounded">
+              10
+            </span>
           </Button>
+          {/* Settings */}
+          <Button
+            variant="ghost"
+            className="flex w-full cursor-pointer items-center justify-start gap-2 px-4 py-2.5 text-left hover:bg-white/5"
+          >
+            <Settings className="h-5 w-5" />
+            <p>Settings</p>
+          </Button>
+        </div>
+        <div className="px-4 pt-4 border-t border-white/10">
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              className="flex w-full cursor-pointer items-center justify-start gap-2 px-4 py-2.5 text-left hover:bg-white/5"
+            >
+              <LogOut className="h-5 w-5" />
+              <p>Logout</p>
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-white/5"
+            >
+              <div className="flex items-center gap-2">
+                <Moon className="h-5 w-5" />
+                <p>Dark mode</p>
+              </div>
+              <div className="relative w-10 h-6 bg-primary-green rounded-full">
+                <div className="absolute right-1 top-1 w-4 h-4 bg-black rounded-full"></div>
+              </div>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
