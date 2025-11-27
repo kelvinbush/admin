@@ -3,6 +3,7 @@
 import React from "react";
 import { format } from "date-fns";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export interface AuditLogEntry {
   id: string;
@@ -18,9 +19,10 @@ export interface AuditLogEntry {
 
 interface AuditTrailTableProps {
   entries: AuditLogEntry[];
+  onEntryClick?: (entryId: string) => void;
 }
 
-export function AuditTrailTable({ entries }: AuditTrailTableProps) {
+export function AuditTrailTable({ entries, onEntryClick }: AuditTrailTableProps) {
   const formatTimestamp = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
@@ -57,7 +59,14 @@ export function AuditTrailTable({ entries }: AuditTrailTableProps) {
             </tr>
           ) : (
             entries.map((entry) => (
-              <tr key={entry.id} className="hover:bg-primaryGrey-50 transition-colors">
+              <tr 
+                key={entry.id} 
+                onClick={() => onEntryClick?.(entry.id)}
+                className={cn(
+                  "hover:bg-primaryGrey-50 transition-colors",
+                  onEntryClick && "cursor-pointer"
+                )}
+              >
                 <td className="px-6 py-4">
                   <div className="text-sm text-midnight-blue">
                     {entry.changeSummary}

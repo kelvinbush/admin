@@ -5,8 +5,10 @@ import { useParams } from "next/navigation";
 import { AuditTrailHeader } from "./_components/audit-trail-header";
 import { AuditTrailTable, type AuditLogEntry } from "./_components/audit-trail-table";
 import { AuditTrailPagination } from "./_components/audit-trail-pagination";
+import { AuditTrailDetailsSheet } from "./_components/audit-trail-details-sheet";
 import { useSMEAuditTrail } from "@/lib/api/hooks/sme";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { SMEAuditTrailEntry } from "@/lib/api/types";
 
 type SortOption = "date-asc" | "date-desc";
 type FilterUser = "all" | string;
@@ -19,6 +21,8 @@ export default function AuditLogsPage() {
   const [sort, setSort] = useState<SortOption>("date-desc");
   const [filterUser, setFilterUser] = useState<FilterUser>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedEntry, setSelectedEntry] = useState<SMEAuditTrailEntry | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const itemsPerPage = 50;
 
   // Fetch audit trail from API
@@ -30,6 +34,16 @@ export default function AuditLogsPage() {
     },
     { enabled: !!userId }
   );
+
+  // Store full entries for details sheet
+  const fullEntriesMap = useMemo(() => {
+    if (!data?.items) return new Map<string, SMEAuditTrailEntry>();
+    const map = new Map<string, SMEAuditTrailEntry>();
+    data.items.forEach((entry) => {
+      map.set(entry.id, entry);
+    });
+    return map;
+  }, [data]);
 
   // Map API response to component format
   const allEntries: AuditLogEntry[] = useMemo(() => {
@@ -155,7 +169,23 @@ export default function AuditLogsPage() {
       />
 
       {/* Table */}
-      <AuditTrailTable entries={sortedEntries} />
+      <AuditTrailTable 
+        entries={sortedEntries} 
+        onEntryClick={(entryId) => {
+          const fullEntry = fullEntriesMap.get(entryId);
+          if (fullEntry) {
+            setSelectedEntry(fullEntry);
+            setIsSheetOpen(true);
+          }
+        }}
+      />
+
+      {/* Details Sheet */}
+      <AuditTrailDetailsSheet
+        entry={selectedEntry}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (
