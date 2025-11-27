@@ -251,21 +251,23 @@ export function EntrepreneursTable({
                           <Eye className="h-4 w-4" />
                           <span>View Details</span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={handleResendInvite}
-                          disabled={!canResendInvite || sendInvitationMutation.isPending}
-                          className={cn(
-                            "inline-flex items-center gap-1 text-xs",
-                            !canResendInvite || sendInvitationMutation.isPending
-                              ? "text-primaryGrey-300 cursor-not-allowed"
-                              : "text-primaryGrey-600 hover:text-midnight-blue",
-                          )}
-                        >
-                          <span>
-                            {sendInvitationMutation.isPending ? "Resending..." : "Resend Invite"}
-                          </span>
-                        </button>
+                        {canResendInvite && (
+                          <button
+                            type="button"
+                            onClick={handleResendInvite}
+                            disabled={sendInvitationMutation.isPending}
+                            className={cn(
+                              "inline-flex items-center gap-1 text-xs",
+                              sendInvitationMutation.isPending
+                                ? "text-primaryGrey-300 cursor-not-allowed"
+                                : "text-primaryGrey-600 hover:text-midnight-blue",
+                            )}
+                          >
+                            <span>
+                              {sendInvitationMutation.isPending ? "Resending..." : "Resend Invite"}
+                            </span>
+                          </button>
+                        )}
                         {onRemove && (
                           <button
                             type="button"

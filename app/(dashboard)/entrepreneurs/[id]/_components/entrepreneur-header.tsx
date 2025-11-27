@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
-import { useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
+import { useSaveBusinessBasicInfo, useSendSMEInvitation } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
 
 interface EntrepreneurData {
@@ -44,6 +44,7 @@ export function EntrepreneurHeader({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { startUpload: startImageUpload } = useUploadThing("imageUploader");
   const saveBusinessBasicInfo = useSaveBusinessBasicInfo();
+  const sendInvitationMutation = useSendSMEInvitation();
 
   const getStatusColor = (status: string) => {
     if (status.toLowerCase().includes("pending")) {
@@ -53,6 +54,23 @@ export function EntrepreneurHeader({
       return "bg-green-100 text-green-500";
     }
     return "bg-gray-100 text-gray-500";
+  };
+
+  const canResendInvite = entrepreneur.status.toLowerCase().includes("pending");
+
+  const handleResendInvite = async () => {
+    if (!canResendInvite) return;
+
+    try {
+      await sendInvitationMutation.mutateAsync({ userId: entrepreneur.id });
+      toast.success("The entrepreneur has been re-invited successfully.");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to resend invitation.";
+      toast.error(errorMessage);
+    }
   };
 
   const handleLogoClick = () => {
@@ -211,13 +229,17 @@ export function EntrepreneurHeader({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0"
-                    >
-                      Resend Invite
-                    </Button>
+                    {canResendInvite && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handleResendInvite}
+                        disabled={sendInvitationMutation.isPending}
+                        className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {sendInvitationMutation.isPending ? "Resending..." : "Resend Invite"}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="lg"
