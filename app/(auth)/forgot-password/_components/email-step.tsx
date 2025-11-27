@@ -40,7 +40,7 @@ export function EmailStep({
           Forgot your password?
         </h1>
         <p className="text-sm text-primaryGrey-500">
-          Please enter your email address and we'll send you a verification code
+          Please enter your email address and we&apos;ll send you a verification code
         </p>
       </div>
 

@@ -146,7 +146,7 @@ export function Step3BusinessLocation() {
           Business Location
         </h2>
         <p className="text-sm text-primaryGrey-500">
-          Specify the company's registered and operational address details.
+          Specify the company&apos;s registered and operational address details.
         </p>
       </div>
 

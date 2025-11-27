@@ -57,7 +57,6 @@ export function Step7OtherSupportingDocuments() {
       // Map existing documents to form fields
       const businessPermit = existingDocuments.find(d => d.docType === "business_permit");
       const pitchDeck = existingDocuments.find(d => d.docType === "pitch_deck");
-      const businessPlan = existingDocuments.find(d => d.docType === "business_plan");
       
       form.reset({
         businessPermit: businessPermit?.docUrl || "",
@@ -153,7 +152,7 @@ export function Step7OtherSupportingDocuments() {
           Other Supporting Documents
         </h2>
         <p className="text-sm text-primaryGrey-500">
-          Upload additional documents relevant to the company's operations.
+          Upload additional documents relevant to the company&apos;s operations.
         </p>
       </div>
 

@@ -4,13 +4,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useClientApiQuery,
   useClientApiMutation,
-  useClientApiPost,
-  useClientApiPut,
 } from '../hooks';
 import { queryKeys } from '../query-keys';
 import type {
-  SMEUser,
-  SMEUserDetail,
   SMEOnboardingState,
   ListSMEUsersResponse,
   SMEUsersFilters,
@@ -31,6 +27,7 @@ import type {
   SendInvitationResponse,
   SMEAuditTrailResponse,
   SMEAuditTrailFilters,
+  SMEUserDetail,
 } from '../types';
 
 // ===== SME USER / ENTREPRENEUR LIST HOOKS =====

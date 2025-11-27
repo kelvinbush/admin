@@ -1,4 +1,4 @@
-import { Icons } from "@/components/icons";
+
 import { Button } from "@/components/ui/button";
 import { useTitle } from "@/context/title-context";
 import Image from "next/image";

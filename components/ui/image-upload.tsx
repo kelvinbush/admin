@@ -115,11 +115,11 @@ export function ImageUpload({
     }
   };
 
-  const handleChangeImage = (index: number) => {
+  const handleChangeImage = () => {
     fileInputRef.current?.click();
   };
 
-  const getInitials = (index: number) => {
+  const getInitials = () => {
     if (label) {
       const words = label.split(" ");
       return words.map((w) => w[0]).join("").toUpperCase().slice(0, 2);
@@ -168,7 +168,7 @@ export function ImageUpload({
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleChangeImage(index)}
+                    onClick={handleChangeImage}
                     disabled={isUploading}
                     className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-black text-white text-xs rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -293,7 +293,7 @@ export function ImageUpload({
             {isUploading ? (
               <Loader2 className="h-8 w-8 text-primary-green animate-spin" />
             ) : (
-              getInitials(0)
+              getInitials()
             )}
           </div>
         )}

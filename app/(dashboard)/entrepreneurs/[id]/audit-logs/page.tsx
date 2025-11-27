@@ -18,7 +18,6 @@ export default function AuditLogsPage() {
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<SortOption>("date-desc");
   const [filterUser, setFilterUser] = useState<FilterUser>("all");
-  const [filterAction, setFilterAction] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
@@ -28,7 +27,6 @@ export default function AuditLogsPage() {
     {
       page: currentPage,
       limit: itemsPerPage,
-      action: filterAction !== "all" ? filterAction : undefined,
     },
     { enabled: !!userId }
   );

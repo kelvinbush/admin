@@ -4,7 +4,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface EntrepreneurBreadcrumbProps {
   companyName: string;

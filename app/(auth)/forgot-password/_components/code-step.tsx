@@ -138,7 +138,7 @@ export function CodeStep({
           {codeDigits.map((digit, index) => (
             <input
               key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
+              ref={(el) => { inputRefs.current[index] = el; }}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -174,7 +174,7 @@ export function CodeStep({
           disabled={isResending}
           className="text-sm text-primaryGrey-500"
         >
-          Didn't receive the code?{" "}
+          Didn&apos;t receive the code?{" "}
           <span className="text-primary-green hover:underline">
             {isResending ? "Sending..." : "Resend Code"}
           </span>

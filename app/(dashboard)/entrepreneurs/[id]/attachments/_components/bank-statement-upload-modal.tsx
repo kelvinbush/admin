@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
 import { FileUpload } from "@/components/ui/file-upload";
-import { cn } from "@/lib/utils";
 
 export interface BankStatementEntry {
   id: string;
@@ -187,7 +186,7 @@ export function BankStatementUploadModal({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-8 pb-6">
           <div className="space-y-6">
-            {entries.map((entry, index) => (
+            {entries.map((entry) => (
               <div
                 key={entry.id}
                 className="space-y-4 p-4 border border-primaryGrey-200 rounded-md bg-white"

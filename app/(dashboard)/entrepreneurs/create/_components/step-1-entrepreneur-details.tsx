@@ -72,7 +72,7 @@ const positionOptions: SelectOption[] = [
 
 export function Step1EntrepreneurDetails() {
   const router = useRouter();
-  const { userId, onboardingState, setUserId, refreshState } = useSMEOnboarding();
+  const { userId, setUserId, refreshState } = useSMEOnboarding();
   const createUserMutation = useCreateSMEUser();
   const updateUserMutation = useUpdateSMEUserStep1();
   

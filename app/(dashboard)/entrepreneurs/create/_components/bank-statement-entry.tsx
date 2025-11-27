@@ -6,7 +6,6 @@ import { SelectWithDescription, type SelectOption } from "@/components/ui/select
 import { FileUpload } from "@/components/ui/file-upload";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Control, UseFormWatch } from "react-hook-form";
 
 export interface BankStatementData {

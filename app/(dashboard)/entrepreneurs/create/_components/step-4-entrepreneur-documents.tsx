@@ -73,8 +73,8 @@ const documentTypeOptions: SelectOption[] = [
 export function Step4EntrepreneurDocuments() {
   const router = useRouter();
   const { userId, onboardingState, refreshState } = useSMEOnboarding();
-  const [hasDocuments, setHasDocuments] = useState<"yes" | "no" | undefined>(undefined);
-  const [documentType, setDocumentType] = useState<string>("");
+  const [, setHasDocuments] = useState<"yes" | "no" | undefined>(undefined);
+  const [, setDocumentType] = useState<string>("");
   const saveDocumentsMutation = useSavePersonalDocuments();
   
   // Determine if we're editing (userId exists, regardless of completion status)
@@ -322,7 +322,7 @@ export function Step4EntrepreneurDocuments() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel required className="text-primaryGrey-400">
-                  Do you have the entrepreneur's identification documents?
+                  Do you have the entrepreneur&apos;s identification documents?
                 </FormLabel>
                 <FormControl>
                   <RadioGroup
@@ -353,7 +353,7 @@ export function Step4EntrepreneurDocuments() {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="no" />
                       <Label htmlFor="no" className="cursor-pointer text-primaryGrey-400">
-                        No, I don't
+                        No, I don&apos;t
                       </Label>
                     </div>
                   </RadioGroup>

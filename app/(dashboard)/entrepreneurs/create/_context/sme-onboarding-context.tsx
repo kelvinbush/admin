@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSMEUser } from '@/lib/api/hooks/sme';
-import type { SMEUserDetail, SMEOnboardingState } from '@/lib/api/types';
+import type {  SMEOnboardingState } from '@/lib/api/types';
 
 interface SMEOnboardingContextValue {
-  userId: string | null;
+  userId: string | null;  
   onboardingState: SMEOnboardingState | null;
   isLoading: boolean;
   isError: boolean;

@@ -74,7 +74,6 @@ function CreateEntrepreneurPageContent() {
 
   // Determine which steps are completed
   const completedSteps = onboardingState?.completedSteps || [];
-  const currentStepNumber = onboardingState?.currentStep || currentStep;
 
   return (
     <div className="space-y-6">

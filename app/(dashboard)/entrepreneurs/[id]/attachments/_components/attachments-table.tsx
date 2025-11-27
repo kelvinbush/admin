@@ -31,7 +31,6 @@ export function AttachmentsTable({
   onUpdate,
   onDownload,
   onUpload,
-  onUploadNew,
 }: AttachmentsTableProps) {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
 

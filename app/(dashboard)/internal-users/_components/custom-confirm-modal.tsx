@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 type ConfirmActionModalVariant = "orange" | "red";

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
+import { type SelectOption } from "@/components/ui/select-with-description";
 import { BankStatementEntry } from "./bank-statement-entry";
 import { FinancialStatementEntry } from "./financial-statement-entry";
 import { useRouter } from "next/navigation";
@@ -83,7 +83,7 @@ const generateYearOptions = (): SelectOption[] => {
 
 export function Step6CompanyFinancialDocuments() {
   const router = useRouter();
-  const { userId, onboardingState, refreshState } = useSMEOnboarding();
+  const { userId, refreshState } = useSMEOnboarding();
   const yearOptions = generateYearOptions();
   const saveDocumentsMutation = useSaveFinancialDocuments();
   
@@ -308,7 +308,7 @@ export function Step6CompanyFinancialDocuments() {
           Financial Documents
         </h2>
         <p className="text-sm text-primaryGrey-500">
-          Provide the company's financial statements and supporting records.
+          Provide the company&apos;s financial statements and supporting records.
         </p>
       </div>
 
@@ -326,7 +326,7 @@ export function Step6CompanyFinancialDocuments() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel required className="text-primaryGrey-400">
-                  Do you have any of the company's recent bank statements?
+                  Do you have any of the company&apos;s recent bank statements?
                 </FormLabel>
                 <FormControl>
                   <RadioGroup
@@ -358,7 +358,7 @@ export function Step6CompanyFinancialDocuments() {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="no-bank" />
                       <Label htmlFor="no-bank" className="cursor-pointer text-primaryGrey-400">
-                        No, I don't
+                        No, I don&apos;t
                       </Label>
                     </div>
                   </RadioGroup>
@@ -415,7 +415,6 @@ export function Step6CompanyFinancialDocuments() {
               {financialStatementFields.map((field, index) => {
                 // Get all used years except the current one
                 const allUsedYears = getAllUsedYears();
-                const currentYear = form.watch(`financialStatements.${index}.year`);
                 const usedYearsExcludingCurrent = allUsedYears.filter((_, i) => i !== index);
                 
                 return (

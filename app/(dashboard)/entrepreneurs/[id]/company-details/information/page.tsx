@@ -49,7 +49,7 @@ export default function CompanyInformationPage() {
     numberOfEmployees: mapNoOfEmployees(business.noOfEmployees),
     companyWebsite: business.website || "",
     businessPhotos: business.businessPhotos || [],
-    videoLinks: (business.videoLinks || []).map((v) => v.url),
+    videoLinks: (business.videoLinks || []).map((v: { url: string; source: string | null }) => v.url),
   };
 
   return (

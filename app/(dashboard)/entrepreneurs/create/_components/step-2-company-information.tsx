@@ -84,7 +84,7 @@ const numberOfEmployeesOptions: SelectOption[] = [
 
 export function Step2CompanyInformation() {
   const router = useRouter();
-  const { userId, onboardingState, refreshState } = useSMEOnboarding();
+  const { userId, refreshState } = useSMEOnboarding();
   const [descriptionLength, setDescriptionLength] = useState(0);
   const saveBusinessMutation = useSaveBusinessBasicInfo();
   
@@ -144,7 +144,7 @@ export function Step2CompanyInformation() {
       // Map video links from API format to form format (array of strings)
       // API returns: { url: string; source: string | null }[]
       // Form expects: string[]
-      const videoLinksForm = businessData.videoLinks?.map(v => v.url) || [];
+      const videoLinksForm = businessData.videoLinks?.map((v: { url: string; source: string | null }) => v.url) || [];
 
       form.reset({
         companyLogo: businessData.logo || "",

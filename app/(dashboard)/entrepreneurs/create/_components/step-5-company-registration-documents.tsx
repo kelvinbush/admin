@@ -28,7 +28,7 @@ type CompanyRegistrationDocumentsFormData = z.infer<typeof companyRegistrationDo
 
 export function Step5CompanyRegistrationDocuments() {
   const router = useRouter();
-  const { userId, onboardingState, refreshState } = useSMEOnboarding();
+  const { userId, refreshState } = useSMEOnboarding();
   const saveDocumentsMutation = useSaveCompanyDocuments();
   
   // Determine if we're editing (userId exists, regardless of completion status)

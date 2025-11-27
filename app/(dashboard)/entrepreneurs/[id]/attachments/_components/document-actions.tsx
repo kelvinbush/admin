@@ -3,7 +3,6 @@
 import React from "react";
 import { EyeIcon, EditIcon, DownloadIcon, UploadIcon } from "@/components/icons/document-icons";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type DocumentStatus = "uploaded" | "pending" | "rejected";
 
@@ -18,7 +17,6 @@ interface DocumentActionsProps {
 
 export function DocumentActions({
   status,
-  documentName,
   onView,
   onUpdate,
   onDownload,
