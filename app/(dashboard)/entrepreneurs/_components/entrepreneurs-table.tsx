@@ -160,8 +160,15 @@ export function EntrepreneursTable({
                 const registeredUserPhone = item.phone;
 
                 const handleViewDetails = () => {
-                  // Temporarily always go to the entrepreneurs detail page
-                  router.push(`/entrepreneurs/${item.userId}`);
+                  // Determine routing based on onboarding status:
+                  // - Draft: Go to create page to continue/complete onboarding
+                  // - Pending Invitation or Active: Go to detail page to view profile
+                  if (item.onboardingStatus === "draft") {
+                    router.push(`/entrepreneurs/create?userId=${item.userId}`);
+                  } else {
+                    // pending_invitation or active - go to detail page
+                    router.push(`/entrepreneurs/${item.userId}`);
+                  }
                 };
 
                 const canResendInvite = item.onboardingStatus === "pending_invitation";
@@ -228,6 +235,7 @@ export function EntrepreneursTable({
                         <Progress
                           value={progress}
                           className="h-1.5 w-full bg-primary-green"
+                          indicatorClassName="bg-primary-green"
                         />
                       </div>
                     </TableCell>

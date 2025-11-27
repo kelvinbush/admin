@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
 import { useSaveBusinessBasicInfo, useSendSMEInvitation } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
+import { businessLegalEntityTypeOptions, sectorOptions } from "@/lib/constants/business-options";
 
 interface EntrepreneurData {
   id: string;
@@ -57,6 +58,24 @@ export function EntrepreneurHeader({
   };
 
   const canResendInvite = entrepreneur.status.toLowerCase().includes("pending");
+
+  // Helper function to get formatted label for legal entity type
+  const getFormattedLegalEntityType = (value: string): string => {
+    const option = businessLegalEntityTypeOptions.find((opt) => opt.value === value);
+    return option?.label || value;
+  };
+
+  // Helper function to get formatted labels for sectors
+  const getFormattedSectors = (sectorValues: string[]): string => {
+    if (!sectorValues || sectorValues.length === 0) return "—";
+    const formatted = sectorValues
+      .map((value) => {
+        const option = sectorOptions.find((opt) => opt.value === value);
+        return option?.label || value;
+      })
+      .join(", ");
+    return formatted;
+  };
 
   const handleResendInvite = async () => {
     if (!canResendInvite) return;
@@ -223,7 +242,7 @@ export function EntrepreneurHeader({
                       {entrepreneur.companyName}
                     </h1>
                     <p className="text-[#B6BABC]">
-                      {entrepreneur.legalEntityType} • {entrepreneur.city}, {entrepreneur.country}
+                      {getFormattedLegalEntityType(entrepreneur.legalEntityType)} • {entrepreneur.city}, {entrepreneur.country}
                     </p>
                   </div>
 
@@ -301,7 +320,7 @@ export function EntrepreneurHeader({
                   Sector(s)
                 </p>
                 <p className="text-white text-sm font-medium">
-                  {entrepreneur.sectors.join(", ")}
+                  {getFormattedSectors(entrepreneur.sectors)}
                 </p>
               </div>
 

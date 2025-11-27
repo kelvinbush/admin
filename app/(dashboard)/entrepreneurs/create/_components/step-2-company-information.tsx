@@ -18,6 +18,7 @@ import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSMEUser, useSaveBusinessBasicInfo } from "@/lib/api/hooks/sme";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
 import { toast } from "sonner";
+import { businessLegalEntityTypeOptions, sectorOptions } from "@/lib/constants/business-options";
 
 const companyInformationSchema = z.object({
   companyLogo: z.string().optional(),
@@ -36,31 +37,12 @@ const companyInformationSchema = z.object({
 
 type CompanyInformationFormData = z.infer<typeof companyInformationSchema>;
 
-const businessLegalEntityTypeOptions: SelectOption[] = [
-  { value: "sole-proprietorship", label: "Sole Proprietorship" },
-  { value: "general-partnership", label: "General Partnership" },
-  { value: "llp", label: "Limited Liability Partnership (LLP)" },
-  { value: "llc", label: "Limited Liability Company (LLC)" },
-  { value: "private-limited", label: "Private Limited Company" },
-  { value: "s-corporation", label: "S Corporation" },
-  { value: "c-corporation", label: "C Corporation" },
-];
-
 const yearOptions: SelectOption[] = [
   { value: "not-registered", label: "Not yet registered" },
   ...Array.from({ length: 10 }, (_, i) => {
     const year = new Date().getFullYear() - i;
     return { value: year.toString(), label: year.toString() };
   }),
-];
-
-const sectorOptions: MultiSelectOption[] = [
-  { value: "agriculture", label: "Agriculture & Farming" },
-  { value: "education", label: "Education & Training" },
-  { value: "food-beverage", label: "Food & Beverage" },
-  { value: "healthcare", label: "Healthcare" },
-  { value: "retail-wholesale", label: "Retail & Wholesale Trade" },
-  { value: "transportation", label: "Transportation & Logistics" },
 ];
 
 // User groups will be fetched from API
