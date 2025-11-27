@@ -90,11 +90,10 @@ const Sidenav = () => {
             <Image
               src="/mklogo.svg"
               alt="Melanin Kapital Logo"
-              className="w-8 h-8"
-              width={32}
-              height={32}
+              className="w-max max-w-[180px] md:max-w-[200px]"
+              width={200}
+              height={36}
             />
-            <span className="text-white font-medium">melanin kapital</span>
           </div>
         </div>
         <div className={"px-4 mt-4"}>
