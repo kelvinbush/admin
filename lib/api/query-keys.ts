@@ -40,6 +40,15 @@ export const queryKeys = {
     fees: (id: string) => [...queryKeys.loanProducts.detail(id), 'fees'] as const,
   },
   
+  // Loan fees
+  loanFees: {
+    all: ['loan-fees'] as const,
+    lists: () => [...queryKeys.loanFees.all, 'list'] as const,
+    list: (filters?: Record<string, any>) => [...queryKeys.loanFees.lists(), JSON.stringify(filters || {})] as const,
+    details: () => [...queryKeys.loanFees.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.loanFees.details(), id] as const,
+  },
+  
   // Organizations
   organizations: {
     all: ['organizations'] as const,

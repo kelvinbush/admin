@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useClientApiQuery, useClientApiPost, useClientApiPut, useClientApiDelete, useClientApiPaginatedQuery } from '../hooks';
+import { useClientApiQuery, useClientApiPost, useClientApiPatch, useClientApiMutation, useClientApiPaginatedQuery } from '../hooks';
 import { queryKeys } from '../query-keys';
 import type {
   Organization,
@@ -13,8 +13,34 @@ import type {
 
 // ===== ORGANIZATION HOOKS =====
 
+export interface CreateOrganizationRequest {
+  name: string;        // Required, max 255 chars
+  description?: string; // Optional
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string;        // Optional, max 255 chars
+  description?: string;  // Optional
+}
+
+export interface OrganizationResponse {
+  id: string;
+  name: string;
+  description?: string | null;
+  createdAt: string;  // ISO 8601 timestamp
+  updatedAt: string;  // ISO 8601 timestamp
+}
+
+export interface PaginatedOrganizationsResponse {
+  items: OrganizationResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export function useOrganizations(filters?: OrganizationFilters, pagination?: PaginationParams) {
-  return useClientApiPaginatedQuery<Organization[]>(
+  return useClientApiPaginatedQuery<PaginatedOrganizationsResponse>(
     queryKeys.organizations.list(filters),
     '/organizations',
     pagination?.page || 1,
@@ -23,16 +49,20 @@ export function useOrganizations(filters?: OrganizationFilters, pagination?: Pag
 }
 
 export function useOrganization(organizationId: string) {
-  return useClientApiQuery<Organization>(
+  return useClientApiQuery<OrganizationResponse>(
     queryKeys.organizations.detail(organizationId),
-    `/organizations/${organizationId}`
+    `/organizations/${organizationId}`,
+    undefined,
+    {
+      enabled: !!organizationId,
+    }
   );
 }
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
   
-  return useClientApiPost<Organization, CreateOrganizationData>(
+  return useClientApiPost<OrganizationResponse, CreateOrganizationRequest>(
     '/organizations',
     {
       onSuccess: () => {
@@ -42,14 +72,14 @@ export function useCreateOrganization() {
   );
 }
 
-export function useUpdateOrganization() {
+export function useUpdateOrganization(organizationId: string) {
   const queryClient = useQueryClient();
   
-  return useClientApiPut<Organization, UpdateOrganizationData>(
-    '/organizations',
+  return useClientApiPatch<OrganizationResponse, UpdateOrganizationRequest>(
+    `/organizations/${organizationId}`,
     {
-      onSuccess: (data, variables) => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.detail(variables.id) });
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.detail(organizationId) });
         queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
       }
     }
@@ -59,8 +89,8 @@ export function useUpdateOrganization() {
 export function useDeleteOrganization() {
   const queryClient = useQueryClient();
   
-  return useClientApiDelete<{ success: boolean }>(
-    '/organizations',
+  return useClientApiMutation<{ success: boolean; message: string }, { id: string }>(
+    async (api, { id }) => api.delete<{ success: boolean; message: string }>(`/organizations/${id}`),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
-import { format } from "date-fns";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { format, parseISO } from "date-fns";
 import type { CreateLoanProductFormData } from "@/lib/validations/loan-product";
+import type { LoanProduct } from "@/lib/api/hooks/loan-products";
 
 export type LoanFee = {
   loanFeeId?: string;
@@ -34,9 +35,12 @@ type LoanProductFormState = {
 
 type LoanProductFormContextType = {
   formState: LoanProductFormState;
+  isEditMode: boolean;
+  loanProductId?: string;
   updateStep1Data: (data: Partial<CreateLoanProductFormData>) => void;
   updateStep2Data: (data: LoanProductFormState["step2Data"]) => void;
   addFee: (fee: LoanFee) => void;
+  updateFee: (index: number, fee: LoanFee) => void;
   removeFee: (index: number) => void;
   clearForm: () => void;
   getCombinedFormData: () => any; // Combined data ready for API submission
@@ -44,10 +48,68 @@ type LoanProductFormContextType = {
 
 const LoanProductFormContext = createContext<LoanProductFormContextType | undefined>(undefined);
 
-export function LoanProductFormProvider({ children }: { children: React.ReactNode }) {
+type LoanProductFormProviderProps = {
+  children: React.ReactNode;
+  initialData?: LoanProduct;
+  loanProductId?: string;
+};
+
+export function LoanProductFormProvider({ 
+  children, 
+  initialData,
+  loanProductId 
+}: LoanProductFormProviderProps) {
   const [formState, setFormState] = useState<LoanProductFormState>({
     fees: [],
   });
+
+  // Initialize form state from existing loan product data (edit mode)
+  useEffect(() => {
+    if (initialData) {
+      // Transform API data to form state
+      setFormState({
+        step1Data: {
+          name: initialData.name,
+          slug: initialData.slug,
+          summary: initialData.summary,
+          description: initialData.description,
+          currency: initialData.currency,
+          minAmount: initialData.minAmount,
+          maxAmount: initialData.maxAmount,
+          minTerm: initialData.minTerm,
+          maxTerm: initialData.maxTerm,
+          termUnit: initialData.termUnit as any,
+          loanProvider: initialData.organizationId, // Transform organizationId → loanProvider
+          loanVisibility: initialData.userGroupIds?.[0] || "", // Transform userGroupIds array → loanVisibility (single value)
+          availabilityStartDate: initialData.availabilityStartDate
+            ? parseISO(initialData.availabilityStartDate)
+            : undefined,
+          availabilityEndDate: initialData.availabilityEndDate
+            ? parseISO(initialData.availabilityEndDate)
+            : undefined,
+        },
+        step2Data: {
+          repaymentFrequency: initialData.repaymentFrequency,
+          maxGracePeriod: initialData.maxGracePeriod?.toString() || "",
+          maxGraceUnit: initialData.maxGraceUnit || "",
+          interestRate: initialData.interestRate?.toString() || "",
+          ratePeriod: initialData.ratePeriod,
+          amortizationMethod: initialData.amortizationMethod,
+          interestCollectionMethod: initialData.interestCollectionMethod,
+          interestRecognitionCriteria: initialData.interestRecognitionCriteria,
+        },
+        fees: (initialData.fees || []).map((fee) => ({
+          loanFeeId: fee.loanFeeId,
+          feeName: fee.feeName,
+          calculationMethod: fee.calculationMethod,
+          rate: fee.rate.toString(),
+          collectionRule: fee.collectionRule,
+          allocationMethod: fee.allocationMethod,
+          calculationBasis: fee.calculationBasis,
+        })),
+      });
+    }
+  }, [initialData]);
 
   const updateStep1Data = useCallback((data: Partial<CreateLoanProductFormData>) => {
     setFormState((prev) => ({
@@ -68,6 +130,17 @@ export function LoanProductFormProvider({ children }: { children: React.ReactNod
       ...prev,
       fees: [...prev.fees, fee],
     }));
+  }, []);
+
+  const updateFee = useCallback((index: number, fee: LoanFee) => {
+    setFormState((prev) => {
+      const updatedFees = [...prev.fees];
+      updatedFees[index] = fee;
+      return {
+        ...prev,
+        fees: updatedFees,
+      };
+    });
   }, []);
 
   const removeFee = useCallback((index: number) => {
@@ -137,9 +210,12 @@ export function LoanProductFormProvider({ children }: { children: React.ReactNod
     <LoanProductFormContext.Provider
       value={{
         formState,
+        isEditMode: !!loanProductId,
+        loanProductId,
         updateStep1Data,
         updateStep2Data,
         addFee,
+        updateFee,
         removeFee,
         clearForm,
         getCombinedFormData,

@@ -120,7 +120,7 @@ export function Step2TermsPricing({
   onBack,
   onContinue,
 }: Step2TermsPricingProps) {
-  const { formState, updateStep2Data } = useLoanProductForm();
+  const { formState, updateStep2Data, isEditMode } = useLoanProductForm();
   
   const form = useForm<Step2TermsPricingValues>({
     defaultValues: {
@@ -138,15 +138,15 @@ export function Step2TermsPricing({
 
   // Load saved Step 2 data from context if available
   useEffect(() => {
-    if (formState.step2Data) {
+    if (formState.step2Data && Object.keys(formState.step2Data).length > 0) {
       Object.keys(formState.step2Data).forEach((key) => {
         const value = formState.step2Data?.[key as keyof typeof formState.step2Data];
-        if (value !== undefined) {
-          form.setValue(key as any, value);
+        if (value !== undefined && value !== null && value !== "") {
+          form.setValue(key as any, value, { shouldValidate: false });
         }
       });
     }
-  }, []); // Only run on mount
+  }, [formState.step2Data, form]); // Watch formState changes
 
   const onSubmit = (values: Step2TermsPricingValues) => {
     // Save Step 2 data to context
@@ -166,10 +166,12 @@ export function Step2TermsPricing({
         <div>
           <p className="text-xs font-medium text-primary-green">STEP 2/3</p>
           <h2 className="mt-1 text-2xl font-semibold text-midnight-blue">
-            Add loan product
+            {isEditMode ? "Edit loan product" : "Add loan product"}
           </h2>
           <p className="mt-1 text-sm text-primaryGrey-500 max-w-xl">
-            Fill in the details below to create a new loan product.
+            {isEditMode
+              ? "Update the details below to modify this loan product."
+              : "Fill in the details below to create a new loan product."}
           </p>
         </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,10 +24,12 @@ import {
 import { useForm } from "react-hook-form";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useLoanProductForm, type LoanFee } from "../_context/loan-product-form-context";
-import { useCreateLoanProduct } from "@/lib/api/hooks/loan-products";
+import { useCreateLoanProduct, useUpdateLoanProduct } from "@/lib/api/hooks/loan-products";
+import { useLoanFees, useCreateLoanFee, useUpdateLoanFee } from "@/lib/api/hooks/loan-fees";
 
 type Step3LoanFeesProps = {
   onBack?: () => void;
+  loanProductId?: string;
 };
 
 type LoanFeeFormValues = {
@@ -59,12 +62,34 @@ const calculationBasisOptions = [
   { label: "Total disbursed amount", value: "total_disbursed" },
 ];
 
-export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
+export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
   const router = useRouter();
-  const { formState, addFee, removeFee, getCombinedFormData, clearForm } = useLoanProductForm();
+  const { formState, addFee, updateFee, removeFee, getCombinedFormData, clearForm, isEditMode } = useLoanProductForm();
   const createLoanProductMutation = useCreateLoanProduct();
+  const updateLoanProductMutation = useUpdateLoanProduct(loanProductId || "");
+  
+  // Fetch loan fees for dropdown
+  const { data: loanFeesData } = useLoanFees(undefined, { page: 1, limit: 100 });
+  
+  // Transform loan fees to options
+  const loanFeeOptions = useMemo(() => {
+    if (!loanFeesData?.items) return [];
+    return loanFeesData.items
+      .filter((fee) => !fee.isArchived) // Only show non-archived fees
+      .map((fee) => ({
+        label: fee.name,
+        value: fee.id,
+      }));
+  }, [loanFeesData]);
+  
+  // Mutations for creating/updating loan fees
+  const createLoanFeeMutation = useCreateLoanFee();
+  const [editingFeeIndex, setEditingFeeIndex] = useState<number | null>(null);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
+  
   const [addFeeOpen, setAddFeeOpen] = useState(false);
   const [createFeeOpen, setCreateFeeOpen] = useState(false);
+  const [editFeeOpen, setEditFeeOpen] = useState(false);
 
   const addFeeForm = useForm<LoanFeeFormValues>({
     defaultValues: {
@@ -79,6 +104,18 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
 
   const createFeeForm = useForm<LoanFeeFormValues>({
     defaultValues: {
+      feeName: "",
+      calculationMethod: "",
+      rate: "",
+      collectionRule: "",
+      allocationMethod: "",
+      calculationBasis: "",
+    },
+  });
+
+  const editFeeForm = useForm<LoanFeeFormValues>({
+    defaultValues: {
+      loanFeeId: "",
       feeName: "",
       calculationMethod: "",
       rate: "",
@@ -111,20 +148,106 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
     handleCloseAddFee();
   };
 
-  const handleSubmitCreateFee = (values: LoanFeeFormValues) => {
-    addFee(values as LoanFee);
-    handleCloseCreateFee();
+  const handleSubmitCreateFee = async (values: LoanFeeFormValues) => {
+    try {
+      // If creating a new fee, save it to the backend first
+      if (!values.loanFeeId && values.feeName) {
+        const createdFee = await createLoanFeeMutation.mutateAsync({
+          name: values.feeName,
+          calculationMethod: values.calculationMethod as "flat" | "percentage",
+          rate: Number(values.rate),
+          collectionRule: values.collectionRule as "upfront" | "end_of_term",
+          allocationMethod: values.allocationMethod,
+          calculationBasis: values.calculationBasis as "principal" | "total_disbursed",
+        });
+        
+        // Add to form with the created fee ID
+        addFee({
+          ...values,
+          loanFeeId: createdFee.id,
+        } as LoanFee);
+        toast.success("Loan fee created and added");
+      } else {
+        // Just add to form (using existing fee ID)
+        addFee(values as LoanFee);
+      }
+      handleCloseCreateFee();
+    } catch (error: any) {
+      console.error("Failed to create loan fee:", error);
+      toast.error(error?.response?.data?.message || "Failed to create loan fee");
+    }
+  };
+  
+  const handleOpenEditFee = (index: number, fee: LoanFee) => {
+    setEditingFeeIndex(index);
+    setEditingFeeId(fee.loanFeeId || null);
+    editFeeForm.reset({
+      loanFeeId: fee.loanFeeId,
+      feeName: fee.feeName,
+      calculationMethod: fee.calculationMethod,
+      rate: fee.rate,
+      collectionRule: fee.collectionRule,
+      allocationMethod: fee.allocationMethod,
+      calculationBasis: fee.calculationBasis,
+    });
+    setEditFeeOpen(true);
+  };
+  
+  const handleCloseEditFee = () => {
+    setEditFeeOpen(false);
+    setEditingFeeIndex(null);
+    setEditingFeeId(null);
+    editFeeForm.reset();
+  };
+  
+  // Create update mutation - we'll use it conditionally
+  const updateLoanFeeMutation = editingFeeId ? useUpdateLoanFee(editingFeeId) : null;
+  
+  const handleSubmitEditFee = async (values: LoanFeeFormValues) => {
+    try {
+      if (editingFeeIndex === null) return;
+      
+      // If editing an existing fee that has an ID, update it in the backend
+      if (editingFeeId && updateLoanFeeMutation && values.loanFeeId === editingFeeId) {
+        await updateLoanFeeMutation.mutateAsync({
+          name: values.feeName,
+          calculationMethod: values.calculationMethod as "flat" | "percentage",
+          rate: Number(values.rate),
+          collectionRule: values.collectionRule as "upfront" | "end_of_term",
+          allocationMethod: values.allocationMethod,
+          calculationBasis: values.calculationBasis as "principal" | "total_disbursed",
+        });
+        toast.success("Loan fee updated");
+      }
+      
+      // Update the fee in the form state using updateFee
+      updateFee(editingFeeIndex, values as LoanFee);
+      
+      handleCloseEditFee();
+    } catch (error: any) {
+      console.error("Failed to update loan fee:", error);
+      toast.error(error?.response?.data?.message || "Failed to update loan fee");
+    }
   };
 
   const handleSubmitAll = async () => {
     try {
       const formData = getCombinedFormData();
-      await createLoanProductMutation.mutateAsync(formData);
+      
+      if (isEditMode && loanProductId) {
+        await updateLoanProductMutation.mutateAsync(formData);
+        toast.success("Loan product updated successfully");
+      } else {
+        await createLoanProductMutation.mutateAsync(formData);
+        toast.success("Loan product created successfully");
+      }
+      
       clearForm();
       router.push("/loan-products");
-    } catch (error) {
-      console.error("Failed to create loan product:", error);
-      // TODO: Show error toast/notification
+    } catch (error: any) {
+      console.error(`Failed to ${isEditMode ? "update" : "create"} loan product:`, error);
+      const errorMessage = error?.response?.data?.message || error?.message || `Failed to ${isEditMode ? "update" : "create"} loan product. Please try again.`;
+      toast.error(errorMessage);
     }
   };
 
@@ -136,10 +259,12 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
       <div>
         <p className="text-xs font-medium text-primary-green">STEP 3/3</p>
         <h2 className="mt-1 text-2xl font-semibold text-midnight-blue">
-          Add MK loan product
+          {isEditMode ? "Edit loan product" : "Add loan product"}
         </h2>
         <p className="mt-1 text-sm text-primaryGrey-500 max-w-xl">
-          Fill in the details below to create a new loan product.
+          {isEditMode
+            ? "Update the details below to modify this loan product."
+            : "Fill in the details below to create a new loan product."}
         </p>
       </div>
 
@@ -179,15 +304,40 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
                     {fee.calculationMethod} - {fee.rate}%
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFee(index)}
-                  className="text-primaryGrey-500 hover:text-red-600"
-                >
-                  Remove
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setEditingFeeIndex(index);
+                      setEditingFeeId(fee.loanFeeId || null);
+                      // Pre-fill edit form
+                      editFeeForm.reset({
+                        loanFeeId: fee.loanFeeId,
+                        feeName: fee.feeName,
+                        calculationMethod: fee.calculationMethod,
+                        rate: fee.rate,
+                        collectionRule: fee.collectionRule,
+                        allocationMethod: fee.allocationMethod,
+                        calculationBasis: fee.calculationBasis,
+                      });
+                      setEditFeeOpen(true);
+                    }}
+                    className="text-primary-green hover:text-primary-green hover:bg-green-50"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFee(index)}
+                    className="text-primaryGrey-500 hover:text-red-600"
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -204,9 +354,11 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
               "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
           }}
           onClick={handleSubmitAll}
-          disabled={createLoanProductMutation.isPending}
+          disabled={createLoanProductMutation.isPending || updateLoanProductMutation.isPending}
         >
-          {createLoanProductMutation.isPending ? "Creating..." : "Submit"}
+          {createLoanProductMutation.isPending || updateLoanProductMutation.isPending
+            ? (isEditMode ? "Updating..." : "Creating...")
+            : "Submit"}
         </Button>
         <button
           type="button"
@@ -241,7 +393,7 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
                     name="loanFeeId"
                     label="Loan fee"
                     notFound="No loan fees found"
-                    options={[]}
+                    options={loanFeeOptions}
                     placeholder="Select loan fee"
                     control={addFeeForm.control}
                     required
@@ -540,6 +692,156 @@ export function Step3LoanFees({ onBack }: Step3LoanFeesProps) {
                     }}
                   >
                     Save
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit loan fee modal */}
+      <Dialog open={editFeeOpen} onOpenChange={setEditFeeOpen}>
+        <DialogContent className="max-w-[900px] p-0 overflow-hidden">
+          <div className="px-8 py-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-medium text-midnight-blue">
+                Edit loan fee
+              </DialogTitle>
+              <DialogDescription className="text-primaryGrey-500">
+                Update the details below to modify this loan fee.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...editFeeForm}>
+              <form
+                className="mt-6 space-y-6"
+                onSubmit={editFeeForm.handleSubmit(handleSubmitEditFee)}
+              >
+                <FormField
+                  control={editFeeForm.control}
+                  name="feeName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel
+                        required
+                        className="text-sm text-[#444C53]"
+                      >
+                        Loan fee name
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter loan fee name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <SearchableSelect
+                    name="calculationMethod"
+                    label="Calculation method"
+                    notFound="No methods found"
+                    options={calculationMethodOptions}
+                    placeholder="Select calculation method"
+                    control={editFeeForm.control}
+                    required
+                  />
+
+                  <FormField
+                    control={editFeeForm.control}
+                    name="rate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel
+                          required
+                          className="text-sm text-[#444C53]"
+                        >
+                          Fee rate/percentage
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder="Enter value"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <SearchableSelect
+                  name="collectionRule"
+                  label="Fee collection rule"
+                  notFound="No collection rules found"
+                  options={collectionRuleOptions}
+                  placeholder="Select fee collection rule"
+                  control={editFeeForm.control}
+                  required
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={editFeeForm.control}
+                    name="allocationMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel
+                          required
+                          className="text-sm text-[#444C53]"
+                        >
+                          Fee allocation method
+                        </FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            name="allocationMethod"
+                            label=""
+                            notFound="No methods found"
+                            options={allocationMethodOptions}
+                            placeholder="Select allocation method"
+                            control={editFeeForm.control}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <SearchableSelect
+                    name="calculationBasis"
+                    label="Calculate fee on"
+                    notFound="No calculation basis found"
+                    options={calculationBasisOptions}
+                    placeholder="Select calculation basis"
+                    control={editFeeForm.control}
+                    required
+                  />
+                </div>
+
+                <DialogFooter className="mt-8 border-t pt-6 flex items-center justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseEditFee}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="text-white border-0"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                    }}
+                    disabled={editingFeeId ? false : true}
+                  >
+                    {editingFeeId ? "Update" : "Save"}
                   </Button>
                 </DialogFooter>
               </form>

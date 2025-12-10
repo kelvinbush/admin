@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useClientApiPost } from "../hooks";
+import { useClientApiPost, useClientApiQuery, useClientApiPatch, useClientApiMutation } from "../hooks";
 import { queryKeys } from "../query-keys";
+import type { AxiosRequestConfig } from "axios";
 
 export interface CreateLoanProductRequest {
   // Step 1: Basic Loan Details
@@ -45,6 +46,7 @@ export interface LoanProduct {
   id: string;
   name: string;
   slug?: string;
+  imageUrl?: string;
   summary?: string;
   description?: string;
   currency: string;
@@ -52,17 +54,30 @@ export interface LoanProduct {
   maxAmount: number;
   minTerm: number;
   maxTerm: number;
-  termUnit: string;
+  termUnit: "months" | "years";
+  interestRate: number;
+  interestType: "fixed" | "variable";
+  ratePeriod: "per_year" | "per_month";
+  amortizationMethod: "flat" | "reducing_balance";
+  repaymentFrequency: "monthly" | "quarterly" | "semi_annual" | "annual";
+  gracePeriodDays: number;
+  version: number;
+  status: "draft" | "active" | "archived";
+  isActive: boolean;
+  processingFeeFlat?: number;
+  lateFeeRate?: number;
+  lateFeeFlat?: number;
+  prepaymentPenaltyRate?: number;
+  changeReason?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  // Additional fields from our form
   availabilityStartDate?: string;
   availabilityEndDate?: string;
   organizationId: string;
   userGroupIds: string[];
-  repaymentFrequency: string;
   maxGracePeriod?: number;
   maxGraceUnit?: string;
-  interestRate: number;
-  ratePeriod: string;
-  amortizationMethod: string;
   interestCollectionMethod: string;
   interestRecognitionCriteria: string;
   fees: Array<{
@@ -78,11 +93,175 @@ export interface LoanProduct {
   updatedAt: string;
 }
 
+export interface LoanProductFilters {
+  status?: "draft" | "active" | "archived";
+  includeArchived?: boolean;
+  currency?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  minTerm?: number;
+  maxTerm?: number;
+  termUnit?: "months" | "years";
+  interestType?: "fixed" | "variable";
+  ratePeriod?: "per_year" | "per_month";
+  amortizationMethod?: "flat" | "reducing_balance";
+  repaymentFrequency?: "monthly" | "quarterly" | "semi_annual" | "annual";
+  isActive?: boolean;
+  search?: string;
+  sortBy?: "name" | "createdAt" | "updatedAt" | "interestRate" | "minAmount" | "maxAmount";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedLoanProductsResponse {
+  items: LoanProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface UpdateLoanProductRequest {
+  name?: string;
+  slug?: string;
+  imageUrl?: string;
+  summary?: string;
+  description?: string;
+  currency?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  minTerm?: number;
+  maxTerm?: number;
+  termUnit?: "months" | "years";
+  interestRate?: number;
+  interestType?: "fixed" | "variable";
+  ratePeriod?: "per_year" | "per_month";
+  amortizationMethod?: "flat" | "reducing_balance";
+  repaymentFrequency?: "monthly" | "quarterly" | "semi_annual" | "annual";
+  gracePeriodDays?: number;
+  processingFeeFlat?: number;
+  lateFeeRate?: number;
+  lateFeeFlat?: number;
+  prepaymentPenaltyRate?: number;
+  changeReason?: string;
+}
+
+export interface UpdateLoanProductStatusRequest {
+  status: "draft" | "active" | "archived";
+  changeReason: string;
+  approvedBy: string;
+}
+
+export function useLoanProducts(filters?: LoanProductFilters, pagination?: { page?: number; limit?: number }) {
+  const page = pagination?.page || 1;
+  const limit = pagination?.limit || 20;
+  
+  // Build query params
+  const params = new URLSearchParams();
+  params.append('page', page.toString());
+  params.append('limit', limit.toString());
+  
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.includeArchived) params.append('includeArchived', 'true');
+  if (filters?.currency) params.append('currency', filters.currency);
+  if (filters?.minAmount) params.append('minAmount', filters.minAmount.toString());
+  if (filters?.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
+  if (filters?.minTerm) params.append('minTerm', filters.minTerm.toString());
+  if (filters?.maxTerm) params.append('maxTerm', filters.maxTerm.toString());
+  if (filters?.termUnit) params.append('termUnit', filters.termUnit);
+  if (filters?.interestType) params.append('interestType', filters.interestType);
+  if (filters?.ratePeriod) params.append('ratePeriod', filters.ratePeriod);
+  if (filters?.amortizationMethod) params.append('amortizationMethod', filters.amortizationMethod);
+  if (filters?.repaymentFrequency) params.append('repaymentFrequency', filters.repaymentFrequency);
+  if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+  if (filters?.search) params.append('search', filters.search);
+  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
+
+  const config: AxiosRequestConfig = {
+    params: Object.fromEntries(params),
+  };
+
+  return useClientApiQuery<PaginatedLoanProductsResponse>(
+    queryKeys.loanProducts.list(filters),
+    `/loan-products?${params.toString()}`,
+    config
+  );
+}
+
+export function useLoanProduct(loanProductId: string) {
+  return useClientApiQuery<LoanProduct>(
+    queryKeys.loanProducts.detail(loanProductId),
+    `/loan-products/${loanProductId}`,
+    undefined,
+    {
+      enabled: !!loanProductId,
+    }
+  );
+}
+
 export function useCreateLoanProduct() {
   const queryClient = useQueryClient();
 
   return useClientApiPost<LoanProduct, CreateLoanProductRequest>(
     "/loan-products",
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });
+      },
+    }
+  );
+}
+
+export function useUpdateLoanProduct(loanProductId: string) {
+  const queryClient = useQueryClient();
+
+  return useClientApiPatch<LoanProduct, UpdateLoanProductRequest>(
+    `/loan-products/${loanProductId}`,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.detail(loanProductId) });
+      },
+    }
+  );
+}
+
+export function useUpdateLoanProductStatus(loanProductId: string) {
+  const queryClient = useQueryClient();
+
+  return useClientApiPatch<LoanProduct, UpdateLoanProductStatusRequest>(
+    `/loan-products/${loanProductId}/status`,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.detail(loanProductId) });
+      },
+    }
+  );
+}
+
+// Hook for updating status that accepts ID in variables (for use in tables)
+export function useUpdateLoanProductStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<LoanProduct, { id: string; data: UpdateLoanProductStatusRequest }>(
+    async (api, { id, data }) => {
+      return api.patch<LoanProduct>(`/loan-products/${id}/status`, data);
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.detail(variables.id) });
+      },
+    }
+  );
+}
+
+export function useDeleteLoanProduct() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<{ success: boolean }, { id: string }>(
+    async (api, { id }) => api.delete<{ success: boolean }>(`/loan-products/${id}`),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.loanProducts.lists() });

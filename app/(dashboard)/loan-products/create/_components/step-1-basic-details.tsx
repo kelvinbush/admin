@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createLoanProductSchema, type CreateLoanProductFormData, LoanTermUnitEnum } from "@/lib/validations/loan-product";
@@ -23,6 +23,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import CreateUserGroupModal from "@/app/(dashboard)/usergroups/_components/create-user-group-modal";
 import { useLoanProductForm } from "../_context/loan-product-form-context";
+import { useOrganizations } from "@/lib/api/hooks/organizations";
+import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
 
 type Step1BasicDetailsProps = {
   onContinue?: () => void;
@@ -30,7 +32,29 @@ type Step1BasicDetailsProps = {
 
 export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
   const [createUserGroupOpen, setCreateUserGroupOpen] = useState(false);
-  const { formState, updateStep1Data } = useLoanProductForm();
+  const { formState, updateStep1Data, isEditMode } = useLoanProductForm();
+  
+  // Fetch organizations and user groups
+  const { data: organizationsData } = useOrganizations(undefined, { page: 1, limit: 100 });
+  const { data: userGroupsData } = useUserGroups(undefined, { page: 1, limit: 100 });
+  
+  // Transform organizations to options
+  const organizationOptions = useMemo(() => {
+    if (!organizationsData?.items) return [];
+    return organizationsData.items.map((org) => ({
+      label: org.name,
+      value: org.id,
+    }));
+  }, [organizationsData]);
+  
+  // Transform user groups to options
+  const userGroupOptions = useMemo(() => {
+    if (!userGroupsData?.data) return [];
+    return userGroupsData.data.map((group: any) => ({
+      label: group.name,
+      value: group.id,
+    }));
+  }, [userGroupsData]);
   
   // Use untyped form instance here to avoid strict generic mismatch between
   // react-hook-form and the Zod resolver while still benefiting from runtime validation.
@@ -63,15 +87,15 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
 
   // Load saved Step 1 data from context if available
   useEffect(() => {
-    if (formState.step1Data) {
+    if (formState.step1Data && Object.keys(formState.step1Data).length > 0) {
       Object.keys(formState.step1Data).forEach((key) => {
         const value = formState.step1Data?.[key as keyof typeof formState.step1Data];
-        if (value !== undefined) {
-          form.setValue(key as any, value);
+        if (value !== undefined && value !== null) {
+          form.setValue(key as any, value, { shouldValidate: false });
         }
       });
     }
-  }, []); // Only run on mount
+  }, [formState.step1Data, form]); // Watch formState changes
 
   const onSubmit = (values: unknown) => {
     const formData = values as CreateLoanProductFormData;
@@ -86,12 +110,6 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
     value: unit,
   }));
 
-  const visibilityOptions = [
-    { label: "All Users", value: "all" },
-    { label: "Tuungane Users", value: "tuungane" },
-    { label: "GIZ-SAIS Users", value: "giz_sais" },
-    { label: "Ecobank Users", value: "ecobank" },
-  ];
 
   return (
     <Form {...form}>
@@ -104,10 +122,12 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
         <div>
           <p className="text-xs font-medium text-primary-green">STEP 1/3</p>
           <h2 className="mt-1 text-2xl font-semibold text-midnight-blue">
-            Add loan product
+            {isEditMode ? "Edit loan product" : "Add loan product"}
           </h2>
           <p className="mt-1 text-sm text-primaryGrey-500 max-w-xl">
-            Fill in the details below to create a new loan product.
+            {isEditMode
+              ? "Update the details below to modify this loan product."
+              : "Fill in the details below to create a new loan product."}
           </p>
         </div>
 
@@ -152,14 +172,14 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
               )}
             />
 
-            {/* Loan provider placeholder - TODO: hook to real data */}
             <SearchableSelect
               name="loanProvider"
               label="Loan provider/organization"
               notFound="No providers found"
-              options={[]}
+              options={organizationOptions}
               placeholder="Select loan provider"
               control={form.control}
+              required
             />
 
             <FormField
@@ -187,7 +207,7 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
                       name="loanVisibility"
                       label=""
                       notFound="No user groups found"
-                      options={visibilityOptions}
+                      options={userGroupOptions}
                       placeholder="Select user group"
                       control={form.control}
                     />
