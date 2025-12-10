@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createLoanProductSchema, type CreateLoanProductFormData, LoanTermUnitEnum } from "@/lib/validations/loan-product";
@@ -15,12 +16,22 @@ import {
 } from "@/components/ui/form";
 import { InputWithCurrency } from "@/components/ui/input-with-currency";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import CreateUserGroupModal from "@/app/(dashboard)/usergroups/_components/create-user-group-modal";
+import { useLoanProductForm } from "../_context/loan-product-form-context";
 
 type Step1BasicDetailsProps = {
-  onContinue?: (values: CreateLoanProductFormData) => void;
+  onContinue?: () => void;
 };
 
 export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
+  const [createUserGroupOpen, setCreateUserGroupOpen] = useState(false);
+  const { formState, updateStep1Data } = useLoanProductForm();
+  
   // Use untyped form instance here to avoid strict generic mismatch between
   // react-hook-form and the Zod resolver while still benefiting from runtime validation.
   const form = useForm({
@@ -36,18 +47,38 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
       minTerm: 0,
       maxTerm: 0,
       termUnit: "days",
-      interestRate: 0,
-      interestType: "fixed",
-      ratePeriod: "per_month",
-      amortizationMethod: "flat",
-      repaymentFrequency: "monthly",
-      isActive: true,
+      loanProvider: "",
+      loanVisibility: "",
+      availabilityStartDate: undefined,
+      availabilityEndDate: undefined,
+      // Step 2 fields (optional for Step 1 validation)
+      repaymentFrequency: "monthly" as const,
+      ratePeriod: "per_month" as const,
+      amortizationMethod: "flat" as const,
+      interestCollectionMethod: "",
+      interestRecognitionCriteria: "",
     },
     mode: "onChange",
   });
 
+  // Load saved Step 1 data from context if available
+  useEffect(() => {
+    if (formState.step1Data) {
+      Object.keys(formState.step1Data).forEach((key) => {
+        const value = formState.step1Data?.[key as keyof typeof formState.step1Data];
+        if (value !== undefined) {
+          form.setValue(key as any, value);
+        }
+      });
+    }
+  }, []); // Only run on mount
+
   const onSubmit = (values: unknown) => {
-    onContinue?.(values as CreateLoanProductFormData);
+    const formData = values as CreateLoanProductFormData;
+    // Save Step 1 data to context
+    updateStep1Data(formData);
+    // Continue to next step
+    onContinue?.();
   };
 
   const termUnitOptions = LoanTermUnitEnum.map((unit) => ({
@@ -131,26 +162,128 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
               control={form.control}
             />
 
-            <SearchableSelect
-              name="loanVisibility"
-              label="Loan visibility"
-              notFound="No user groups found"
-              options={visibilityOptions}
-              placeholder="Select user group"
+            <FormField
               control={form.control}
-              required
+              name="loanVisibility"
+              render={() => (
+                <FormItem>
+                  <div className="flex items-center justify-between -mb-3.5">
+                    <FormLabel
+                      required
+                      className="text-sm text-[#444C53]"
+                    >
+                      Loan visibility
+                    </FormLabel>
+                    <button
+                      type="button"
+                      onClick={() => setCreateUserGroupOpen(true)}
+                      className="text-xs font-medium text-primary-green hover:underline"
+                    >
+                      + New user group
+                    </button>
+                  </div>
+                  <FormControl>
+                    <SearchableSelect
+                      name="loanVisibility"
+                      label=""
+                      notFound="No user groups found"
+                      options={visibilityOptions}
+                      placeholder="Select user group"
+                      control={form.control}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
         </section>
 
         {/* Loan availability window + description */}
         <section className="space-y-4">
-          <div className="space-y-3">
-            <FormLabel className="text-sm text-[#444C53]">
-              Loan availability window (optional)
-            </FormLabel>
-            <Input placeholder="Enter start & end dates" />
-          </div>
+          <FormField
+            control={form.control}
+            name="availabilityStartDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-[#444C53]">
+                  Loan availability window (optional)
+                </FormLabel>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Start date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormField
+                    control={form.control}
+                    name="availabilityEndDate"
+                    render={({ field: endField }) => (
+                      <FormControl>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !endField.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {endField.value ? (
+                                format(endField.value, "PPP")
+                              ) : (
+                                <span>End date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={endField.value}
+                              onSelect={endField.onChange}
+                              disabled={(date) =>
+                                form.watch("availabilityStartDate")
+                                  ? date < form.watch("availabilityStartDate")!
+                                  : false
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                    )}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="summary"
@@ -379,6 +512,16 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
           </Button>
         </div>
       </form>
+
+      <CreateUserGroupModal
+        open={createUserGroupOpen}
+        onOpenChange={setCreateUserGroupOpen}
+        onCreated={(groupId) => {
+          // TODO: Refresh user groups list and optionally select the new group
+          // For now, just close the modal
+          setCreateUserGroupOpen(false);
+        }}
+      />
     </Form>
   );
 }
