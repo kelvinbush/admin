@@ -62,21 +62,22 @@ export function useLoanFees(filters?: LoanFeeFilters, pagination?: { page?: numb
   const page = pagination?.page || 1;
   const limit = pagination?.limit || 10;
   
-  // Build query params
-  const params = new URLSearchParams();
-  params.append('page', page.toString());
-  params.append('limit', limit.toString());
+  // Build query params - all values must be strings per API docs
+  const params: Record<string, string> = {
+    page: page.toString(),
+    limit: limit.toString(),
+  };
   
-  if (filters?.search) params.append('search', filters.search);
-  if (filters?.includeArchived) params.append('includeArchived', 'true');
+  if (filters?.search) params.search = filters.search;
+  if (filters?.includeArchived) params.includeArchived = 'true';
 
   const config: AxiosRequestConfig = {
-    params: Object.fromEntries(params),
+    params,
   };
 
   return useClientApiQuery<PaginatedLoanFeesResponse>(
     queryKeys.loanFees.list(filters),
-    `/loan-fees?${params.toString()}`,
+    '/loan-fees',
     config
   );
 }

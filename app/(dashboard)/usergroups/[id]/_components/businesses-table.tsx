@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,29 +10,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
-import { EyeIcon, EditIcon } from "@/components/icons/document-icons";
-import type { UserGroup } from "@/lib/api/types";
-import { useRouter } from "next/navigation";
-import { useDeleteUserGroupMutation } from "@/lib/api/hooks/useUserGroups";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Building2 } from "lucide-react";
+import type { BusinessSearchItem } from "@/lib/api/hooks/user-groups-businesses";
 
-interface UserGroupsTableProps {
-  data: UserGroup[];
-  onRowClick: (group: UserGroup) => void;
-  onAddGroup: () => void;
-  onViewGroup: (group: UserGroup) => void;
-  onDeleted?: (id: string) => void;
+interface BusinessesTableProps {
+  data: BusinessSearchItem[];
+  isLoading?: boolean;
+  onAdd?: () => void;
+  onRemove?: (businessId: string) => void;
+  actionBusyId?: string | null;
 }
 
-export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onDeleted }: UserGroupsTableProps) {
-  const router = useRouter();
-  const deleteMutation = useDeleteUserGroupMutation();
-  if (data.length === 0) {
+export default function BusinessesTable({
+  data,
+  isLoading = false,
+  onAdd,
+  onRemove,
+  actionBusyId,
+}: BusinessesTableProps) {
+  const getOwnerName = (business: BusinessSearchItem) => {
+    if (business.owner.firstName && business.owner.lastName) {
+      return `${business.owner.firstName} ${business.owner.lastName}`;
+    }
+    return business.owner.email;
+  };
+
+  if (!data || data.length === 0) {
     return (
-      <Card className={"shadow-none"}>
+      <Card className="shadow-none border-none">
         <CardContent className="p-0">
           <div className="flex flex-col items-center justify-center py-20">
-            {/* Provided illustration */}
             <svg width="245" height="173" viewBox="0 0 245 173" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-6">
               <path d="M198.771 0H50.4856C43.6609 0 38.1284 5.53248 38.1284 12.3571V160.643C38.1284 167.468 43.6609 173 50.4856 173H198.771C205.596 173 211.128 167.468 211.128 160.643V12.3571C211.128 5.53248 205.596 0 198.771 0Z" fill="#E6FAF5"/>
               <g filter="url(#filter0_d_6690_240611)">
@@ -87,17 +95,14 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
                 </filter>
               </defs>
             </svg>
-            <p className="text-primaryGrey-500 mb-6">No user groups have been added yet!</p>
+            <p className="text-primaryGrey-500 mb-6">No businesses linked to this group yet!</p>
             <Button
-              className="h-10 border-0 text-white"
-              style={{
-                background:
-                  "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-              }}
-              onClick={onAddGroup}
+              size="lg"
+              className="text-white border-0"
+              style={{ background: "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)" }}
+              onClick={onAdd}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              New User Group
+              Add Business
             </Button>
           </div>
         </CardContent>
@@ -106,76 +111,78 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
   }
 
   return (
-    <Card className={"shadow-none"}>
+    <Card className="shadow-none">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-primaryGrey-50">
-                <TableHead className="w-[200px] font-medium text-primaryGrey-500 py-4">GROUP NO</TableHead>
-                <TableHead className="font-medium text-midnight-blue py-4">NAME</TableHead>
-                <TableHead className="font-medium text-midnight-blue py-4">LINKED SME(S)</TableHead>
-                <TableHead className="font-medium text-midnight-blue py-4">CREATED AT</TableHead>
-                <TableHead className="font-medium text-midnight-blue py-4">UPDATED AT</TableHead>
+                <TableHead className="w-[280px] font-medium text-primaryGrey-500 py-4">BUSINESS NAME</TableHead>
+                <TableHead className="font-medium text-midnight-blue py-4">SECTOR</TableHead>
+                <TableHead className="font-medium text-midnight-blue py-4">LOCATION</TableHead>
+                <TableHead className="font-medium text-midnight-blue py-4">OWNER</TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">ACTIONS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((group: UserGroup) => (
-                <TableRow
-                  key={group.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => onRowClick(group)}
-                >
-                  <TableCell className="py-4">
-                    <div className="text-sm text-midnight-blue">{(group as any).slug || group.id}</div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="text-sm text-midnight-blue">{(group as any).name}</div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="text-sm text-primaryGrey-500">{(group as any).businessCount ?? 0}</div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="text-sm text-primaryGrey-400">{group.createdAt ? new Date((group as any).createdAt).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "-"}</div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="text-sm text-primaryGrey-400">{(group as any).updatedAt ? new Date((group as any).updatedAt).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "-"}</div>
-                  </TableCell>
-                  <TableCell className="py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-4">
-                      <button
-                        className="flex items-center gap-1.5 text-[#01337F] hover:text-[#01337F]/80 transition-colors text-sm font-medium"
-                        onClick={(e) => { e.stopPropagation(); onViewGroup(group); }}
-                      >
-                        <EyeIcon />
-                        View
-                      </button>
-                      <button
-                        className="flex items-center gap-1.5 text-[#00CC99] hover:text-[#00CC99]/80 transition-colors text-sm font-medium"
-                        onClick={(e) => { e.stopPropagation(); router.push(`/usergroups/${group.id}`); }}
-                      >
-                        <EditIcon />
-                        Edit
-                      </button>
-                      <button
-                        className="flex items-center gap-1.5 text-red-600 hover:text-red-600/80 transition-colors text-sm font-medium"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (deleteMutation.isPending) return;
-                          const proceed = window.confirm("Delete this user group?");
-                          if (!proceed) return;
-                          await deleteMutation.mutateAsync({ id: (group as any).id });
-                          if (onDeleted) onDeleted((group as any).id);
+              {data.map((business) => {
+                const isBusy = actionBusyId === business.id;
+                return (
+                  <TableRow key={business.id}>
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-primaryGrey-400" />
+                        <div>
+                          <div className="text-sm font-medium text-midnight-blue">{business.name}</div>
+                          {business.description && (
+                            <div className="text-xs text-primaryGrey-500 line-clamp-1">{business.description}</div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {business.sector ? (
+                        <Badge variant="outline" className="text-xs">
+                          {business.sector}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-primaryGrey-500">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="text-sm text-primaryGrey-500">
+                        {business.city && business.country
+                          ? `${business.city}, ${business.country}`
+                          : business.city || business.country || "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div>
+                        <div className="text-sm text-midnight-blue">
+                          {getOwnerName(business)}
+                        </div>
+                        <div className="text-xs text-primaryGrey-500">{business.owner.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-red-600 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          if (onRemove) {
+                            onRemove(business.id);
+                          }
                         }}
+                        disabled={isBusy}
                       >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -183,3 +190,4 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
     </Card>
   );
 }
+

@@ -211,6 +211,7 @@ export interface UserGroup {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  businessCount?: number;
 }
 
 export interface Permission {

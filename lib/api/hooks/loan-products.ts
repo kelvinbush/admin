@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useClientApiPost, useClientApiQuery, useClientApiPatch, useClientApiMutation } from "../hooks";
 import { queryKeys } from "../query-keys";
 import type { AxiosRequestConfig } from "axios";
+import { useMemo } from "react";
 
 export interface CreateLoanProductRequest {
   // Step 1: Basic Loan Details
@@ -155,35 +156,37 @@ export function useLoanProducts(filters?: LoanProductFilters, pagination?: { pag
   const page = pagination?.page || 1;
   const limit = pagination?.limit || 20;
   
-  // Build query params
-  const params = new URLSearchParams();
-  params.append('page', page.toString());
-  params.append('limit', limit.toString());
-  
-  if (filters?.status) params.append('status', filters.status);
-  if (filters?.includeArchived) params.append('includeArchived', 'true');
-  if (filters?.currency) params.append('currency', filters.currency);
-  if (filters?.minAmount) params.append('minAmount', filters.minAmount.toString());
-  if (filters?.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
-  if (filters?.minTerm) params.append('minTerm', filters.minTerm.toString());
-  if (filters?.maxTerm) params.append('maxTerm', filters.maxTerm.toString());
-  if (filters?.termUnit) params.append('termUnit', filters.termUnit);
-  if (filters?.interestType) params.append('interestType', filters.interestType);
-  if (filters?.ratePeriod) params.append('ratePeriod', filters.ratePeriod);
-  if (filters?.amortizationMethod) params.append('amortizationMethod', filters.amortizationMethod);
-  if (filters?.repaymentFrequency) params.append('repaymentFrequency', filters.repaymentFrequency);
-  if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
-  if (filters?.search) params.append('search', filters.search);
-  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
-  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
+  // Build query params - all values must be strings per API docs
+  // Memoize to prevent React Query from treating it as a new query on every render
+  const config = useMemo<AxiosRequestConfig>(() => {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      limit: limit.toString(),
+    };
+    
+    if (filters?.status) params.status = filters.status;
+    if (filters?.includeArchived) params.includeArchived = 'true';
+    if (filters?.currency) params.currency = filters.currency;
+    if (filters?.minAmount !== undefined) params.minAmount = filters.minAmount.toString();
+    if (filters?.maxAmount !== undefined) params.maxAmount = filters.maxAmount.toString();
+    if (filters?.minTerm !== undefined) params.minTerm = filters.minTerm.toString();
+    if (filters?.maxTerm !== undefined) params.maxTerm = filters.maxTerm.toString();
+    if (filters?.termUnit) params.termUnit = filters.termUnit;
+    if (filters?.interestType) params.interestType = filters.interestType;
+    if (filters?.ratePeriod) params.ratePeriod = filters.ratePeriod;
+    if (filters?.amortizationMethod) params.amortizationMethod = filters.amortizationMethod;
+    if (filters?.repaymentFrequency) params.repaymentFrequency = filters.repaymentFrequency;
+    if (filters?.isActive !== undefined) params.isActive = filters.isActive.toString();
+    if (filters?.search) params.search = filters.search;
+    if (filters?.sortBy) params.sortBy = filters.sortBy;
+    if (filters?.sortOrder) params.sortOrder = filters.sortOrder;
 
-  const config: AxiosRequestConfig = {
-    params: Object.fromEntries(params),
-  };
+    return { params };
+  }, [page, limit, filters]);
 
   return useClientApiQuery<PaginatedLoanProductsResponse>(
     queryKeys.loanProducts.list(filters),
-    `/loan-products?${params.toString()}`,
+    '/loan-products',
     config
   );
 }

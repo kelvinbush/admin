@@ -1,19 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTitle } from "@/context/title-context";
-import { useUserGroup, useUserGroupMembers, useDeleteUserGroupMutation } from "@/lib/api/hooks/useUserGroups";
-import type { User } from "@/lib/api/types";
-import UsersTable from "./_components/users-table";
+import { useUserGroup, useDeleteUserGroupMutation } from "@/lib/api/hooks/useUserGroups";
+import { useSearchUserGroupBusinesses, useRemoveBusinessFromGroup } from "@/lib/api/hooks/user-groups-businesses";
+import BusinessesTable from "./_components/businesses-table";
 import AddSmeModal from "./_components/add-sme-modal";
 import EditUserGroupModal from "./_components/edit-user-group-modal";
 import { ArrowLeft, Search, X, Filter as FilterIcon, ChevronDown, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function UserGroupDetailPage() {
   const router = useRouter();
@@ -22,10 +24,33 @@ export default function UserGroupDetailPage() {
   const id = params?.id as string;
 
   const { data: group, error: groupError } = useUserGroup(id);
-  const { data: members } = useUserGroupMembers(id, { page: 1, limit: 10 });
   const deleteMutation = useDeleteUserGroupMutation();
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [page, setPage] = useState(1);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const limit = 20;
+
+  // Debounce search
+  const debouncedSearch = useDebounce(searchValue, 300);
+
+  // Fetch businesses in the group
+  const { data: businessesData, isLoading: isLoadingBusinesses } = useSearchUserGroupBusinesses(
+    id,
+    debouncedSearch || undefined,
+    { page, limit }
+  );
+
+  const removeBusinessMutation = useRemoveBusinessFromGroup();
+
+  // Filter to only show businesses already in group
+  const businessesInGroup = useMemo(() => {
+    if (!businessesData?.data) return [];
+    return businessesData.data.filter((b) => b.isAlreadyInGroup);
+  }, [businessesData]);
+
+  const totalBusinesses = businessesData?.pagination?.total || 0;
 
   React.useEffect(() => {
     setTitle("User Management");
@@ -114,14 +139,31 @@ export default function UserGroupDetailPage() {
       <Card className="shadow-none border-none">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-midnight-blue">{`Linked SMEs (${members?.pagination?.total ?? 0})`}</h2>
+            <h2 className="text-lg font-medium text-midnight-blue">{`Linked Businesses (${totalBusinesses})`}</h2>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 border rounded-md px-3 h-10 w-[260px]">
                 <Search className="h-4 w-4 text-primaryGrey-400" />
-                <Input className="h-9 border-0 p-0 focus-visible:ring-0 text-sm placeholder:text-primaryGrey-400" placeholder="Search entrepreneur..." />
-                <button className="ml-auto text-primaryGrey-400 hover:text-midnight-blue" aria-label="Clear">
-                  <X className="h-4 w-4" />
-                </button>
+                <Input
+                  value={searchValue}
+                  onChange={(e) => {
+                    setSearchValue(e.target.value);
+                    setPage(1); // Reset to first page on new search
+                  }}
+                  className="h-9 border-0 p-0 focus-visible:ring-0 text-sm placeholder:text-primaryGrey-400"
+                  placeholder="Search business or owner..."
+                />
+                {searchValue && (
+                  <button
+                    className="ml-auto text-primaryGrey-400 hover:text-midnight-blue"
+                    aria-label="Clear"
+                    onClick={() => {
+                      setSearchValue("");
+                      setPage(1);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -147,17 +189,36 @@ export default function UserGroupDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Users table in its own card (rendered by component) */}
-      <UsersTable data={(members?.data as unknown as User[]) || []} onAdd={() => setAddOpen(true)} />
+      {/* Businesses table */}
+      <BusinessesTable
+        data={businessesInGroup}
+        isLoading={isLoadingBusinesses}
+        onAdd={() => setAddOpen(true)}
+        onRemove={async (businessId: string) => {
+          if (!window.confirm("Are you sure you want to remove this business from the group?")) {
+            return;
+          }
+
+          try {
+            setActionBusyId(businessId);
+            await removeBusinessMutation.mutateAsync({ groupId: id, businessId });
+            toast.success("Business removed from group successfully");
+          } catch (error: any) {
+            console.error("Failed to remove business:", error);
+            toast.error(error?.response?.data?.message || "Failed to remove business");
+          } finally {
+            setActionBusyId(null);
+          }
+        }}
+        actionBusyId={actionBusyId}
+      />
 </div>
       <AddSmeModal
         open={addOpen}
         onOpenChange={setAddOpen}
         groupId={id}
-        existingUserIds={Array.isArray((group as any)?.users) ? ((group as any).users as string[]) : []}
         onAdded={() => {
-          // simple refetch by toggling to same params
-          router.refresh?.();
+          // Data will refresh automatically via query invalidation
         }}
       />
       <EditUserGroupModal
