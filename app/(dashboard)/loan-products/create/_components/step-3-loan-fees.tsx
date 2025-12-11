@@ -22,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { ModalSelect } from "@/components/ui/modal-select";
 import { useLoanProductForm, type LoanFee } from "../_context/loan-product-form-context";
 import { useCreateLoanProduct, useUpdateLoanProduct } from "@/lib/api/hooks/loan-products";
@@ -91,14 +93,14 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
   const [createFeeOpen, setCreateFeeOpen] = useState(false);
   const [editFeeOpen, setEditFeeOpen] = useState(false);
 
-  const addFeeForm = useForm<LoanFeeFormValues>({
+  const addFeeFormSchema = z.object({
+    loanFeeId: z.string().min(1, "Please select a loan fee"),
+  });
+
+  const addFeeForm = useForm<{ loanFeeId: string }>({
+    resolver: zodResolver(addFeeFormSchema),
     defaultValues: {
       loanFeeId: "",
-      calculationMethod: "",
-      rate: "",
-      collectionRule: "",
-      allocationMethod: "",
-      calculationBasis: "",
     },
   });
 
@@ -148,34 +150,66 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
     createFeeForm.reset();
   };
 
-  const handleSubmitAddFee = (values: LoanFeeFormValues) => {
-    addFee(values as LoanFee);
+  const handleSubmitAddFee = (values: { loanFeeId: string }) => {
+    if (!values.loanFeeId) {
+      toast.error("Please select a loan fee");
+      return;
+    }
+
+    // Find the selected fee from the fetched data
+    const selectedFee = loanFeesData?.items?.find((fee) => fee.id === values.loanFeeId);
+    
+    if (!selectedFee) {
+      toast.error("Selected loan fee not found");
+      return;
+    }
+
+    // Convert API fee format to form fee format
+    const feeToAdd: LoanFee = {
+      loanFeeId: selectedFee.id,
+      feeName: selectedFee.name,
+      calculationMethod: selectedFee.calculationMethod,
+      rate: selectedFee.rate.toString(),
+      collectionRule: selectedFee.collectionRule,
+      allocationMethod: selectedFee.allocationMethod,
+      calculationBasis: selectedFee.calculationBasis,
+    };
+
+    addFee(feeToAdd);
+    toast.success("Loan fee added successfully");
     handleCloseAddFee();
   };
 
   const handleSubmitCreateFee = async (values: LoanFeeFormValues) => {
     try {
-      // If creating a new fee, save it to the backend first
-      if (!values.loanFeeId && values.feeName) {
-        const createdFee = await createLoanFeeMutation.mutateAsync({
-          name: values.feeName,
-          calculationMethod: values.calculationMethod as "flat" | "percentage",
-          rate: Number(values.rate),
-          collectionRule: values.collectionRule as "upfront" | "end_of_term",
-          allocationMethod: values.allocationMethod,
-          calculationBasis: values.calculationBasis as "principal" | "total_disbursed",
-        });
-        
-        // Add to form with the created fee ID
-        addFee({
-          ...values,
-          loanFeeId: createdFee.id,
-        } as LoanFee);
-        toast.success("Loan fee created and added");
-      } else {
-        // Just add to form (using existing fee ID)
-        addFee(values as LoanFee);
+      if (!values.feeName) {
+        toast.error("Loan fee name is required");
+        return;
       }
+
+      // Create the new fee in the backend
+      const createdFee = await createLoanFeeMutation.mutateAsync({
+        name: values.feeName,
+        calculationMethod: values.calculationMethod as "flat" | "percentage",
+        rate: Number(values.rate),
+        collectionRule: values.collectionRule as "upfront" | "end_of_term",
+        allocationMethod: values.allocationMethod,
+        calculationBasis: values.calculationBasis as "principal" | "total_disbursed",
+      });
+      
+      // Convert to form fee format and add it
+      const feeToAdd: LoanFee = {
+        loanFeeId: createdFee.id,
+        feeName: createdFee.name,
+        calculationMethod: createdFee.calculationMethod,
+        rate: createdFee.rate.toString(),
+        collectionRule: createdFee.collectionRule,
+        allocationMethod: createdFee.allocationMethod,
+        calculationBasis: createdFee.calculationBasis,
+      };
+
+      addFee(feeToAdd);
+      toast.success("Loan fee created and added successfully");
       handleCloseCreateFee();
     } catch (error: any) {
       console.error("Failed to create loan fee:", error);
@@ -382,15 +416,14 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
 
       {/* Add loan fee modal */}
       <Dialog open={addFeeOpen} onOpenChange={setAddFeeOpen}>
-        <DialogContent className="max-w-[900px] p-0 overflow-hidden">
+        <DialogContent className="max-w-[600px] p-0 overflow-hidden">
           <div className="px-8 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-medium text-midnight-blue">
                 Add loan fee
               </DialogTitle>
               <DialogDescription className="text-primaryGrey-500">
-                Select an existing loan fee or create a new one to attach to
-                this loan product.
+                Select an existing loan fee or create a new one to attach to this loan product.
               </DialogDescription>
             </DialogHeader>
 
@@ -399,104 +432,21 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                 className="mt-6 space-y-6"
                 onSubmit={addFeeForm.handleSubmit(handleSubmitAddFee)}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <FormField
-                    control={addFeeForm.control}
-                    name="loanFeeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel required className="text-sm text-[#444C53]">
-                          Loan fee
-                        </FormLabel>
-                        <FormControl>
-                          <ModalSelect
-                            options={loanFeeOptions.map(opt => ({ value: opt.value, label: opt.label }))}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder="Select loan fee"
-                            searchable
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex justify-end mt-8 md:mt-[26px]">
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-primary-green hover:underline"
-                      onClick={handleOpenCreateFee}
-                    >
-                      + New loan fee
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={addFeeForm.control}
-                    name="calculationMethod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel
-                          required
-                          className="text-sm text-[#444C53]"
-                        >
-                          Fee calculation method
-                        </FormLabel>
-                        <FormControl>
-                          <ModalSelect
-                            options={calculationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
-                            value={addFeeForm.watch("calculationMethod")}
-                            onValueChange={(value) => addFeeForm.setValue("calculationMethod", value)}
-                            placeholder="Select calculation method"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={addFeeForm.control}
-                    name="rate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel
-                          required
-                          className="text-sm text-[#444C53]"
-                        >
-                          Rate (%)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={0}
-                            placeholder="Enter value"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <FormField
                   control={addFeeForm.control}
-                  name="collectionRule"
+                  name="loanFeeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel required className="text-sm text-[#444C53]">
-                        Fee collection rule
+                        Loan fee
                       </FormLabel>
                       <FormControl>
                         <ModalSelect
-                          options={collectionRuleOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                          options={loanFeeOptions.map(opt => ({ value: opt.value, label: opt.label }))}
                           value={field.value}
                           onValueChange={field.onChange}
-                          placeholder="Select fee collection rule"
+                          placeholder="Select loan fee"
+                          searchable
                         />
                       </FormControl>
                       <FormMessage />
@@ -504,51 +454,15 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={addFeeForm.control}
-                    name="allocationMethod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel
-                          required
-                          className="text-sm text-[#444C53]"
-                        >
-                          Fee allocation method
-                        </FormLabel>
-                        <FormControl>
-                          <ModalSelect
-                            options={allocationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
-                            value={addFeeForm.watch("allocationMethod")}
-                            onValueChange={(value) => addFeeForm.setValue("allocationMethod", value)}
-                            placeholder="Select allocation method"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={addFeeForm.control}
-                    name="calculationBasis"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel required className="text-sm text-[#444C53]">
-                          Calculate fee on
-                        </FormLabel>
-                        <FormControl>
-                          <ModalSelect
-                            options={calculationBasisOptions.map(opt => ({ value: opt.value, label: opt.label }))}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder="Select calculation basis"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleOpenCreateFee}
+                    className="text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
+                  >
+                    + Add New Loan Fee
+                  </Button>
                 </div>
 
                 <DialogFooter className="mt-8 border-t pt-6 flex items-center justify-end gap-3">
@@ -567,7 +481,7 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                         "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
                     }}
                   >
-                    Save
+                    Add Fee
                   </Button>
                 </DialogFooter>
               </form>
