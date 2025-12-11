@@ -117,7 +117,7 @@ export function LoanProductDetailsSheet({
 }: LoanProductDetailsSheetProps) {
   if (!product) return null;
 
-  const isActive = product.status === "active" && product.isActive;
+  const isActive = product.isActive;
   const isBusy = actionBusyId === product.id;
 
   return (
