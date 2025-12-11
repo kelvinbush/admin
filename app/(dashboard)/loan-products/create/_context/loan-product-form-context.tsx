@@ -158,7 +158,7 @@ export function LoanProductFormProvider({
 
   const getCombinedFormData = useCallback(() => {
     const step1 = formState.step1Data || {};
-    const step2 = formState.step2Data || {};
+    const step2 = formState.step2Data;
     const fees = formState.fees || [];
 
     // Transform UI data to API format
@@ -184,14 +184,22 @@ export function LoanProductFormProvider({
       userGroupIds: step1.loanVisibility ? [step1.loanVisibility] : [], // Transform loanVisibility → userGroupIds array
 
       // Step 2 fields
-      repaymentFrequency: step2.repaymentFrequency,
-      maxGracePeriod: step2.maxGracePeriod ? Number(step2.maxGracePeriod) : undefined,
-      maxGraceUnit: step2.maxGraceUnit,
-      interestRate: step2.interestRate ? Number(step2.interestRate) : undefined,
-      ratePeriod: step2.ratePeriod,
-      amortizationMethod: step2.amortizationMethod,
-      interestCollectionMethod: step2.interestCollectionMethod,
-      interestRecognitionCriteria: step2.interestRecognitionCriteria,
+      repaymentFrequency: step2?.repaymentFrequency,
+      maxGracePeriod: (step2?.maxGracePeriod && step2.maxGracePeriod.trim() !== "") 
+        ? Number(step2.maxGracePeriod) 
+        : undefined,
+      maxGraceUnit: step2?.maxGraceUnit,
+      // interestRate is required by API - convert string to number
+      // If empty string or undefined, it will be undefined (validation should catch this)
+      interestRate: (step2?.interestRate && 
+        step2.interestRate.trim() !== "" && 
+        !isNaN(Number(step2.interestRate)))
+        ? Number(step2.interestRate) 
+        : undefined,
+      ratePeriod: step2?.ratePeriod,
+      amortizationMethod: step2?.amortizationMethod,
+      interestCollectionMethod: step2?.interestCollectionMethod,
+      interestRecognitionCriteria: step2?.interestRecognitionCriteria,
 
       // Step 3 fields
       fees: fees.map((fee) => ({

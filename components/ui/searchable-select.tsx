@@ -65,7 +65,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className="w-full p-0" style={{ zIndex: 9999 }}>
           <Command>
             <CommandInput placeholder="Search..." />
             <CommandList>

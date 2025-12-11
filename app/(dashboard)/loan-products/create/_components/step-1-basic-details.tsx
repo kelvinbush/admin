@@ -28,9 +28,10 @@ import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
 
 type Step1BasicDetailsProps = {
   onContinue?: () => void;
+  onBack?: () => void;
 };
 
-export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
+export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps) {
   const [createUserGroupOpen, setCreateUserGroupOpen] = useState(false);
   const { formState, updateStep1Data, isEditMode } = useLoanProductForm();
   
@@ -520,13 +521,18 @@ export function Step1BasicDetails({ onContinue }: Step1BasicDetailsProps) {
 
         {/* Footer actions */}
         <div className="flex justify-between border-t border-primaryGrey-100 pt-6 mt-4">
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-sm text-primaryGrey-500"
-          >
-            ← Back
-          </Button>
+          {onBack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-sm text-primaryGrey-500"
+              onClick={onBack}
+            >
+              {isEditMode ? "Cancel" : "← Back"}
+            </Button>
+          ) : (
+            <div />
+          )}
           <Button type="submit" className="px-8">
             Continue →
           </Button>

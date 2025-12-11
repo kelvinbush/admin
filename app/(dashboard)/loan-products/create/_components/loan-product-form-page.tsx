@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { LoanProductFormProvider } from "../_context/loan-product-form-context";
@@ -18,6 +19,7 @@ export function LoanProductFormPage({
   initialData, 
   loanProductId 
 }: LoanProductFormPageProps) {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const isEditMode = !!loanProductId;
 
@@ -42,6 +44,7 @@ export function LoanProductFormPage({
                 onContinue={() => {
                   setCurrentStep(2);
                 }}
+                onBack={isEditMode ? () => router.push("/loan-products") : undefined}
               />
             )}
             {currentStep === 2 && (

@@ -12,8 +12,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Power } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Pencil, Power, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { LoanProduct } from "@/lib/api/hooks/loan-products";
 
 // Placeholder type for loan product
 export type LoanProductTableItem = {
@@ -25,6 +27,7 @@ export type LoanProductTableItem = {
   linkedSmes: number;
   linkedLoans: number;
   status: "active" | "inactive";
+  product?: LoanProduct; // Store full product for sheet
 };
 
 interface LoanProductsTableProps {
@@ -32,6 +35,7 @@ interface LoanProductsTableProps {
   isLoading?: boolean;
   onEdit?: (id: string) => void;
   onToggleStatus?: (id: string, currentStatus: "active" | "inactive") => void;
+  onViewDetails?: (id: string) => void;
   actionBusyId?: string | null;
 }
 
@@ -40,6 +44,7 @@ export function LoanProductsTable({
   isLoading = false,
   onEdit,
   onToggleStatus,
+  onViewDetails,
   actionBusyId,
 }: LoanProductsTableProps) {
   const router = useRouter();
@@ -82,30 +87,31 @@ export function LoanProductsTable({
                 {Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="py-4">
-                      <div className="h-4 w-20 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-20" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-4 w-32 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-32" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-4 w-28 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-28" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-4 w-24 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-24" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-4 w-16 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-4 w-16 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="h-6 w-20 bg-primaryGrey-50 rounded animate-pulse" />
+                      <Skeleton className="h-6 w-20" />
                     </TableCell>
                     <TableCell className="py-4">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-primaryGrey-50 rounded animate-pulse" />
-                        <div className="h-8 w-8 bg-primaryGrey-50 rounded animate-pulse" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -157,13 +163,14 @@ export function LoanProductsTable({
             </TableHeader>
             <TableBody>
               {data.map((product) => {
-                const isActive = product.status === "active";
+                const isActive = product?.product?.isActive;
                 const isBusy = actionBusyId === product.id;
 
                 return (
                   <TableRow
                     key={product.id}
-                    className="hover:bg-gray-50"
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => onViewDetails?.(product.id)}
                   >
                     <TableCell className="py-4">
                       <div className="text-sm font-medium text-midnight-blue">
@@ -213,7 +220,8 @@ export function LoanProductsTable({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-primary-green hover:text-primary-green hover:bg-green-50"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (onEdit) {
                               onEdit(product.id);
                             } else {
@@ -221,8 +229,22 @@ export function LoanProductsTable({
                             }
                           }}
                           disabled={isBusy}
+                          title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDetails?.(product.id);
+                          }}
+                          disabled={isBusy}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -232,7 +254,8 @@ export function LoanProductsTable({
                               ? "text-yellow-600 hover:text-yellow-600 hover:bg-yellow-50"
                               : "text-yellow-600 hover:text-yellow-600 hover:bg-yellow-50"
                           }`}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (onToggleStatus) {
                               onToggleStatus(
                                 product.id,

@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { ModalSelect } from "@/components/ui/modal-select";
 import { useLoanProductForm, type LoanFee } from "../_context/loan-product-form-context";
 import { useCreateLoanProduct, useUpdateLoanProduct } from "@/lib/api/hooks/loan-products";
 import { useLoanFees, useCreateLoanFee, useUpdateLoanFee } from "@/lib/api/hooks/loan-fees";
@@ -135,7 +135,12 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
   };
 
   const handleOpenCreateFee = () => {
-    setCreateFeeOpen(true);
+    // Close the add fee modal first to avoid z-index conflicts
+    setAddFeeOpen(false);
+    // Small delay to ensure the first modal closes before opening the second
+    setTimeout(() => {
+      setCreateFeeOpen(true);
+    }, 100);
   };
 
   const handleCloseCreateFee = () => {
@@ -233,6 +238,12 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
   const handleSubmitAll = async () => {
     try {
       const formData = getCombinedFormData();
+      
+      // Validate required fields before submission
+      if (formData.interestRate === undefined || formData.interestRate === null) {
+        toast.error("Interest rate is required. Please go back to Step 2 and fill in the interest rate.");
+        return;
+      }
       
       if (isEditMode && loanProductId) {
         await updateLoanProductMutation.mutateAsync(formData);
@@ -389,14 +400,26 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                 onSubmit={addFeeForm.handleSubmit(handleSubmitAddFee)}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                  <SearchableSelect
-                    name="loanFeeId"
-                    label="Loan fee"
-                    notFound="No loan fees found"
-                    options={loanFeeOptions}
-                    placeholder="Select loan fee"
+                  <FormField
                     control={addFeeForm.control}
-                    required
+                    name="loanFeeId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-sm text-[#444C53]">
+                          Loan fee
+                        </FormLabel>
+                        <FormControl>
+                          <ModalSelect
+                            options={loanFeeOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select loan fee"
+                            searchable
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   <div className="flex justify-end mt-8 md:mt-[26px]">
@@ -423,13 +446,11 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                           Fee calculation method
                         </FormLabel>
                         <FormControl>
-                          <SearchableSelect
-                            name="calculationMethod"
-                            label=""
-                            notFound="No methods found"
-                            options={calculationMethodOptions}
+                          <ModalSelect
+                            options={calculationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={addFeeForm.watch("calculationMethod")}
+                            onValueChange={(value) => addFeeForm.setValue("calculationMethod", value)}
                             placeholder="Select calculation method"
-                            control={addFeeForm.control}
                           />
                         </FormControl>
                         <FormMessage />
@@ -462,14 +483,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                   />
                 </div>
 
-                <SearchableSelect
-                  name="collectionRule"
-                  label="Fee collection rule"
-                  notFound="No collection rules found"
-                  options={collectionRuleOptions}
-                  placeholder="Select fee collection rule"
+                <FormField
                   control={addFeeForm.control}
-                  required
+                  name="collectionRule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Fee collection rule
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={collectionRuleOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select fee collection rule"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -485,13 +517,11 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                           Fee allocation method
                         </FormLabel>
                         <FormControl>
-                          <SearchableSelect
-                            name="allocationMethod"
-                            label=""
-                            notFound="No methods found"
-                            options={allocationMethodOptions}
+                          <ModalSelect
+                            options={allocationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={addFeeForm.watch("allocationMethod")}
+                            onValueChange={(value) => addFeeForm.setValue("allocationMethod", value)}
                             placeholder="Select allocation method"
-                            control={addFeeForm.control}
                           />
                         </FormControl>
                         <FormMessage />
@@ -499,14 +529,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                     )}
                   />
 
-                  <SearchableSelect
-                    name="calculationBasis"
-                    label="Calculate fee on"
-                    notFound="No calculation basis found"
-                    options={calculationBasisOptions}
-                    placeholder="Select calculation basis"
+                  <FormField
                     control={addFeeForm.control}
-                    required
+                    name="calculationBasis"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-sm text-[#444C53]">
+                          Calculate fee on
+                        </FormLabel>
+                        <FormControl>
+                          <ModalSelect
+                            options={calculationBasisOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select calculation basis"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
@@ -537,7 +578,7 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
 
       {/* Create loan fee modal */}
       <Dialog open={createFeeOpen} onOpenChange={setCreateFeeOpen}>
-        <DialogContent className="max-w-[900px] p-0 overflow-hidden">
+        <DialogContent className="max-w-[900px] p-0 overflow-hidden" style={{ zIndex: 100 }}>
           <div className="px-8 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-medium text-midnight-blue">
@@ -588,13 +629,11 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                           Fee calculation method
                         </FormLabel>
                         <FormControl>
-                          <SearchableSelect
-                            name="calculationMethod"
-                            label=""
-                            notFound="No methods found"
-                            options={calculationMethodOptions}
+                          <ModalSelect
+                            options={calculationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={createFeeForm.watch("calculationMethod")}
+                            onValueChange={(value) => createFeeForm.setValue("calculationMethod", value)}
                             placeholder="Select calculation method"
-                            control={createFeeForm.control}
                           />
                         </FormControl>
                         <FormMessage />
@@ -627,14 +666,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                   />
                 </div>
 
-                <SearchableSelect
-                  name="collectionRule"
-                  label="Fee collection rule"
-                  notFound="No collection rules found"
-                  options={collectionRuleOptions}
-                  placeholder="Select fee collection rule"
+                <FormField
                   control={createFeeForm.control}
-                  required
+                  name="collectionRule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Fee collection rule
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={collectionRuleOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select fee collection rule"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -650,13 +700,11 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                           Fee allocation method
                         </FormLabel>
                         <FormControl>
-                          <SearchableSelect
-                            name="allocationMethod"
-                            label=""
-                            notFound="No methods found"
-                            options={allocationMethodOptions}
+                          <ModalSelect
+                            options={allocationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={createFeeForm.watch("allocationMethod")}
+                            onValueChange={(value) => createFeeForm.setValue("allocationMethod", value)}
                             placeholder="Select allocation method"
-                            control={createFeeForm.control}
                           />
                         </FormControl>
                         <FormMessage />
@@ -664,14 +712,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                     )}
                   />
 
-                  <SearchableSelect
-                    name="calculationBasis"
-                    label="Calculate fee on"
-                    notFound="No calculation basis found"
-                    options={calculationBasisOptions}
-                    placeholder="Select calculation basis"
+                  <FormField
                     control={createFeeForm.control}
-                    required
+                    name="calculationBasis"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-sm text-[#444C53]">
+                          Calculate fee on
+                        </FormLabel>
+                        <FormControl>
+                          <ModalSelect
+                            options={calculationBasisOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select calculation basis"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
@@ -702,7 +761,7 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
 
       {/* Edit loan fee modal */}
       <Dialog open={editFeeOpen} onOpenChange={setEditFeeOpen}>
-        <DialogContent className="max-w-[900px] p-0 overflow-hidden">
+        <DialogContent className="max-w-[900px] p-0 overflow-hidden" style={{ zIndex: 100 }}>
           <div className="px-8 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-medium text-midnight-blue">
@@ -741,14 +800,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SearchableSelect
-                    name="calculationMethod"
-                    label="Calculation method"
-                    notFound="No methods found"
-                    options={calculationMethodOptions}
-                    placeholder="Select calculation method"
+                  <FormField
                     control={editFeeForm.control}
-                    required
+                    name="calculationMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-sm text-[#444C53]">
+                          Calculation method
+                        </FormLabel>
+                        <FormControl>
+                          <ModalSelect
+                            options={calculationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select calculation method"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   <FormField
@@ -776,14 +846,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                   />
                 </div>
 
-                <SearchableSelect
-                  name="collectionRule"
-                  label="Fee collection rule"
-                  notFound="No collection rules found"
-                  options={collectionRuleOptions}
-                  placeholder="Select fee collection rule"
+                <FormField
                   control={editFeeForm.control}
-                  required
+                  name="collectionRule"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Fee collection rule
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={collectionRuleOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select fee collection rule"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -799,13 +880,11 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                           Fee allocation method
                         </FormLabel>
                         <FormControl>
-                          <SearchableSelect
-                            name="allocationMethod"
-                            label=""
-                            notFound="No methods found"
-                            options={allocationMethodOptions}
+                          <ModalSelect
+                            options={allocationMethodOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={editFeeForm.watch("allocationMethod")}
+                            onValueChange={(value) => editFeeForm.setValue("allocationMethod", value)}
                             placeholder="Select allocation method"
-                            control={editFeeForm.control}
                           />
                         </FormControl>
                         <FormMessage />
@@ -813,14 +892,25 @@ export function Step3LoanFees({ onBack, loanProductId }: Step3LoanFeesProps) {
                     )}
                   />
 
-                  <SearchableSelect
-                    name="calculationBasis"
-                    label="Calculate fee on"
-                    notFound="No calculation basis found"
-                    options={calculationBasisOptions}
-                    placeholder="Select calculation basis"
+                  <FormField
                     control={editFeeForm.control}
-                    required
+                    name="calculationBasis"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required className="text-sm text-[#444C53]">
+                          Calculate fee on
+                        </FormLabel>
+                        <FormControl>
+                          <ModalSelect
+                            options={calculationBasisOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select calculation basis"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 

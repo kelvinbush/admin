@@ -114,11 +114,15 @@ export interface LoanProductFilters {
 }
 
 export interface PaginatedLoanProductsResponse {
-  items: LoanProduct[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  success: boolean;
+  message: string;
+  data: LoanProduct[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface UpdateLoanProductRequest {

@@ -7,7 +7,8 @@ import {
 } from "./_components/loan-products-header";
 import { LoanProductsEmptyState } from "./_components/loan-products-empty-state";
 import { LoanProductsTable, type LoanProductTableItem } from "./_components/loan-products-table";
-import { useLoanProducts, useUpdateLoanProductStatusMutation } from "@/lib/api/hooks/loan-products";
+import { LoanProductDetailsSheet } from "./_components/loan-product-details-sheet";
+import { useLoanProducts, useUpdateLoanProductStatusMutation, useLoanProduct, type LoanProduct } from "@/lib/api/hooks/loan-products";
 import { useOrganizations } from "@/lib/api/hooks/organizations";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
 import { toast } from "sonner";
@@ -23,6 +24,8 @@ export default function LoanProductsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Build filters for API
   const apiFilters = useMemo(() => {
@@ -36,6 +39,7 @@ export default function LoanProductsPage() {
   // Fetch loan products
   const { data: loanProductsData, isLoading } = useLoanProducts(apiFilters, { page, limit });
   
+
   // Fetch organizations and user groups for display names
   const { data: organizationsData } = useOrganizations();
   const { data: userGroupsData } = useUserGroups();
@@ -63,9 +67,9 @@ export default function LoanProductsPage() {
 
   // Transform API data to table format
   const tableData: LoanProductTableItem[] = useMemo(() => {
-    if (!loanProductsData?.items) return [];
+    if (!loanProductsData?.data) return [];
     
-    return loanProductsData.items.map((product) => {
+    return loanProductsData.data.map((product) => {
       const organizationName = organizationsMap.get(product.organizationId) || product.organizationId;
       const userGroupNames = product.userGroupIds
         .map((id) => userGroupsMap.get(id) || id)
@@ -86,11 +90,30 @@ export default function LoanProductsPage() {
         linkedSmes: 0, // TODO: Get from API when available
         linkedLoans: 0, // TODO: Get from API when available
         status: tableStatus,
+        // Store full product data for the sheet
+        product: product,
       };
     });
   }, [loanProductsData, organizationsMap, userGroupsMap]);
 
-  const total = loanProductsData?.total || 0;
+  // Get selected product details - only fetch when sheet is open and ID is set
+  // useLoanProduct already has enabled: !!loanProductId, so we can pass empty string when not needed
+  const { data: selectedProduct } = useLoanProduct(selectedProductId || "");
+
+  // Get organization and user group names for selected product
+  const selectedOrgName = useMemo(() => {
+    if (!selectedProduct) return undefined;
+    return organizationsMap.get(selectedProduct.organizationId) || selectedProduct.organizationId;
+  }, [selectedProduct, organizationsMap]);
+
+  const selectedUserGroupNames = useMemo(() => {
+    if (!selectedProduct) return [];
+    return selectedProduct.userGroupIds
+      .map((id) => userGroupsMap.get(id) || id)
+      .filter(Boolean);
+  }, [selectedProduct, userGroupsMap]);
+
+  const total = loanProductsData?.pagination?.total || 0;
   const hasLoanProducts = total > 0;
 
   // Status update mutation (accepts ID in variables)
@@ -98,6 +121,17 @@ export default function LoanProductsPage() {
 
   const handleEdit = (id: string) => {
     router.push(`/loan-products/${id}/edit`);
+  };
+
+  const handleViewDetails = (id: string) => {
+    setSelectedProductId(id);
+    setSheetOpen(true);
+  };
+
+  const handleCloseSheet = () => {
+    setSheetOpen(false);
+    // Don't clear selectedProductId immediately to avoid flicker
+    setTimeout(() => setSelectedProductId(null), 300);
   };
 
   const handleToggleStatus = async (id: string, newStatus: "active" | "inactive") => {
@@ -145,7 +179,16 @@ export default function LoanProductsPage() {
           }}
         />
 
-        {!hasLoanProducts ? (
+        {isLoading ? (
+          <LoanProductsTable
+            data={[]}
+            isLoading={true}
+            onEdit={handleEdit}
+            onToggleStatus={handleToggleStatus}
+            onViewDetails={handleViewDetails}
+            actionBusyId={actionBusyId}
+          />
+        ) : !hasLoanProducts ? (
           <div className="flex-1 min-h-[320px] rounded-xl border border-dashed border-primaryGrey-200 bg-primaryGrey-25">
             <LoanProductsEmptyState
               onAddLoanProduct={() => {
@@ -156,13 +199,28 @@ export default function LoanProductsPage() {
         ) : (
           <LoanProductsTable
             data={tableData}
-            isLoading={isLoading}
+            isLoading={false}
             onEdit={handleEdit}
             onToggleStatus={handleToggleStatus}
+            onViewDetails={handleViewDetails}
             actionBusyId={actionBusyId}
           />
         )}
       </section>
+
+      {/* Loan Product Details Sheet */}
+      {selectedProduct && (
+        <LoanProductDetailsSheet
+          product={selectedProduct}
+          open={sheetOpen}
+          onOpenChange={handleCloseSheet}
+          onEdit={handleEdit}
+          onToggleStatus={handleToggleStatus}
+          actionBusyId={actionBusyId}
+          organizationName={selectedOrgName}
+          userGroupNames={selectedUserGroupNames}
+        />
+      )}
     </div>
   );
 }
