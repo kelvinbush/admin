@@ -87,8 +87,7 @@ export default function LoanProductsPage() {
         name: product.name,
         provider: organizationName,
         visibility: userGroupNames,
-        linkedSmes: 0, // TODO: Get from API when available
-        linkedLoans: 0, // TODO: Get from API when available
+        linkedLoans: product.loansCount ?? 0,
         status: tableStatus,
         // Store full product data for the sheet
         product: product,

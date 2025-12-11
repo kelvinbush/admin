@@ -24,7 +24,6 @@ export type LoanProductTableItem = {
   name: string;
   provider: string;
   visibility: string;
-  linkedSmes: number;
   linkedLoans: number;
   status: "active" | "inactive";
   product?: LoanProduct; // Store full product for sheet
@@ -70,9 +69,6 @@ export function LoanProductsTable({
                     LOAN VISIBILITY
                   </TableHead>
                   <TableHead className="font-medium text-midnight-blue py-4">
-                    LINKED SME(S)
-                  </TableHead>
-                  <TableHead className="font-medium text-midnight-blue py-4">
                     LINKED LOANS
                   </TableHead>
                   <TableHead className="font-medium text-midnight-blue py-4">
@@ -97,9 +93,6 @@ export function LoanProductsTable({
                     </TableCell>
                     <TableCell className="py-4">
                       <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell className="py-4">
                       <Skeleton className="h-4 w-16" />
@@ -148,9 +141,6 @@ export function LoanProductsTable({
                   LOAN VISIBILITY
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
-                  LINKED SME(S)
-                </TableHead>
-                <TableHead className="font-medium text-midnight-blue py-4">
                   LINKED LOANS
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
@@ -190,11 +180,6 @@ export function LoanProductsTable({
                     <TableCell className="py-4">
                       <div className="text-sm text-primaryGrey-500">
                         {product.visibility}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-sm text-primaryGrey-500">
-                        {product.linkedSmes}
                       </div>
                     </TableCell>
                     <TableCell className="py-4">

@@ -92,6 +92,7 @@ export interface LoanProduct {
   }>;
   createdAt: string;
   updatedAt: string;
+  loansCount?: number;
 }
 
 export interface LoanProductFilters {
