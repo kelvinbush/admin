@@ -17,22 +17,22 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { ModalSelect } from "@/components/ui/modal-select";
 
 const createLoanFeeSchema = z.object({
   name: z.string().min(1, "Name is required").max(255, "Name must be less than 255 characters"),
   calculationMethod: z.enum(["flat", "percentage"], {
-    required_error: "Calculation method is required",
+    message: "Calculation method is required",
   }),
   rate: z.string().min(1, "Rate is required").refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
     message: "Rate must be a valid number",
   }),
   collectionRule: z.enum(["upfront", "end_of_term"], {
-    required_error: "Collection rule is required",
+    message: "Collection rule is required",
   }),
   allocationMethod: z.string().min(1, "Allocation method is required"),
   calculationBasis: z.enum(["principal", "total_disbursed"], {
-    required_error: "Calculation basis is required",
+    message: "Calculation basis is required",
   }),
 });
 
@@ -138,14 +138,26 @@ export function CreateLoanFeeModal({ open, onOpenChange, onCreated }: CreateLoan
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SearchableSelect
-                  name="calculationMethod"
-                  label="Calculation Method"
-                  notFound="No methods found"
-                  options={calculationMethodOptions}
-                  placeholder="Select calculation method"
+                <FormField
                   control={form.control}
-                  required
+                  name="calculationMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Calculation Method
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={calculationMethodOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select calculation method"
+                          error={!!form.formState.errors.calculationMethod}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <FormField
@@ -171,14 +183,26 @@ export function CreateLoanFeeModal({ open, onOpenChange, onCreated }: CreateLoan
                 />
               </div>
 
-              <SearchableSelect
-                name="collectionRule"
-                label="Fee Collection Rule"
-                notFound="No collection rules found"
-                options={collectionRuleOptions}
-                placeholder="Select fee collection rule"
+              <FormField
                 control={form.control}
-                required
+                name="collectionRule"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required className="text-sm text-[#444C53]">
+                      Fee Collection Rule
+                    </FormLabel>
+                    <FormControl>
+                      <ModalSelect
+                        options={collectionRuleOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select fee collection rule"
+                        error={!!form.formState.errors.collectionRule}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,13 +215,12 @@ export function CreateLoanFeeModal({ open, onOpenChange, onCreated }: CreateLoan
                         Fee Allocation Method
                       </FormLabel>
                       <FormControl>
-                        <SearchableSelect
-                          name="allocationMethod"
-                          label=""
-                          notFound="No methods found"
+                        <ModalSelect
                           options={allocationMethodOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
                           placeholder="Select allocation method"
-                          control={form.control}
+                          error={!!form.formState.errors.allocationMethod}
                         />
                       </FormControl>
                       <FormMessage />
@@ -205,14 +228,26 @@ export function CreateLoanFeeModal({ open, onOpenChange, onCreated }: CreateLoan
                   )}
                 />
 
-                <SearchableSelect
-                  name="calculationBasis"
-                  label="Calculate Fee On"
-                  notFound="No calculation basis found"
-                  options={calculationBasisOptions}
-                  placeholder="Select calculation basis"
+                <FormField
                   control={form.control}
-                  required
+                  name="calculationBasis"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Calculate Fee On
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={calculationBasisOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select calculation basis"
+                          error={!!form.formState.errors.calculationBasis}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 

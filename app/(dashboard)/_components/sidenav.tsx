@@ -57,6 +57,11 @@ const sidenavLinks = [
         href: "/loan-products",
         icon: <SvgIcon src="/loan-products.svg" width={16} height={16} />,
       },
+      {
+        title: "Loan Fees",
+        href: "/loan-fees",
+        icon: <SvgIcon src="/loan-products.svg" width={16} height={16} />,
+      },
     ],
   },
 ];

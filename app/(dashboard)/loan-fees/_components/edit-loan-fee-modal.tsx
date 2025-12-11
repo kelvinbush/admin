@@ -17,7 +17,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { ModalSelect } from "@/components/ui/modal-select";
 
 const updateLoanFeeSchema = z.object({
   name: z.string().min(1, "Name is required").max(255, "Name must be less than 255 characters").optional(),
@@ -160,14 +160,26 @@ export function EditLoanFeeModal({
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SearchableSelect
-                  name="calculationMethod"
-                  label="Calculation Method"
-                  notFound="No methods found"
-                  options={calculationMethodOptions}
-                  placeholder="Select calculation method"
+                <FormField
                   control={form.control}
-                  required
+                  name="calculationMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Calculation Method
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={calculationMethodOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select calculation method"
+                          error={!!form.formState.errors.calculationMethod}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <FormField
@@ -193,14 +205,26 @@ export function EditLoanFeeModal({
                 />
               </div>
 
-              <SearchableSelect
-                name="collectionRule"
-                label="Fee Collection Rule"
-                notFound="No collection rules found"
-                options={collectionRuleOptions}
-                placeholder="Select fee collection rule"
+              <FormField
                 control={form.control}
-                required
+                name="collectionRule"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required className="text-sm text-[#444C53]">
+                      Fee Collection Rule
+                    </FormLabel>
+                    <FormControl>
+                      <ModalSelect
+                        options={collectionRuleOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select fee collection rule"
+                        error={!!form.formState.errors.collectionRule}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -213,13 +237,12 @@ export function EditLoanFeeModal({
                         Fee Allocation Method
                       </FormLabel>
                       <FormControl>
-                        <SearchableSelect
-                          name="allocationMethod"
-                          label=""
-                          notFound="No methods found"
+                        <ModalSelect
                           options={allocationMethodOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
                           placeholder="Select allocation method"
-                          control={form.control}
+                          error={!!form.formState.errors.allocationMethod}
                         />
                       </FormControl>
                       <FormMessage />
@@ -227,14 +250,26 @@ export function EditLoanFeeModal({
                   )}
                 />
 
-                <SearchableSelect
-                  name="calculationBasis"
-                  label="Calculate Fee On"
-                  notFound="No calculation basis found"
-                  options={calculationBasisOptions}
-                  placeholder="Select calculation basis"
+                <FormField
                   control={form.control}
-                  required
+                  name="calculationBasis"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required className="text-sm text-[#444C53]">
+                        Calculate Fee On
+                      </FormLabel>
+                      <FormControl>
+                        <ModalSelect
+                          options={calculationBasisOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select calculation basis"
+                          error={!!form.formState.errors.calculationBasis}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
