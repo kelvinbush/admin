@@ -26,6 +26,8 @@ type LoanApplication = {
   loanId: string;
   loanSource: string;
   businessName: string;
+  entrepreneurId: string;
+  businessId: string;
   applicant: {
     name: string;
     email: string;
@@ -48,6 +50,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-48291",
     loanSource: "SME Platform",
     businessName: "DMA Limited",
+    entrepreneurId: "ent-001",
+    businessId: "biz-001",
     applicant: {
       name: "Robert Mugabe",
       email: "robert.mugabe@gmail.com",
@@ -66,6 +70,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-90357",
     loanSource: "Admin Platform",
     businessName: "Duhqa",
+    entrepreneurId: "ent-002",
+    businessId: "biz-002",
     applicant: {
       name: "Mariame Bamba",
       email: "mariame.bamba@gmail.com",
@@ -84,6 +90,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-12345",
     loanSource: "SME Platform",
     businessName: "Lineter Enterprise Ltd",
+    entrepreneurId: "ent-003",
+    businessId: "biz-003",
     applicant: {
       name: "John Doe",
       email: "john.doe@gmail.com",
@@ -102,6 +110,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-67890",
     loanSource: "Admin Platform",
     businessName: "Tech Solutions Inc",
+    entrepreneurId: "ent-004",
+    businessId: "biz-004",
     applicant: {
       name: "Jane Smith",
       email: "jane.smith@gmail.com",
@@ -120,6 +130,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-65938",
     loanSource: "SME Platform",
     businessName: "Green Energy Co",
+    entrepreneurId: "ent-005",
+    businessId: "biz-005",
     applicant: {
       name: "Cecile Soul",
       email: "cecile.soul@gmail.com",
@@ -138,6 +150,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-24680",
     loanSource: "Admin Platform",
     businessName: "Food & Beverage Ltd",
+    entrepreneurId: "ent-006",
+    businessId: "biz-006",
     applicant: {
       name: "Michael Brown",
       email: "michael.brown@gmail.com",
@@ -156,6 +170,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-13579",
     loanSource: "SME Platform",
     businessName: "Retail Solutions",
+    entrepreneurId: "ent-007",
+    businessId: "biz-007",
     applicant: {
       name: "Sarah Johnson",
       email: "sarah.johnson@gmail.com",
@@ -175,6 +191,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-11111",
     loanSource: "Admin Platform",
     businessName: "Agribora Ventures Limited",
+    entrepreneurId: "ent-008",
+    businessId: "biz-008",
     applicant: {
       name: "Alice Johnson",
       email: "alice.johnson@agribora.com",
@@ -193,6 +211,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-22222",
     loanSource: "SME Platform",
     businessName: "TechStart Innovations",
+    entrepreneurId: "ent-009",
+    businessId: "biz-009",
     applicant: {
       name: "David Kim",
       email: "david.kim@techstart.com",
@@ -211,6 +231,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-33333",
     loanSource: "Admin Platform",
     businessName: "GreenFuture Enterprises",
+    entrepreneurId: "ent-010",
+    businessId: "biz-010",
     applicant: {
       name: "Emma Wilson",
       email: "emma.wilson@greenfuture.com",
@@ -229,6 +251,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-44444",
     loanSource: "SME Platform",
     businessName: "Agribora Ventures Limited",
+    entrepreneurId: "ent-011",
+    businessId: "biz-011",
     applicant: {
       name: "Michael Brown",
       email: "michael.brown@agribora.com",
@@ -247,6 +271,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-55555",
     loanSource: "SME Platform",
     businessName: "GreenFuture Enterprises",
+    entrepreneurId: "ent-012",
+    businessId: "biz-012",
     applicant: {
       name: "Sarah Johnson",
       email: "sarah.johnson@greenfuture.com",
@@ -265,6 +291,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-66666",
     loanSource: "SME Platform",
     businessName: "Kokari Ventures Limited",
+    entrepreneurId: "ent-013",
+    businessId: "biz-013",
     applicant: {
       name: "Lisa Chen",
       email: "lisa.chen@kokari.com",
@@ -283,6 +311,8 @@ const dummyData: LoanApplication[] = [
     loanId: "LN-77777",
     loanSource: "Admin Platform",
     businessName: "InnovateHub Solutions",
+    entrepreneurId: "ent-014",
+    businessId: "biz-014",
     applicant: {
       name: "James Taylor",
       email: "james.taylor@innovatehub.com",
@@ -496,14 +526,18 @@ export default function LoanApplicationsPage() {
           <LoanApplicationsTable
             data={filteredAndSortedData}
             onRowClick={(application) => {
-              router.push(`/loan-applications/${application.id}`);
+              router.push(
+                `/loan-applications/${application.id}?entrepreneurId=${application.entrepreneurId}&businessId=${application.businessId}`
+              );
             }}
           />
         ) : (
           <LoanApplicationsBoard
             data={filteredAndSortedData}
             onCardClick={(application) => {
-              router.push(`/loan-applications/${application.id}`);
+              router.push(
+                `/loan-applications/${application.id}?entrepreneurId=${application.entrepreneurId}&businessId=${application.businessId}`
+              );
             }}
           />
         )}

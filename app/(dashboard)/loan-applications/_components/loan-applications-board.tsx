@@ -18,6 +18,8 @@ type LoanApplication = {
   loanId: string;
   loanSource: string;
   businessName: string;
+  entrepreneurId: string;
+  businessId: string;
   applicant: {
     name: string;
     email: string;
