@@ -10,6 +10,7 @@ import { LoanApplicationsTabs, type LoanApplicationTab } from "./_components/loa
 import { LoanApplicationsEmptyState } from "./_components/loan-applications-empty-state";
 import { LoanApplicationsTable } from "./_components/loan-applications-table";
 import { LoanApplicationsBoard } from "./_components/loan-applications-board";
+import { CreateLoanApplicationModal } from "./_components/create-loan-application-modal";
 
 // Import dummy data from table component (we'll extract it later)
 type LoanApplicationStatus =
@@ -359,6 +360,7 @@ export default function LoanApplicationsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [activeTab, setActiveTab] = useState<LoanApplicationTab>("all");
   const [filters, setFilters] = useState<LoanApplicationFiltersState>({});
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleFilterChange = <K extends keyof LoanApplicationFiltersState>(
     key: K,
@@ -495,7 +497,7 @@ export default function LoanApplicationsPage() {
             /* TODO: hook up download */
           }}
           onNewApplication={() => {
-            /* TODO: hook up new application */
+            setIsCreateModalOpen(true);
           }}
         />
 
@@ -519,7 +521,7 @@ export default function LoanApplicationsPage() {
         {filteredAndSortedData.length === 0 ? (
           <LoanApplicationsEmptyState
             onNewApplication={() => {
-              /* TODO: hook up new application */
+              setIsCreateModalOpen(true);
             }}
           />
         ) : viewMode === "table" ? (
@@ -542,6 +544,15 @@ export default function LoanApplicationsPage() {
           />
         )}
       </div>
+
+      <CreateLoanApplicationModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onCreated={() => {
+          // TODO: Refresh loan applications list
+          console.log("Loan application created");
+        }}
+      />
     </div>
   );
 }
