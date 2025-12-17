@@ -8,6 +8,7 @@ import { LoanApplicationsFilters, type LoanApplicationFiltersState } from "./_co
 import { LoanApplicationsTabs, type LoanApplicationTab } from "./_components/loan-applications-tabs";
 import { LoanApplicationsEmptyState } from "./_components/loan-applications-empty-state";
 import { LoanApplicationsTable } from "./_components/loan-applications-table";
+import { LoanApplicationsBoard } from "./_components/loan-applications-board";
 
 export default function LoanApplicationsPage() {
   const [searchValue, setSearchValue] = useState("");
@@ -81,14 +82,12 @@ export default function LoanApplicationsPage() {
             }}
           />
         ) : (
-          <div>
-            {/* Board view will go here */}
-            <LoanApplicationsEmptyState
-              onNewApplication={() => {
-                /* TODO: hook up new application */
-              }}
-            />
-          </div>
+          <LoanApplicationsBoard
+            onCardClick={(application) => {
+              /* TODO: navigate to application details */
+              console.log("Clicked application:", application);
+            }}
+          />
         )}
       </div>
     </div>
