@@ -30,11 +30,13 @@ type LoanApplicationsFiltersProps = {
   onClear?: () => void;
 };
 
-// Dummy options - will be replaced with real data later
+// Dummy options - matching actual data
 const loanProductOptions = [
   { label: "All loan products", value: "all" },
-  { label: "Product A", value: "product-a" },
-  { label: "Product B", value: "product-b" },
+  { label: "LPO Financing", value: "lpo financing" },
+  { label: "Term Loan", value: "term loan" },
+  { label: "Invoice Discount Facility", value: "invoice discount facility" },
+  { label: "Asset Financing", value: "asset financing" },
 ];
 
 const statusOptions = [
@@ -54,8 +56,8 @@ const loanProviderOptions = [
 
 const loanSourceOptions = [
   { label: "All sources", value: "all" },
-  { label: "Source A", value: "source-a" },
-  { label: "Source B", value: "source-b" },
+  { label: "SME Platform", value: "sme platform" },
+  { label: "Admin Platform", value: "admin platform" },
 ];
 
 const applicationDateOptions = [
