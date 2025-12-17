@@ -1,7 +1,17 @@
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 export default function LoanApplicationDetailPage() {
-  return (
-    <div>
-      <p className="text-primaryGrey-500">Loan application details will go here</p>
-    </div>
-  );
+  const params = useParams();
+  const router = useRouter();
+  const applicationId = params.id as string;
+
+  useEffect(() => {
+    // Redirect to loan-summary as the default tab
+    router.replace(`/loan-applications/${applicationId}/loan-summary`);
+  }, [applicationId, router]);
+
+  return null;
 }

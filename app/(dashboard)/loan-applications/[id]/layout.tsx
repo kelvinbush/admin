@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { LoanApplicationBreadcrumb } from "./_components/loan-application-breadcrumb";
 import { LoanApplicationHeader } from "./_components/loan-application-header";
 import { LoanApplicationStagesCard } from "./_components/loan-application-stages-card";
+import { LoanApplicationTabs } from "./_components/loan-application-tabs";
 
 type LoanApplicationStage =
   | "kyc_kyb_verification"
@@ -85,8 +86,9 @@ export default function LoanApplicationDetailLayout({
       {/* Stages Card */}
       <LoanApplicationStagesCard currentStage={dummyLoanApplication.status} />
 
-      {/* Main Card - Tabs will go here later */}
+      {/* Main Card - Tabs */}
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50">
+        <LoanApplicationTabs applicationId={applicationId} />
         <div className="p-8">
           {children}
         </div>
