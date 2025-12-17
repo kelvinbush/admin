@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LoanApplicationsStatsHeader } from "./_components/loan-applications-stats-header";
 import { LoanApplicationsHeader, type LoanApplicationSort } from "./_components/loan-applications-header";
 import type { ViewMode } from "./_components/loan-applications-header";
@@ -318,6 +319,7 @@ function getStatusFromTab(tab: LoanApplicationTab): LoanApplicationStatus | null
 }
 
 export default function LoanApplicationsPage() {
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [sort, setSort] = useState<LoanApplicationSort>({
@@ -494,16 +496,14 @@ export default function LoanApplicationsPage() {
           <LoanApplicationsTable
             data={filteredAndSortedData}
             onRowClick={(application) => {
-              /* TODO: navigate to application details */
-              console.log("Clicked application:", application);
+              router.push(`/loan-applications/${application.id}`);
             }}
           />
         ) : (
           <LoanApplicationsBoard
             data={filteredAndSortedData}
             onCardClick={(application) => {
-              /* TODO: navigate to application details */
-              console.log("Clicked application:", application);
+              router.push(`/loan-applications/${application.id}`);
             }}
           />
         )}
