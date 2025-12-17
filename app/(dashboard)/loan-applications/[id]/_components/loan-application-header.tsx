@@ -21,6 +21,9 @@ type LoanApplicationStatus =
   | "internal_approval_ceo"
   | "committee_decision"
   | "sme_offer_approval"
+  | "document_generation"
+  | "signing_execution"
+  | "awaiting_disbursement"
   | "approved"
   | "rejected"
   | "disbursed"
@@ -63,7 +66,10 @@ function getNextStage(currentStatus: LoanApplicationStatus): string | null {
     head_of_credit_review: "internal_approval_ceo",
     internal_approval_ceo: "committee_decision",
     committee_decision: "sme_offer_approval",
-    sme_offer_approval: "approved",
+    sme_offer_approval: "document_generation",
+    document_generation: "signing_execution",
+    signing_execution: "awaiting_disbursement",
+    awaiting_disbursement: "disbursed",
     approved: null,
     rejected: null,
     disbursed: null,
@@ -84,7 +90,10 @@ function getButtonText(currentStatus: LoanApplicationStatus): string {
     head_of_credit_review: "Send for Internal Approval (CEO)",
     internal_approval_ceo: "Send for Committee Decision",
     committee_decision: "Send for SME Offer Approval",
-    sme_offer_approval: "Approve Loan",
+    sme_offer_approval: "Send for Document Generation",
+    document_generation: "Send for Signing & Execution",
+    signing_execution: "Send for Awaiting Disbursement",
+    awaiting_disbursement: "Disburse Loan",
     approved: "No Next Stage",
     rejected: "No Next Stage",
     disbursed: "No Next Stage",
@@ -104,6 +113,9 @@ function getStatusBadge(status: LoanApplicationStatus) {
     case "internal_approval_ceo":
     case "committee_decision":
     case "sme_offer_approval":
+    case "document_generation":
+    case "signing_execution":
+    case "awaiting_disbursement":
       return {
         label: status === "kyc_kyb_verification"
           ? "KYC-KYB Verification"
@@ -117,7 +129,13 @@ function getStatusBadge(status: LoanApplicationStatus) {
                   ? "Internal Approval (CEO)"
                   : status === "committee_decision"
                     ? "Committee Decision"
-                    : "SME Offer Approval",
+                    : status === "sme_offer_approval"
+                      ? "SME Offer Approval"
+                      : status === "document_generation"
+                        ? "Document Generation"
+                        : status === "signing_execution"
+                          ? "Signing & Execution"
+                          : "Awaiting Disbursement",
         className: "border-0",
         style: {
           backgroundColor: "#FFE5B0",

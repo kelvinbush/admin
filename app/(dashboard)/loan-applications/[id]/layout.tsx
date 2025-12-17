@@ -4,6 +4,20 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { LoanApplicationBreadcrumb } from "./_components/loan-application-breadcrumb";
 import { LoanApplicationHeader } from "./_components/loan-application-header";
+import { LoanApplicationStagesCard } from "./_components/loan-application-stages-card";
+
+type LoanApplicationStage =
+  | "kyc_kyb_verification"
+  | "eligibility_check"
+  | "credit_analysis"
+  | "head_of_credit_review"
+  | "internal_approval_ceo"
+  | "committee_decision"
+  | "sme_offer_approval"
+  | "document_generation"
+  | "signing_execution"
+  | "awaiting_disbursement"
+  | "disbursed";
 
 // Dummy data - will be replaced with API call later
 const dummyLoanApplication = {
@@ -22,7 +36,7 @@ const dummyLoanApplication = {
     avatar: undefined,
   },
   loanProduct: "Invoice Discount Facility",
-  status: "kyc_kyb_verification" as const,
+  status: "kyc_kyb_verification" as LoanApplicationStage,
   createdAt: "2025-01-28",
   createdBy: "Melanie Keita",
 };
@@ -67,6 +81,9 @@ export default function LoanApplicationDetailLayout({
         onEmailApplicant={handleEmailApplicant}
         onArchive={handleArchive}
       />
+
+      {/* Stages Card */}
+      <LoanApplicationStagesCard currentStage={dummyLoanApplication.status} />
 
       {/* Main Card - Tabs will go here later */}
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50">
