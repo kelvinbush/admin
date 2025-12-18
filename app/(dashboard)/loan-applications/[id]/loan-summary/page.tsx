@@ -1,23 +1,41 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
 
-// Dummy data - will be replaced with API call later
-const dummyLoanSummary = {
-  loanProduct: "Invoice Discount Facility",
-  loanProvider: "MK Green Facility (Ecobank)",
-  loanRequested: "9,000.00",
-  loanCurrency: "EUR",
-  preferredTenure: "7",
-  tenureUnit: "months",
-  intendedUseOfFunds: "To purchase more solar panels for my business",
-  appliedOn: "25-01-2025",
-};
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
 
 export default function LoanSummaryPage() {
+  const params = useParams();
+  const applicationId = params.id as string;
+
+  const { data: application, isLoading, error } = useLoanApplication(applicationId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-primaryGrey-500">Loading loan application details...</p>
+      </div>
+    );
+  }
+
+  if (error || !application) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-red-500">Error loading loan application details. Please try again.</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -39,7 +57,7 @@ export default function LoanSummaryPage() {
             <Label className="text-primaryGrey-400">Loan product</Label>
             <Input
               type="text"
-              value={dummyLoanSummary.loanProduct}
+              value={application.loanProduct?.name || "N/A"}
               readOnly
               className="h-10 bg-white border-primaryGrey-200"
             />
@@ -50,7 +68,7 @@ export default function LoanSummaryPage() {
             <Label className="text-primaryGrey-400">Loan provider/organization</Label>
             <Input
               type="text"
-              value={dummyLoanSummary.loanProvider}
+              value={application.organizationName || "N/A"}
               readOnly
               className="h-10 bg-white border-primaryGrey-200"
             />
@@ -62,12 +80,15 @@ export default function LoanSummaryPage() {
             <div className="flex">
               <Input
                 type="text"
-                value={dummyLoanSummary.loanRequested}
+                value={application.fundingAmount.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
                 readOnly
                 className="h-10 bg-white border-primaryGrey-200 rounded-r-none border-r-0"
               />
               <div className="h-10 px-3 flex items-center justify-center border border-primaryGrey-200 rounded-r-md border-l-0 bg-primaryGrey-50 text-sm text-primaryGrey-600">
-                {dummyLoanSummary.loanCurrency}
+                {application.fundingCurrency}
               </div>
             </div>
           </div>
@@ -78,12 +99,12 @@ export default function LoanSummaryPage() {
             <div className="flex">
               <Input
                 type="text"
-                value={dummyLoanSummary.preferredTenure}
+                value={application.repaymentPeriod.toString()}
                 readOnly
                 className="h-10 bg-white border-primaryGrey-200 rounded-r-none border-r-0"
               />
               <div className="h-10 px-3 flex items-center justify-center border border-primaryGrey-200 rounded-r-md border-l-0 bg-primaryGrey-50 text-sm text-primaryGrey-600">
-                {dummyLoanSummary.tenureUnit}
+                months
               </div>
             </div>
           </div>
@@ -94,13 +115,13 @@ export default function LoanSummaryPage() {
           <Label className="text-primaryGrey-400">Intended use of funds</Label>
           <div className="relative">
             <Textarea
-              value={dummyLoanSummary.intendedUseOfFunds}
+              value={application.intendedUseOfFunds}
               readOnly
               rows={4}
               className="bg-white border-primaryGrey-200 resize-none pr-16"
             />
             <div className="absolute bottom-2 right-2 text-xs text-primaryGrey-400">
-              {dummyLoanSummary.intendedUseOfFunds.length}/100
+              {application.intendedUseOfFunds.length}/100
             </div>
           </div>
         </div>
@@ -109,7 +130,7 @@ export default function LoanSummaryPage() {
           <Label className="text-primaryGrey-400">Applied on</Label>
           <Input
             type="text"
-            value={dummyLoanSummary.appliedOn}
+            value={formatDate(application.createdAt)}
             readOnly
             className="h-10 bg-white border-primaryGrey-200"
           />

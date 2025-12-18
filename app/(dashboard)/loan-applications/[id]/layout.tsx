@@ -21,28 +21,6 @@ type LoanApplicationStage =
   | "awaiting_disbursement"
   | "disbursed";
 
-// Dummy data - will be replaced with API call later
-const dummyLoanApplication = {
-  id: "1",
-  loanId: "LN-65938",
-  companyName: "Cesha Investments Ltd",
-  companyLogo: null,
-  legalEntityType: "Public Limited Company",
-  city: "Nairobi",
-  country: "Kenya",
-  loanSource: "Admin Platform",
-  loanApplicant: {
-    name: "Robert Mugabe",
-    email: "robert.mugabe@cesha.com",
-    phone: "+255712345678",
-    avatar: undefined,
-  },
-  loanProduct: "Invoice Discount Facility",
-  status: "kyc_kyb_verification" as LoanApplicationStage,
-  createdAt: "2025-01-28",
-  createdBy: "Melanie Keita",
-};
-
 export default function LoanApplicationDetailLayout({
   children,
 }: {
@@ -90,26 +68,33 @@ export default function LoanApplicationDetailLayout({
     );
   }
 
+  // Helper function to get full name from user object
+  const getFullName = (user: { firstName?: string | null; lastName?: string | null } | undefined) => {
+    if (!user) return "";
+    const parts = [user.firstName, user.lastName].filter(Boolean);
+    return parts.length > 0 ? parts.join(" ") : "";
+  };
+
   // Transform API data to match component expectations
   const applicationData = {
     id: application.id,
     loanId: application.loanId,
-    companyName: application.businessName,
-    companyLogo: null,
-    legalEntityType: "", // TODO: Add to API response
-    city: "", // TODO: Add to API response
-    country: "", // TODO: Add to API response
-    loanSource: application.loanSource,
+    companyName: application.businessName || application.business?.name || "",
+    companyLogo: null, // Logo not available in API response
+    legalEntityType: "", // Not available in new API structure
+    city: application.business?.city || "",
+    country: application.business?.country || "",
+    loanSource: application.loanSource || "",
     loanApplicant: {
-      name: application.applicant.name,
-      email: application.applicant.email,
-      phone: application.applicant.phone,
-      avatar: application.applicant.avatar,
+      name: application.applicantName || getFullName(application.entrepreneur) || "N/A",
+      email: application.entrepreneur?.email || "",
+      phone: application.entrepreneur?.phoneNumber || "",
+      avatar: application.entrepreneur?.imageUrl || undefined,
     },
-    loanProduct: application.loanProduct,
+    loanProduct: application.loanProduct?.name || "",
     status: application.status as LoanApplicationStage,
-    createdAt: application.createdAt,
-    createdBy: application.createdBy,
+    createdAt: application.createdAt || "",
+    createdBy: application.creatorName || getFullName(application.creator) || application.createdBy || "",
   };
 
   return (

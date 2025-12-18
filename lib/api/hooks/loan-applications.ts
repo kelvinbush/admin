@@ -269,11 +269,107 @@ export function useCreateLoanApplication() {
 }
 
 /**
+ * Detailed loan application response (for detail page)
+ * GET /loan-applications/:id
+ */
+export interface LoanApplicationDetail {
+  // Core application data
+  id: string;
+  loanId: string;
+  businessId: string;
+  entrepreneurId: string;
+  loanProductId: string;
+  
+  // Funding details
+  fundingAmount: number;
+  fundingCurrency: string;
+  convertedAmount?: number;
+  convertedCurrency?: string;
+  exchangeRate?: number;
+  
+  // Terms
+  repaymentPeriod: number; // in months
+  interestRate: number; // percentage (e.g., 10 for 10%)
+  intendedUseOfFunds: string;
+  
+  // Metadata
+  loanSource: string;
+  status: LoanApplicationStatus;
+  
+  // Timeline (optional - only set when status changes)
+  submittedAt?: string; // ISO 8601 timestamp
+  approvedAt?: string; // ISO 8601 timestamp
+  rejectedAt?: string; // ISO 8601 timestamp
+  disbursedAt?: string; // ISO 8601 timestamp
+  cancelledAt?: string; // ISO 8601 timestamp
+  rejectionReason?: string; // Only present if rejected
+  
+  // Audit fields
+  createdAt: string; // ISO 8601 timestamp
+  updatedAt: string; // ISO 8601 timestamp
+  lastUpdatedAt?: string; // ISO 8601 timestamp
+  createdBy: string; // User ID
+  lastUpdatedBy?: string; // User ID
+  
+  // Convenience fields (for easy frontend access)
+  businessName: string; // Business name
+  sector?: string | null; // Business sector
+  applicantName: string; // Full name of entrepreneur/applicant
+  organizationName: string; // Name of organization providing the loan
+  creatorName: string; // Full name of creator
+  
+  // Related data - Business
+  business: {
+    id: string;
+    name: string;
+    description?: string | null;
+    sector?: string | null;
+    country?: string | null;
+    city?: string | null;
+  };
+  
+  // Related data - Entrepreneur
+  entrepreneur: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+    phoneNumber?: string | null;
+    imageUrl?: string | null;
+  };
+  
+  // Related data - Loan Product
+  loanProduct: {
+    id: string;
+    name: string;
+    currency: string;
+    minAmount: number;
+    maxAmount: number;
+  };
+  
+  // Related data - Creator
+  creator: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  };
+  
+  // Related data - Last Updated By (optional)
+  lastUpdatedByUser?: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+  };
+}
+
+/**
  * Get a single loan application by ID
  * GET /loan-applications/:id
  */
 export function useLoanApplication(applicationId: string) {
-  return useClientApiQuery<LoanApplication>(
+  return useClientApiQuery<LoanApplicationDetail>(
     queryKeys.loanApplications.detail(applicationId),
     `/loan-applications/${applicationId}`,
     undefined,
