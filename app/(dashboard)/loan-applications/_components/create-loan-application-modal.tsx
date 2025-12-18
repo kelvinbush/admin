@@ -11,6 +11,13 @@ import { InputWithCurrency, currencies } from "@/components/ui/input-with-curren
 import { X, Check, Building2, Info, ExternalLink } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
+import { 
+  useCreateLoanApplication, 
+  useSearchLoanProducts, 
+  useSearchBusinesses,
+  type LoanProductSearchItem,
+  type BusinessSearchItem 
+} from "@/lib/api/hooks/loan-applications";
 
 interface CreateLoanApplicationModalProps {
   open: boolean;
@@ -18,118 +25,37 @@ interface CreateLoanApplicationModalProps {
   onCreated?: () => void;
 }
 
-// Dummy business data type (similar to BusinessSearchItem)
-interface BusinessItem {
-  id: string;
-  name: string;
-  description?: string;
-  sector?: string;
-  city?: string;
-  country?: string;
-  owner: {
-    firstName?: string;
-    lastName?: string;
-    email: string;
-  };
-}
-
-// Dummy loan product type
-interface LoanProduct {
-  id: string;
-  name: string;
-}
-
-// Dummy data for businesses
-const dummyBusinesses: BusinessItem[] = [
-  {
-    id: "biz-001",
-    name: "DMA Solutions Limited",
-    description: "Technology solutions provider",
-    sector: "Technology",
-    city: "Nairobi",
-    country: "Kenya",
-    owner: {
-      firstName: "Robert",
-      lastName: "Mugabe",
-      email: "robert.mugabe@dma.com",
-    },
-  },
-  {
-    id: "biz-002",
-    name: "Agribora Ventures Limited",
-    description: "Agricultural products and services",
-    sector: "Agriculture",
-    city: "Kampala",
-    country: "Uganda",
-    owner: {
-      firstName: "Alice",
-      lastName: "Johnson",
-      email: "alice.johnson@agribora.com",
-    },
-  },
-  {
-    id: "biz-003",
-    name: "TechStart Innovations",
-    description: "Startup incubator and tech consulting",
-    sector: "Technology",
-    city: "Dar es Salaam",
-    country: "Tanzania",
-    owner: {
-      firstName: "David",
-      lastName: "Kim",
-      email: "david.kim@techstart.com",
-    },
-  },
-  {
-    id: "biz-004",
-    name: "GreenFuture Enterprises",
-    description: "Sustainable energy solutions",
-    sector: "Energy",
-    city: "Kigali",
-    country: "Rwanda",
-    owner: {
-      firstName: "Emma",
-      lastName: "Wilson",
-      email: "emma.wilson@greenfuture.com",
-    },
-  },
-  {
-    id: "biz-005",
-    name: "Kokari Ventures Limited",
-    description: "Trading and distribution",
-    sector: "Trade",
-    city: "Nairobi",
-    country: "Kenya",
-    owner: {
-      firstName: "Lisa",
-      lastName: "Chen",
-      email: "lisa.chen@kokari.com",
-    },
-  },
-];
-
-// Dummy loan products
-const dummyLoanProducts: LoanProduct[] = [
-  { id: "lp-001", name: "Invoice Discount Facility" },
-  { id: "lp-002", name: "Term Loan" },
-  { id: "lp-003", name: "Asset Financing" },
-  { id: "lp-004", name: "LPO Financing" },
-  { id: "lp-005", name: "Working Capital Loan" },
-];
 
 export function CreateLoanApplicationModal({
   open,
   onOpenChange,
   onCreated,
 }: CreateLoanApplicationModalProps) {
-  const [selectedBusiness, setSelectedBusiness] = useState<BusinessItem | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessSearchItem | null>(null);
   const [businessSearch, setBusinessSearch] = useState("");
   const [showBusinessSearch, setShowBusinessSearch] = useState(false);
-  const [selectedLoanProduct, setSelectedLoanProduct] = useState<LoanProduct | null>(null);
+  const [selectedLoanProduct, setSelectedLoanProduct] = useState<LoanProductSearchItem | null>(null);
   const [showLoanProductDropdown, setShowLoanProductDropdown] = useState(false);
   const [loanProductSearch, setLoanProductSearch] = useState("");
   const businessSearchRef = useRef<HTMLDivElement>(null);
   const loanProductRef = useRef<HTMLDivElement>(null);
+
+  // Hooks
+  const debouncedBusinessSearch = useDebounce(businessSearch, 300);
+  const debouncedLoanProductSearch = useDebounce(loanProductSearch, 300);
+  
+  const { data: businessesData, isLoading: isLoadingBusinesses } = useSearchBusinesses(
+    debouncedBusinessSearch || undefined,
+    { page: 1, limit: 20 }
+  );
+  
+  const { data: loanProductsData, isLoading: isLoadingLoanProducts } = useSearchLoanProducts(
+    debouncedLoanProductSearch || undefined,
+    { page: 1, limit: 20 },
+    true
+  );
+  
+  const createLoanApplicationMutation = useCreateLoanApplication();
   
   // Funding amount
   const [fundingAmount, setFundingAmount] = useState("10000.00");
@@ -141,6 +67,7 @@ export function CreateLoanApplicationModal({
   
   // Repayment period
   const [repaymentPeriod, setRepaymentPeriod] = useState("3");
+  const [repaymentSliderValue, setRepaymentSliderValue] = useState(3);
   
   // Intended use of funds
   const [intendedUse, setIntendedUse] = useState("");
@@ -148,30 +75,66 @@ export function CreateLoanApplicationModal({
   // Interest rate
   const [interestRate, setInterestRate] = useState("10");
 
-  const debouncedBusinessSearch = useDebounce(businessSearch, 300);
-  const debouncedLoanProductSearch = useDebounce(loanProductSearch, 300);
+  // Get businesses and loan products from API
+  const businesses = businessesData?.data || [];
+  const loanProducts = loanProductsData?.data || [];
 
-  // Filter businesses
-  const filteredBusinesses = useMemo(() => {
-    if (!debouncedBusinessSearch) return [];
-    const searchLower = debouncedBusinessSearch.toLowerCase();
-    return dummyBusinesses.filter(
-      (business) =>
-        business.name.toLowerCase().includes(searchLower) ||
-        business.owner.email.toLowerCase().includes(searchLower) ||
-        (business.owner.firstName && business.owner.firstName.toLowerCase().includes(searchLower)) ||
-        (business.owner.lastName && business.owner.lastName.toLowerCase().includes(searchLower))
-    );
-  }, [debouncedBusinessSearch]);
+  // Get loan product constraints
+  const loanProductConstraints = useMemo(() => {
+    if (!selectedLoanProduct) return null;
+    
+    // Convert term to months if needed
+    let minTermMonths = selectedLoanProduct.minTerm;
+    let maxTermMonths = selectedLoanProduct.maxTerm;
+    
+    if (selectedLoanProduct.termUnit !== "months") {
+      const conversionFactors: Record<string, number> = {
+        days: 1 / 30,
+        weeks: 1 / 4.33,
+        months: 1,
+        quarters: 3,
+        years: 12,
+      };
+      const factor = conversionFactors[selectedLoanProduct.termUnit] || 1;
+      minTermMonths = Math.ceil(selectedLoanProduct.minTerm * factor);
+      maxTermMonths = Math.floor(selectedLoanProduct.maxTerm * factor);
+    }
+    
+    return {
+      minAmount: selectedLoanProduct.minAmount,
+      maxAmount: selectedLoanProduct.maxAmount,
+      minTerm: minTermMonths,
+      maxTerm: maxTermMonths,
+      currency: selectedLoanProduct.currency,
+    };
+  }, [selectedLoanProduct]);
 
-  // Filter loan products
-  const filteredLoanProducts = useMemo(() => {
-    if (!debouncedLoanProductSearch) return dummyLoanProducts;
-    const searchLower = debouncedLoanProductSearch.toLowerCase();
-    return dummyLoanProducts.filter((product) =>
-      product.name.toLowerCase().includes(searchLower)
-    );
-  }, [debouncedLoanProductSearch]);
+  // Update currency and reset values when loan product changes
+  useEffect(() => {
+    if (selectedLoanProduct && loanProductConstraints) {
+      // Update currency to match loan product
+      setFundingCurrency(selectedLoanProduct.currency);
+      
+      // Reset funding amount to min amount (or keep current if within range)
+      const currentAmount = parseFloat(fundingAmount) || 0;
+      const newAmount = Math.max(
+        loanProductConstraints.minAmount,
+        Math.min(currentAmount, loanProductConstraints.maxAmount)
+      );
+      setFundingAmount(newAmount.toFixed(2));
+      setSliderValue(newAmount);
+      
+      // Reset repayment period to min term (or keep current if within range)
+      const currentPeriod = parseInt(repaymentPeriod) || loanProductConstraints.minTerm;
+      const newPeriod = Math.max(
+        loanProductConstraints.minTerm,
+        Math.min(currentPeriod, loanProductConstraints.maxTerm)
+      );
+      setRepaymentPeriod(newPeriod.toString());
+      setRepaymentSliderValue(newPeriod);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLoanProduct?.id]); // Only run when loan product ID changes
 
   // Calculate converted amount when funding amount, currency, or exchange rate changes
   useEffect(() => {
@@ -182,11 +145,27 @@ export function CreateLoanApplicationModal({
 
   // Update slider when funding amount changes manually
   useEffect(() => {
-    const amount = parseFloat(fundingAmount) || 0;
-    if (amount >= 10000 && amount <= 50000) {
-      setSliderValue(amount);
+    if (loanProductConstraints) {
+      const amount = parseFloat(fundingAmount) || 0;
+      const clampedAmount = Math.max(
+        loanProductConstraints.minAmount,
+        Math.min(amount, loanProductConstraints.maxAmount)
+      );
+      setSliderValue(clampedAmount);
     }
-  }, [fundingAmount]);
+  }, [fundingAmount, loanProductConstraints]);
+
+  // Update repayment slider when repayment period changes manually
+  useEffect(() => {
+    if (loanProductConstraints) {
+      const period = parseInt(repaymentPeriod) || loanProductConstraints.minTerm;
+      const clampedPeriod = Math.max(
+        loanProductConstraints.minTerm,
+        Math.min(period, loanProductConstraints.maxTerm)
+      );
+      setRepaymentSliderValue(clampedPeriod);
+    }
+  }, [repaymentPeriod, loanProductConstraints]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -209,13 +188,45 @@ export function CreateLoanApplicationModal({
   }, [showBusinessSearch, showLoanProductDropdown]);
 
   // Update funding amount when slider changes
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
+  const handleFundingSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
     setSliderValue(value);
     setFundingAmount(value.toFixed(2));
   };
 
-  const getOwnerName = (business: BusinessItem) => {
+  // Update repayment period when slider changes
+  const handleRepaymentSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setRepaymentSliderValue(value);
+    setRepaymentPeriod(value.toString());
+  };
+
+  // Validation helpers
+  const fundingAmountError = useMemo(() => {
+    if (!selectedLoanProduct || !loanProductConstraints) return null;
+    const amount = parseFloat(fundingAmount) || 0;
+    if (amount < loanProductConstraints.minAmount) {
+      return `Minimum amount is ${loanProductConstraints.currency} ${loanProductConstraints.minAmount.toLocaleString()}`;
+    }
+    if (amount > loanProductConstraints.maxAmount) {
+      return `Maximum amount is ${loanProductConstraints.currency} ${loanProductConstraints.maxAmount.toLocaleString()}`;
+    }
+    return null;
+  }, [fundingAmount, loanProductConstraints, selectedLoanProduct]);
+
+  const repaymentPeriodError = useMemo(() => {
+    if (!selectedLoanProduct || !loanProductConstraints) return null;
+    const period = parseInt(repaymentPeriod) || 0;
+    if (period < loanProductConstraints.minTerm) {
+      return `Minimum term is ${loanProductConstraints.minTerm} months`;
+    }
+    if (period > loanProductConstraints.maxTerm) {
+      return `Maximum term is ${loanProductConstraints.maxTerm} months`;
+    }
+    return null;
+  }, [repaymentPeriod, loanProductConstraints, selectedLoanProduct]);
+
+  const getOwnerName = (business: BusinessSearchItem) => {
     if (business.owner.firstName && business.owner.lastName) {
       return `${business.owner.firstName} ${business.owner.lastName}`;
     }
@@ -226,33 +237,33 @@ export function CreateLoanApplicationModal({
     window.open("/loan-products/create", "_blank");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!selectedBusiness || !selectedLoanProduct) return;
+
     const formData = {
-      businessId: selectedBusiness?.id,
-      businessName: selectedBusiness?.name,
-      entrepreneurId: selectedBusiness?.id.replace("biz-", "ent-"), // Dummy mapping
-      loanProductId: selectedLoanProduct?.id,
-      loanProductName: selectedLoanProduct?.name,
+      businessId: selectedBusiness.id,
+      entrepreneurId: selectedBusiness.owner.id, // Use owner.id from API response
+      loanProductId: selectedLoanProduct.id,
       fundingAmount: parseFloat(fundingAmount),
       fundingCurrency,
-      convertedAmount: parseFloat(convertedAmount),
-      convertedCurrency,
-      exchangeRate,
+      convertedAmount: parseFloat(convertedAmount) || undefined,
+      convertedCurrency: convertedCurrency || undefined,
+      exchangeRate: exchangeRate || undefined,
       repaymentPeriod: parseInt(repaymentPeriod),
       intendedUseOfFunds: intendedUse,
       interestRate: parseFloat(interestRate),
+      loanSource: "Admin Platform",
     };
 
-    console.log("Loan Application Form Data:", formData);
-    
-    // TODO: Replace with actual API call
-    // await createLoanApplication(formData);
-    
-    // Reset form
-    resetForm();
-    
-    onOpenChange(false);
-    if (onCreated) onCreated();
+    try {
+      await createLoanApplicationMutation.mutateAsync(formData);
+      resetForm();
+      onOpenChange(false);
+      if (onCreated) onCreated();
+    } catch (error) {
+      console.error("Error creating loan application:", error);
+      // TODO: Show error toast/notification
+    }
   };
 
   const resetForm = () => {
@@ -265,8 +276,10 @@ export function CreateLoanApplicationModal({
     setFundingAmount("10000.00");
     setSliderValue(10000);
     setRepaymentPeriod("3");
+    setRepaymentSliderValue(3);
     setIntendedUse("");
     setInterestRate("10");
+    setFundingCurrency("EUR");
   };
 
   const handleClose = () => {
@@ -274,7 +287,15 @@ export function CreateLoanApplicationModal({
     onOpenChange(false);
   };
 
-  const isFormValid = selectedBusiness && selectedLoanProduct && fundingAmount && repaymentPeriod && intendedUse && interestRate;
+  const isFormValid = 
+    selectedBusiness && 
+    selectedLoanProduct && 
+    fundingAmount && 
+    repaymentPeriod && 
+    intendedUse && 
+    interestRate &&
+    !fundingAmountError &&
+    !repaymentPeriodError;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -328,12 +349,16 @@ export function CreateLoanApplicationModal({
                       />
                     </div>
                     <div className="max-h-80 overflow-auto">
-                      {filteredBusinesses.length === 0 ? (
+                      {isLoadingBusinesses ? (
+                        <div className="px-4 py-8 text-center text-sm text-primaryGrey-500">
+                          Loading businesses...
+                        </div>
+                      ) : businesses.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-primaryGrey-500">
                           {businessSearch ? "No businesses found" : "Start typing to search"}
                         </div>
                       ) : (
-                        filteredBusinesses.map((business) => (
+                        businesses.map((business) => (
                           <button
                             key={business.id}
                             type="button"
@@ -425,12 +450,16 @@ export function CreateLoanApplicationModal({
                         />
                       </div>
                       <div className="max-h-48 overflow-auto">
-                        {filteredLoanProducts.length === 0 ? (
+                        {isLoadingLoanProducts ? (
                           <div className="px-4 py-8 text-center text-sm text-primaryGrey-500">
-                            No loan products found
+                            Loading loan products...
+                          </div>
+                        ) : loanProducts.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-sm text-primaryGrey-500">
+                            {loanProductSearch ? "No loan products found" : "Start typing to search"}
                           </div>
                         ) : (
-                          filteredLoanProducts.map((product) => (
+                          loanProducts.map((product) => (
                             <button
                               key={product.id}
                               type="button"
@@ -465,6 +494,11 @@ export function CreateLoanApplicationModal({
             <div className="space-y-2">
               <Label className="text-primaryGrey-400">
                 How much funding do they need? <span className="text-red-500">*</span>
+                {selectedLoanProduct && loanProductConstraints && (
+                  <span className="ml-2 text-xs font-normal text-primaryGrey-500">
+                    (Range: {loanProductConstraints.currency} {loanProductConstraints.minAmount.toLocaleString()} - {loanProductConstraints.maxAmount.toLocaleString()})
+                  </span>
+                )}
               </Label>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -475,12 +509,11 @@ export function CreateLoanApplicationModal({
                       onChange={(e) => {
                         const value = e.target.value;
                         setFundingAmount(value);
-                        const numValue = parseFloat(value) || 0;
-                        setSliderValue(Math.min(50000, Math.max(10000, numValue)));
                       }}
                       currencyValue={fundingCurrency}
                       onCurrencyValueChange={setFundingCurrency}
-                      className="h-10"
+                      className={cn("h-10", fundingAmountError && "border-red-500")}
+                      disabled={!selectedLoanProduct}
                     />
                   </div>
                   <span className="text-primaryGrey-400">=</span>
@@ -495,24 +528,30 @@ export function CreateLoanApplicationModal({
                     />
                   </div>
                 </div>
+                {fundingAmountError && (
+                  <p className="text-xs text-red-500">{fundingAmountError}</p>
+                )}
                 <p className="text-xs text-primaryGrey-500">
                   Exchange rate: 1 {fundingCurrency} = {exchangeRate.toFixed(2)} {convertedCurrency}
                 </p>
-                <div className="space-y-2">
-                  <input
-                    type="range"
-                    min="10000"
-                    max="50000"
-                    step="1000"
-                    value={sliderValue}
-                    onChange={handleSliderChange}
-                    className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
-                  />
-                  <div className="flex justify-between text-xs text-primaryGrey-500">
-                    <span>€10,000</span>
-                    <span>€50,000</span>
+                {selectedLoanProduct && loanProductConstraints && (
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min={loanProductConstraints.minAmount}
+                      max={loanProductConstraints.maxAmount}
+                      step={Math.max(1, (loanProductConstraints.maxAmount - loanProductConstraints.minAmount) / 100)}
+                      value={sliderValue}
+                      onChange={handleFundingSliderChange}
+                      className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
+                      disabled={!selectedLoanProduct}
+                    />
+                    <div className="flex justify-between text-xs text-primaryGrey-500">
+                      <span>{loanProductConstraints.currency} {loanProductConstraints.minAmount.toLocaleString()}</span>
+                      <span>{loanProductConstraints.currency} {loanProductConstraints.maxAmount.toLocaleString()}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -520,34 +559,45 @@ export function CreateLoanApplicationModal({
             <div className="space-y-2">
               <Label className="text-primaryGrey-400">
                 What is the preferred repayment period? <span className="text-red-500">*</span>
+                {selectedLoanProduct && loanProductConstraints && (
+                  <span className="ml-2 text-xs font-normal text-primaryGrey-500">
+                    (Range: {loanProductConstraints.minTerm} - {loanProductConstraints.maxTerm} months)
+                  </span>
+                )}
               </Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   value={repaymentPeriod}
                   onChange={(e) => setRepaymentPeriod(e.target.value)}
-                  className="h-10 w-24"
+                  className={cn("h-10 w-24", repaymentPeriodError && "border-red-500")}
+                  disabled={!selectedLoanProduct}
+                  min={loanProductConstraints?.minTerm}
+                  max={loanProductConstraints?.maxTerm}
                 />
                 <span className="text-sm text-primaryGrey-500">months</span>
               </div>
-              <div className="flex gap-2 mt-2">
-                {["3", "6", "9", "12"].map((months) => (
-                  <Button
-                    key={months}
-                    type="button"
-                    variant={repaymentPeriod === months ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setRepaymentPeriod(months)}
-                    className={cn(
-                      repaymentPeriod === months
-                        ? "bg-primary-green text-white border-primary-green"
-                        : ""
-                    )}
-                  >
-                    {months} months
-                  </Button>
-                ))}
-              </div>
+              {repaymentPeriodError && (
+                <p className="text-xs text-red-500">{repaymentPeriodError}</p>
+              )}
+              {selectedLoanProduct && loanProductConstraints && (
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min={loanProductConstraints.minTerm}
+                    max={loanProductConstraints.maxTerm}
+                    step={1}
+                    value={repaymentSliderValue}
+                    onChange={handleRepaymentSliderChange}
+                    className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
+                    disabled={!selectedLoanProduct}
+                  />
+                  <div className="flex justify-between text-xs text-primaryGrey-500">
+                    <span>{loanProductConstraints.minTerm} months</span>
+                    <span>{loanProductConstraints.maxTerm} months</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Intended Use of Funds */}
@@ -581,6 +631,7 @@ export function CreateLoanApplicationModal({
                   value={interestRate}
                   onChange={(e) => setInterestRate(e.target.value)}
                   className="h-10"
+                  readOnly
                 />
                 <span className="text-sm text-primaryGrey-500">%</span>
               </div>
@@ -612,9 +663,9 @@ export function CreateLoanApplicationModal({
               opacity: isFormValid ? 1 : 0.7,
             }}
             onClick={handleSubmit}
-            disabled={!isFormValid}
+            disabled={!isFormValid || createLoanApplicationMutation.isPending}
           >
-            Submit
+            {createLoanApplicationMutation.isPending ? "Creating..." : "Submit"}
           </Button>
         </DialogFooter>
       </DialogContent>

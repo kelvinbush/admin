@@ -11,326 +11,10 @@ import { LoanApplicationsEmptyState } from "./_components/loan-applications-empt
 import { LoanApplicationsTable } from "./_components/loan-applications-table";
 import { LoanApplicationsBoard } from "./_components/loan-applications-board";
 import { CreateLoanApplicationModal } from "./_components/create-loan-application-modal";
-
-// Import dummy data from table component (we'll extract it later)
-type LoanApplicationStatus =
-  | "kyc_kyb_verification"
-  | "credit_analysis"
-  | "head_of_credit_review"
-  | "rejected"
-  | "cancelled"
-  | "approved"
-  | "disbursed";
-
-type LoanApplication = {
-  id: string;
-  loanId: string;
-  loanSource: string;
-  businessName: string;
-  entrepreneurId: string;
-  businessId: string;
-  applicant: {
-    name: string;
-    email: string;
-    phone: string;
-    avatar?: string;
-  };
-  loanProduct: string;
-  loanRequested: number;
-  loanTenure: number;
-  status: LoanApplicationStatus;
-  createdAt: string;
-  createdBy: string;
-  lastUpdated: string;
-};
-
-// Dummy data - same as in table component
-const dummyData: LoanApplication[] = [
-  {
-    id: "1",
-    loanId: "LN-48291",
-    loanSource: "SME Platform",
-    businessName: "DMA Limited",
-    entrepreneurId: "ent-001",
-    businessId: "biz-001",
-    applicant: {
-      name: "Robert Mugabe",
-      email: "robert.mugabe@gmail.com",
-      phone: "+255712345678",
-    },
-    loanProduct: "LPO Financing",
-    loanRequested: 50000,
-    loanTenure: 3,
-    status: "kyc_kyb_verification",
-    createdAt: "2025-01-28",
-    createdBy: "Robert Mugabe",
-    lastUpdated: "2025-01-28",
-  },
-  {
-    id: "2",
-    loanId: "LN-90357",
-    loanSource: "Admin Platform",
-    businessName: "Duhqa",
-    entrepreneurId: "ent-002",
-    businessId: "biz-002",
-    applicant: {
-      name: "Mariame Bamba",
-      email: "mariame.bamba@gmail.com",
-      phone: "+255712345679",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 10000,
-    loanTenure: 10,
-    status: "rejected",
-    createdAt: "2025-02-01",
-    createdBy: "Mariame Bamba",
-    lastUpdated: "2025-02-03",
-  },
-  {
-    id: "3",
-    loanId: "LN-12345",
-    loanSource: "SME Platform",
-    businessName: "Lineter Enterprise Ltd",
-    entrepreneurId: "ent-003",
-    businessId: "biz-003",
-    applicant: {
-      name: "John Doe",
-      email: "john.doe@gmail.com",
-      phone: "+255712345680",
-    },
-    loanProduct: "Invoice Discount Facility",
-    loanRequested: 25000,
-    loanTenure: 6,
-    status: "credit_analysis",
-    createdAt: "2025-01-15",
-    createdBy: "John Doe",
-    lastUpdated: "2025-01-20",
-  },
-  {
-    id: "4",
-    loanId: "LN-67890",
-    loanSource: "Admin Platform",
-    businessName: "Tech Solutions Inc",
-    entrepreneurId: "ent-004",
-    businessId: "biz-004",
-    applicant: {
-      name: "Jane Smith",
-      email: "jane.smith@gmail.com",
-      phone: "+255712345681",
-    },
-    loanProduct: "Asset Financing",
-    loanRequested: 75000,
-    loanTenure: 12,
-    status: "approved",
-    createdAt: "2025-01-10",
-    createdBy: "Jane Smith",
-    lastUpdated: "2025-01-25",
-  },
-  {
-    id: "5",
-    loanId: "LN-65938",
-    loanSource: "SME Platform",
-    businessName: "Green Energy Co",
-    entrepreneurId: "ent-005",
-    businessId: "biz-005",
-    applicant: {
-      name: "Cecile Soul",
-      email: "cecile.soul@gmail.com",
-      phone: "+255712345682",
-    },
-    loanProduct: "LPO Financing",
-    loanRequested: 30000,
-    loanTenure: 4,
-    status: "head_of_credit_review",
-    createdAt: "2025-01-05",
-    createdBy: "Cecile Soul",
-    lastUpdated: "2025-01-18",
-  },
-  {
-    id: "6",
-    loanId: "LN-24680",
-    loanSource: "Admin Platform",
-    businessName: "Food & Beverage Ltd",
-    entrepreneurId: "ent-006",
-    businessId: "biz-006",
-    applicant: {
-      name: "Michael Brown",
-      email: "michael.brown@gmail.com",
-      phone: "+255712345683",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 15000,
-    loanTenure: 8,
-    status: "disbursed",
-    createdAt: "2024-12-20",
-    createdBy: "Michael Brown",
-    lastUpdated: "2025-01-15",
-  },
-  {
-    id: "7",
-    loanId: "LN-13579",
-    loanSource: "SME Platform",
-    businessName: "Retail Solutions",
-    entrepreneurId: "ent-007",
-    businessId: "biz-007",
-    applicant: {
-      name: "Sarah Johnson",
-      email: "sarah.johnson@gmail.com",
-      phone: "+255712345684",
-    },
-    loanProduct: "Invoice Discount Facility",
-    loanRequested: 20000,
-    loanTenure: 5,
-    status: "cancelled",
-    createdAt: "2024-12-15",
-    createdBy: "Sarah Johnson",
-    lastUpdated: "2025-01-10",
-  },
-  // Additional data for board view
-  {
-    id: "8",
-    loanId: "LN-11111",
-    loanSource: "Admin Platform",
-    businessName: "Agribora Ventures Limited",
-    entrepreneurId: "ent-008",
-    businessId: "biz-008",
-    applicant: {
-      name: "Alice Johnson",
-      email: "alice.johnson@agribora.com",
-      phone: "+255712345689",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 35000,
-    loanTenure: 6,
-    status: "kyc_kyb_verification",
-    createdAt: "2025-01-25",
-    createdBy: "Alice Johnson",
-    lastUpdated: "2025-01-27",
-  },
-  {
-    id: "9",
-    loanId: "LN-22222",
-    loanSource: "SME Platform",
-    businessName: "TechStart Innovations",
-    entrepreneurId: "ent-009",
-    businessId: "biz-009",
-    applicant: {
-      name: "David Kim",
-      email: "david.kim@techstart.com",
-      phone: "+255712345690",
-    },
-    loanProduct: "Asset Financing",
-    loanRequested: 45000,
-    loanTenure: 8,
-    status: "credit_analysis",
-    createdAt: "2025-01-20",
-    createdBy: "David Kim",
-    lastUpdated: "2025-01-22",
-  },
-  {
-    id: "10",
-    loanId: "LN-33333",
-    loanSource: "Admin Platform",
-    businessName: "GreenFuture Enterprises",
-    entrepreneurId: "ent-010",
-    businessId: "biz-010",
-    applicant: {
-      name: "Emma Wilson",
-      email: "emma.wilson@greenfuture.com",
-      phone: "+255712345691",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 40000,
-    loanTenure: 12,
-    status: "head_of_credit_review",
-    createdAt: "2025-01-10",
-    createdBy: "Emma Wilson",
-    lastUpdated: "2025-01-15",
-  },
-  {
-    id: "11",
-    loanId: "LN-44444",
-    loanSource: "SME Platform",
-    businessName: "Agribora Ventures Limited",
-    entrepreneurId: "ent-011",
-    businessId: "biz-011",
-    applicant: {
-      name: "Michael Brown",
-      email: "michael.brown@agribora.com",
-      phone: "+255712345692",
-    },
-    loanProduct: "Invoice Discount Facility",
-    loanRequested: 28000,
-    loanTenure: 5,
-    status: "approved",
-    createdAt: "2025-01-12",
-    createdBy: "Michael Brown",
-    lastUpdated: "2025-01-25",
-  },
-  {
-    id: "12",
-    loanId: "LN-55555",
-    loanSource: "SME Platform",
-    businessName: "GreenFuture Enterprises",
-    entrepreneurId: "ent-012",
-    businessId: "biz-012",
-    applicant: {
-      name: "Sarah Johnson",
-      email: "sarah.johnson@greenfuture.com",
-      phone: "+255712345693",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 15000,
-    loanTenure: 6,
-    status: "rejected",
-    createdAt: "2025-01-08",
-    createdBy: "Sarah Johnson",
-    lastUpdated: "2025-01-12",
-  },
-  {
-    id: "13",
-    loanId: "LN-66666",
-    loanSource: "SME Platform",
-    businessName: "Kokari Ventures Limited",
-    entrepreneurId: "ent-013",
-    businessId: "biz-013",
-    applicant: {
-      name: "Lisa Chen",
-      email: "lisa.chen@kokari.com",
-      phone: "+255712345694",
-    },
-    loanProduct: "LPO Financing",
-    loanRequested: 32000,
-    loanTenure: 4,
-    status: "disbursed",
-    createdAt: "2024-12-18",
-    createdBy: "Lisa Chen",
-    lastUpdated: "2025-01-10",
-  },
-  {
-    id: "14",
-    loanId: "LN-77777",
-    loanSource: "Admin Platform",
-    businessName: "InnovateHub Solutions",
-    entrepreneurId: "ent-014",
-    businessId: "biz-014",
-    applicant: {
-      name: "James Taylor",
-      email: "james.taylor@innovatehub.com",
-      phone: "+255712345695",
-    },
-    loanProduct: "Asset Financing",
-    loanRequested: 60000,
-    loanTenure: 10,
-    status: "disbursed",
-    createdAt: "2024-12-15",
-    createdBy: "James Taylor",
-    lastUpdated: "2025-01-05",
-  },
-];
+import { useLoanApplications, useLoanApplicationStats, type LoanApplicationFilters as ApiFilters } from "@/lib/api/hooks/loan-applications";
 
 // Map tab values to status values
-function getStatusFromTab(tab: LoanApplicationTab): LoanApplicationStatus | null {
+function getStatusFromTab(tab: LoanApplicationTab): string | null {
   switch (tab) {
     case "all":
       return null;
@@ -349,6 +33,59 @@ function getStatusFromTab(tab: LoanApplicationTab): LoanApplicationStatus | null
   }
 }
 
+// Convert UI filters to API filters
+function convertFiltersToApi(
+  searchValue: string,
+  filters: LoanApplicationFiltersState,
+  sort: LoanApplicationSort,
+  activeTab: LoanApplicationTab,
+): ApiFilters {
+  const apiFilters: ApiFilters = {};
+
+  if (searchValue) {
+    apiFilters.search = searchValue;
+  }
+
+  const tabStatus = getStatusFromTab(activeTab);
+  if (tabStatus) {
+    apiFilters.status = tabStatus as any;
+  } else if (filters.status && filters.status !== "all") {
+    const statusMap: Record<string, string> = {
+      approved: "approved",
+      pending_approval: "kyc_kyb_verification",
+      rejected: "rejected",
+      disbursed: "disbursed",
+      cancelled: "cancelled",
+    };
+    const filterStatus = statusMap[filters.status];
+    if (filterStatus) {
+      apiFilters.status = filterStatus as any;
+    }
+  }
+
+  if (filters.loanProduct && filters.loanProduct !== "all") {
+    apiFilters.loanProduct = filters.loanProduct;
+  }
+
+  if (filters.loanSource && filters.loanSource !== "all") {
+    apiFilters.loanSource = filters.loanSource;
+  }
+
+  if (filters.applicationDate && filters.applicationDate !== "all") {
+    const validDateFilters: readonly ("today" | "this_week" | "this_month" | "last_month" | "this_year")[] = ["today", "this_week", "this_month", "last_month", "this_year"];
+    if (validDateFilters.includes(filters.applicationDate as "today" | "this_week" | "this_month" | "last_month" | "this_year")) {
+      apiFilters.applicationDate = filters.applicationDate as "today" | "this_week" | "this_month" | "last_month" | "this_year";
+    }
+  }
+
+  if (sort.sortBy) {
+    apiFilters.sortBy = sort.sortBy;
+    apiFilters.sortOrder = sort.sortOrder || "desc";
+  }
+
+  return apiFilters;
+}
+
 export default function LoanApplicationsPage() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
@@ -361,6 +98,8 @@ export default function LoanApplicationsPage() {
   const [activeTab, setActiveTab] = useState<LoanApplicationTab>("all");
   const [filters, setFilters] = useState<LoanApplicationFiltersState>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
   const handleFilterChange = <K extends keyof LoanApplicationFiltersState>(
     key: K,
@@ -370,119 +109,113 @@ export default function LoanApplicationsPage() {
       ...prev,
       [key]: value === "all" ? undefined : value,
     }));
+    setPage(1); // Reset to first page when filters change
   };
 
   const handleClearFilters = () => {
     setFilters({});
+    setPage(1);
   };
 
-  // Filter and sort data
-  const filteredAndSortedData = useMemo(() => {
-    let filtered = [...dummyData];
+  // Convert UI state to API filters
+  const apiFilters = useMemo(
+    () => convertFiltersToApi(searchValue, filters, sort, activeTab),
+    [searchValue, filters, sort, activeTab]
+  );
 
-    // Apply tab filter (status)
-    const tabStatus = getStatusFromTab(activeTab);
-    if (tabStatus) {
-      filtered = filtered.filter((app) => app.status === tabStatus);
-    }
+  // Fetch loan applications
+  const { data: applicationsData, isLoading: isLoadingApplications, error: applicationsError } = useLoanApplications(
+    apiFilters,
+    { page, limit }
+  );
 
-    // Apply search filter
-    if (searchValue) {
-      const searchLower = searchValue.toLowerCase();
-      filtered = filtered.filter(
-        (app) =>
-          app.loanId.toLowerCase().includes(searchLower) ||
-          app.businessName.toLowerCase().includes(searchLower) ||
-          app.applicant.name.toLowerCase().includes(searchLower) ||
-          app.applicant.email.toLowerCase().includes(searchLower) ||
-          app.loanProduct.toLowerCase().includes(searchLower) ||
-          app.loanSource.toLowerCase().includes(searchLower),
-      );
-    }
+  // Fetch stats
+  const statsFilters = useMemo(() => {
+    const { search, sortBy, sortOrder, ...statsOnlyFilters } = apiFilters;
+    return statsOnlyFilters;
+  }, [apiFilters]);
 
-    // Apply filters
-    if (filters.status && filters.status !== "all") {
-      const statusMap: Record<string, LoanApplicationStatus> = {
-        approved: "approved",
-        pending_approval: "kyc_kyb_verification",
-        rejected: "rejected",
-        disbursed: "disbursed",
-        cancelled: "cancelled",
-      };
-      const filterStatus = statusMap[filters.status];
-      if (filterStatus) {
-        filtered = filtered.filter((app) => app.status === filterStatus);
-      }
-    }
+  const { data: statsData, isLoading: isLoadingStats } = useLoanApplicationStats(statsFilters);
 
-    if (filters.loanProduct && filters.loanProduct !== "all") {
-      filtered = filtered.filter((app) =>
-        app.loanProduct.toLowerCase() === filters.loanProduct!.toLowerCase(),
-      );
-    }
+  // Transform stats data for the header component
+  const stats = useMemo(() => {
+    if (!statsData) return undefined;
 
-    if (filters.loanSource && filters.loanSource !== "all") {
-      filtered = filtered.filter((app) =>
-        app.loanSource.toLowerCase() === filters.loanSource!.toLowerCase(),
-      );
-    }
+    return [
+      {
+        label: "Total Applications",
+        value: statsData.totalApplications.toLocaleString(),
+        delta: statsData.totalApplicationsChange
+          ? `${statsData.totalApplicationsChange > 0 ? "+" : ""}${statsData.totalApplicationsChange.toFixed(1)}%`
+          : "0%",
+      },
+      {
+        label: "Approved Loans",
+        value: statsData.approved.toLocaleString(),
+        delta: statsData.approvedChange
+          ? `${statsData.approvedChange > 0 ? "+" : ""}${statsData.approvedChange.toFixed(1)}%`
+          : "0%",
+      },
+      {
+        label: "Pending Approval",
+        value: statsData.pendingApproval.toLocaleString(),
+        delta: statsData.pendingApprovalChange
+          ? `${statsData.pendingApprovalChange > 0 ? "+" : ""}${statsData.pendingApprovalChange.toFixed(1)}%`
+          : "0%",
+      },
+      {
+        label: "Rejected Loans",
+        value: statsData.rejected.toLocaleString(),
+        delta: statsData.rejectedChange
+          ? `${statsData.rejectedChange > 0 ? "+" : ""}${statsData.rejectedChange.toFixed(1)}%`
+          : "0%",
+      },
+      {
+        label: "Disbursed Loans",
+        value: statsData.disbursed.toLocaleString(),
+        delta: statsData.disbursedChange
+          ? `${statsData.disbursedChange > 0 ? "+" : ""}${statsData.disbursedChange.toFixed(1)}%`
+          : "0%",
+      },
+      {
+        label: "Cancelled Loans",
+        value: statsData.cancelled.toLocaleString(),
+        delta: statsData.cancelledChange
+          ? `${statsData.cancelledChange > 0 ? "+" : ""}${statsData.cancelledChange.toFixed(1)}%`
+          : "0%",
+      },
+    ];
+  }, [statsData]);
 
-    // Apply date filter
-    if (filters.applicationDate && filters.applicationDate !== "all") {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      filtered = filtered.filter((app) => {
-        const appDate = new Date(app.createdAt);
-        switch (filters.applicationDate) {
-          case "today":
-            return appDate >= today;
-          case "this_week":
-            const weekAgo = new Date(today);
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return appDate >= weekAgo;
-          case "this_month":
-            return appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear();
-          case "last_month":
-            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-            return appDate >= lastMonth && appDate <= lastMonthEnd;
-          case "this_year":
-            return appDate.getFullYear() === now.getFullYear();
-          default:
-            return true;
-        }
-      });
-    }
+  const applications = applicationsData?.data || [];
+  const total = applicationsData?.pagination?.total || 0;
 
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      let comparison = 0;
-      switch (sort.sortBy) {
-        case "createdAt":
-          comparison =
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-          break;
-        case "applicationNumber":
-          comparison = a.loanId.localeCompare(b.loanId);
-          break;
-        case "applicantName":
-          comparison = a.applicant.name.localeCompare(b.applicant.name);
-          break;
-        case "amount":
-          comparison = a.loanRequested - b.loanRequested;
-          break;
-      }
-      return sort.sortOrder === "asc" ? comparison : -comparison;
-    });
+  // Handle loading and error states
+  if (isLoadingApplications && !applicationsData) {
+    return (
+      <div className="space-y-6">
+        <LoanApplicationsStatsHeader stats={stats} />
+        <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex items-center justify-center min-h-[400px]">
+          <p className="text-primaryGrey-500">Loading loan applications...</p>
+        </div>
+      </div>
+    );
+  }
 
-    return sorted;
-  }, [dummyData, activeTab, searchValue, filters, sort]);
-
-  const total = filteredAndSortedData.length;
+  if (applicationsError) {
+    return (
+      <div className="space-y-6">
+        <LoanApplicationsStatsHeader stats={stats} />
+        <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex items-center justify-center min-h-[400px]">
+          <p className="text-red-500">Error loading loan applications. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <LoanApplicationsStatsHeader />
+      <LoanApplicationsStatsHeader stats={stats} />
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex flex-col gap-6">
         <LoanApplicationsHeader
           total={total}
@@ -490,7 +223,10 @@ export default function LoanApplicationsPage() {
           filtersVisible={filtersVisible}
           sort={sort}
           onSearchChange={setSearchValue}
-          onClearSearch={() => setSearchValue("")}
+          onClearSearch={() => {
+            setSearchValue("");
+            setPage(1);
+          }}
           onSortChange={setSort}
           onToggleFilters={() => setFiltersVisible((prev) => !prev)}
           onDownload={() => {
@@ -518,7 +254,7 @@ export default function LoanApplicationsPage() {
           onViewModeChange={setViewMode}
         />
 
-        {filteredAndSortedData.length === 0 ? (
+        {applications.length === 0 ? (
           <LoanApplicationsEmptyState
             onNewApplication={() => {
               setIsCreateModalOpen(true);
@@ -526,7 +262,7 @@ export default function LoanApplicationsPage() {
           />
         ) : viewMode === "table" ? (
           <LoanApplicationsTable
-            data={filteredAndSortedData}
+            data={applications}
             onRowClick={(application) => {
               router.push(
                 `/loan-applications/${application.id}?entrepreneurId=${application.entrepreneurId}&businessId=${application.businessId}`
@@ -535,7 +271,7 @@ export default function LoanApplicationsPage() {
           />
         ) : (
           <LoanApplicationsBoard
-            data={filteredAndSortedData}
+            data={applications}
             onCardClick={(application) => {
               router.push(
                 `/loan-applications/${application.id}?entrepreneurId=${application.entrepreneurId}&businessId=${application.businessId}`
@@ -549,8 +285,8 @@ export default function LoanApplicationsPage() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onCreated={() => {
-          // TODO: Refresh loan applications list
-          console.log("Loan application created");
+          // Query invalidation is handled by the hook
+          setIsCreateModalOpen(false);
         }}
       />
     </div>

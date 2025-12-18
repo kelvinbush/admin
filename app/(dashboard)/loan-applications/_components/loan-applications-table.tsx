@@ -11,173 +11,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
-type LoanApplicationStatus =
-  | "kyc_kyb_verification"
-  | "credit_analysis"
-  | "head_of_credit_review"
-  | "rejected"
-  | "cancelled"
-  | "approved"
-  | "disbursed";
-
-type LoanApplication = {
-  id: string;
-  loanId: string;
-  loanSource: string;
-  businessName: string;
-  entrepreneurId: string;
-  businessId: string;
-  applicant: {
-    name: string;
-    email: string;
-    phone: string;
-    avatar?: string;
-  };
-  loanProduct: string;
-  loanRequested: number;
-  loanTenure: number;
-  status: LoanApplicationStatus;
-  createdAt: string;
-  createdBy: string;
-  lastUpdated: string;
-};
+import type { LoanApplication, LoanApplicationStatus } from "@/lib/api/hooks/loan-applications";
 
 type LoanApplicationsTableProps = {
   data?: LoanApplication[];
   isLoading?: boolean;
   onRowClick?: (application: LoanApplication) => void;
 };
-
-// Dummy data
-const dummyData: LoanApplication[] = [
-  {
-    id: "1",
-    loanId: "LN-48291",
-    loanSource: "SME Platform",
-    businessName: "DMA Limited",
-    applicant: {
-      name: "Robert Mugabe",
-      email: "robert.mugabe@gmail.com",
-      phone: "+255712345678",
-    },
-    loanProduct: "LPO Financing",
-    loanRequested: 50000,
-    loanTenure: 3,
-    status: "kyc_kyb_verification",
-    createdAt: "2025-01-28",
-    createdBy: "Robert Mugabe",
-    lastUpdated: "2025-01-28",
-  },
-  {
-    id: "2",
-    loanId: "LN-90357",
-    loanSource: "Admin Platform",
-    businessName: "Duhqa",
-    applicant: {
-      name: "Mariame Bamba",
-      email: "mariame.bamba@gmail.com",
-      phone: "+255712345679",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 10000,
-    loanTenure: 10,
-    status: "rejected",
-    createdAt: "2025-02-01",
-    createdBy: "Mariame Bamba",
-    lastUpdated: "2025-02-03",
-  },
-  {
-    id: "3",
-    loanId: "LN-12345",
-    loanSource: "SME Platform",
-    businessName: "Lineter Enterprise Ltd",
-    applicant: {
-      name: "John Doe",
-      email: "john.doe@gmail.com",
-      phone: "+255712345680",
-    },
-    loanProduct: "Invoice Discount Facility",
-    loanRequested: 25000,
-    loanTenure: 6,
-    status: "credit_analysis",
-    createdAt: "2025-01-15",
-    createdBy: "John Doe",
-    lastUpdated: "2025-01-20",
-  },
-  {
-    id: "4",
-    loanId: "LN-67890",
-    loanSource: "Admin Platform",
-    businessName: "Tech Solutions Inc",
-    applicant: {
-      name: "Jane Smith",
-      email: "jane.smith@gmail.com",
-      phone: "+255712345681",
-    },
-    loanProduct: "Asset Financing",
-    loanRequested: 75000,
-    loanTenure: 12,
-    status: "approved",
-    createdAt: "2025-01-10",
-    createdBy: "Jane Smith",
-    lastUpdated: "2025-01-25",
-  },
-  {
-    id: "5",
-    loanId: "LN-65938",
-    loanSource: "SME Platform",
-    businessName: "Green Energy Co",
-    applicant: {
-      name: "Cecile Soul",
-      email: "cecile.soul@gmail.com",
-      phone: "+255712345682",
-    },
-    loanProduct: "LPO Financing",
-    loanRequested: 30000,
-    loanTenure: 4,
-    status: "head_of_credit_review",
-    createdAt: "2025-01-05",
-    createdBy: "Cecile Soul",
-    lastUpdated: "2025-01-18",
-  },
-  {
-    id: "6",
-    loanId: "LN-24680",
-    loanSource: "Admin Platform",
-    businessName: "Food & Beverage Ltd",
-    applicant: {
-      name: "Michael Brown",
-      email: "michael.brown@gmail.com",
-      phone: "+255712345683",
-    },
-    loanProduct: "Term Loan",
-    loanRequested: 15000,
-    loanTenure: 8,
-    status: "disbursed",
-    createdAt: "2024-12-20",
-    createdBy: "Michael Brown",
-    lastUpdated: "2025-01-15",
-  },
-  {
-    id: "7",
-    loanId: "LN-13579",
-    loanSource: "SME Platform",
-    businessName: "Retail Solutions",
-    applicant: {
-      name: "Sarah Johnson",
-      email: "sarah.johnson@gmail.com",
-      phone: "+255712345684",
-    },
-    loanProduct: "Invoice Discount Facility",
-    loanRequested: 20000,
-    loanTenure: 5,
-    status: "cancelled",
-    createdAt: "2024-12-15",
-    createdBy: "Sarah Johnson",
-    lastUpdated: "2025-01-10",
-  },
-];
 
 function getStatusBadge(status: LoanApplicationStatus) {
   switch (status) {
@@ -263,7 +103,7 @@ function getInitials(name: string): string {
 }
 
 export function LoanApplicationsTable({
-  data = dummyData,
+  data = [],
   isLoading = false,
   onRowClick,
 }: LoanApplicationsTableProps) {

@@ -16,6 +16,7 @@ export const queryKeys = {
     all: ['loan-applications'] as const,
     lists: () => [...queryKeys.loanApplications.all, 'list'] as const,
     list: (filters?: Record<string, any>) => [...queryKeys.loanApplications.lists(), JSON.stringify(filters || {})] as const,
+    stats: (filters?: Record<string, any>) => [...queryKeys.loanApplications.all, 'stats', JSON.stringify(filters || {})] as const,
     details: () => [...queryKeys.loanApplications.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.loanApplications.details(), id] as const,
     documents: (id: string) => [...queryKeys.loanApplications.detail(id), 'documents'] as const,

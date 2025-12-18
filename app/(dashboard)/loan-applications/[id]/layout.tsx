@@ -6,6 +6,7 @@ import { LoanApplicationBreadcrumb } from "./_components/loan-application-breadc
 import { LoanApplicationHeader } from "./_components/loan-application-header";
 import { LoanApplicationStagesCard } from "./_components/loan-application-stages-card";
 import { LoanApplicationTabs } from "./_components/loan-application-tabs";
+import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
 
 type LoanApplicationStage =
   | "kyc_kyb_verification"
@@ -50,8 +51,7 @@ export default function LoanApplicationDetailLayout({
   const params = useParams();
   const applicationId = params.id as string;
 
-  // TODO: Replace with actual API call
-  // const { data, isLoading, isError } = useLoanApplication(applicationId);
+  const { data: application, isLoading, error } = useLoanApplication(applicationId);
 
   const handleSendToNextStage = () => {
     // TODO: Implement stage advancement
@@ -68,23 +68,67 @@ export default function LoanApplicationDetailLayout({
     console.log("Archive loan");
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex items-center justify-center min-h-[400px]">
+          <p className="text-primaryGrey-500">Loading loan application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !application) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex items-center justify-center min-h-[400px]">
+          <p className="text-red-500">Error loading loan application. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Transform API data to match component expectations
+  const applicationData = {
+    id: application.id,
+    loanId: application.loanId,
+    companyName: application.businessName,
+    companyLogo: null,
+    legalEntityType: "", // TODO: Add to API response
+    city: "", // TODO: Add to API response
+    country: "", // TODO: Add to API response
+    loanSource: application.loanSource,
+    loanApplicant: {
+      name: application.applicant.name,
+      email: application.applicant.email,
+      phone: application.applicant.phone,
+      avatar: application.applicant.avatar,
+    },
+    loanProduct: application.loanProduct,
+    status: application.status as LoanApplicationStage,
+    createdAt: application.createdAt,
+    createdBy: application.createdBy,
+  };
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb Navigation */}
       <LoanApplicationBreadcrumb
-        companyName={dummyLoanApplication.companyName}
+        companyName={applicationData.companyName}
       />
 
       {/* Header with Banner */}
       <LoanApplicationHeader
-        application={dummyLoanApplication}
+        application={applicationData}
         onSendToNextStage={handleSendToNextStage}
         onEmailApplicant={handleEmailApplicant}
         onArchive={handleArchive}
       />
 
       {/* Stages Card */}
-      <LoanApplicationStagesCard currentStage={dummyLoanApplication.status} />
+      <LoanApplicationStagesCard currentStage={applicationData.status} />
 
       {/* Main Card - Tabs */}
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50">
