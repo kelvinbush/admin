@@ -56,6 +56,7 @@ interface LoanApplicationHeaderProps {
   onSendToNextStage?: () => void;
   onEmailApplicant?: () => void;
   onArchive?: () => void;
+  isUpdatingStatus?: boolean;
 }
 
 // Get the next stage based on current status
@@ -217,6 +218,7 @@ export function LoanApplicationHeader({
   onSendToNextStage,
   onEmailApplicant,
   onArchive,
+  isUpdatingStatus = false,
 }: LoanApplicationHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const nextStage = getNextStage(application.status);
@@ -309,13 +311,14 @@ export function LoanApplicationHeader({
                       <Button
                         size="sm"
                         onClick={onSendToNextStage}
+                        disabled={isUpdatingStatus}
                         className="h-9 px-4 text-sm text-white border-0"
                         style={{
                           background:
                             "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
                         }}
                       >
-                        {buttonText}
+                        {isUpdatingStatus ? "Updating..." : buttonText}
                       </Button>
                     )}
                     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>

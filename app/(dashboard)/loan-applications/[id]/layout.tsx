@@ -2,11 +2,17 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { LoanApplicationBreadcrumb } from "./_components/loan-application-breadcrumb";
 import { LoanApplicationHeader } from "./_components/loan-application-header";
 import { LoanApplicationStagesCard } from "./_components/loan-application-stages-card";
 import { LoanApplicationTabs } from "./_components/loan-application-tabs";
-import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
+import {
+  useLoanApplication,
+  useUpdateLoanApplicationStatus,
+  getNextStage,
+  type LoanApplicationStatus,
+} from "@/lib/api/hooks/loan-applications";
 
 type LoanApplicationStage =
   | "kyc_kyb_verification"
@@ -30,10 +36,54 @@ export default function LoanApplicationDetailLayout({
   const applicationId = params.id as string;
 
   const { data: application, isLoading, error } = useLoanApplication(applicationId);
+  const updateStatusMutation = useUpdateLoanApplicationStatus();
 
-  const handleSendToNextStage = () => {
-    // TODO: Implement stage advancement
-    console.log("Send to next stage");
+  const handleSendToNextStage = async () => {
+    if (!application) return;
+
+    const nextStatus = getNextStage(application.status);
+    if (!nextStatus) {
+      toast.error("No next stage available");
+      return;
+    }
+
+    try {
+      await updateStatusMutation.mutateAsync({
+        id: applicationId,
+        data: {
+          status: nextStatus,
+          reason: `Moving application from ${application.status} to ${nextStatus}`,
+        },
+      });
+      toast.success(`Application status updated to ${getStatusLabel(nextStatus)}`);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to update application status";
+      toast.error(errorMessage);
+    }
+  };
+
+  // Helper function to get human-readable status label
+  const getStatusLabel = (status: LoanApplicationStatus): string => {
+    const labels: Record<LoanApplicationStatus, string> = {
+      kyc_kyb_verification: "KYC-KYB Verification",
+      eligibility_check: "Eligibility Check",
+      credit_analysis: "Credit Assessment",
+      head_of_credit_review: "Head of Credit Review",
+      internal_approval_ceo: "Internal Approval (CEO)",
+      committee_decision: "Committee Decision",
+      sme_offer_approval: "SME Offer Approval",
+      document_generation: "Document Generation",
+      signing_execution: "Signing & Execution",
+      awaiting_disbursement: "Awaiting Disbursement",
+      approved: "Approved",
+      rejected: "Rejected",
+      disbursed: "Disbursed",
+      cancelled: "Cancelled",
+    };
+    return labels[status] || status;
   };
 
   const handleEmailApplicant = () => {
@@ -110,6 +160,7 @@ export default function LoanApplicationDetailLayout({
         onSendToNextStage={handleSendToNextStage}
         onEmailApplicant={handleEmailApplicant}
         onArchive={handleArchive}
+        isUpdatingStatus={updateStatusMutation.isPending}
       />
 
       {/* Stages Card */}

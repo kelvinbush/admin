@@ -24,6 +24,35 @@ export type LoanApplicationStatus =
   | "disbursed"
   | "cancelled";
 
+export interface UpdateLoanApplicationStatusRequest {
+  status: LoanApplicationStatus;
+  reason?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Get the next stage based on current status
+ */
+export function getNextStage(currentStatus: LoanApplicationStatus): LoanApplicationStatus | null {
+  const stageFlow: Record<LoanApplicationStatus, LoanApplicationStatus | null> = {
+    kyc_kyb_verification: "eligibility_check",
+    eligibility_check: "credit_analysis",
+    credit_analysis: "head_of_credit_review",
+    head_of_credit_review: "internal_approval_ceo",
+    internal_approval_ceo: "committee_decision",
+    committee_decision: "sme_offer_approval",
+    sme_offer_approval: "document_generation",
+    document_generation: "signing_execution",
+    signing_execution: "awaiting_disbursement",
+    awaiting_disbursement: "disbursed",
+    approved: null,
+    rejected: null,
+    disbursed: null,
+    cancelled: null,
+  };
+  return stageFlow[currentStatus] || null;
+}
+
 export interface LoanApplication {
   id: string;
   loanId: string;
@@ -488,4 +517,41 @@ export function useLoanApplicationTimeline(applicationId: string) {
     ...query,
     data: query.data?.data,
   };
+}
+
+/**
+ * Update loan application status
+ * PUT /loan-applications/:id/status
+ */
+export function useUpdateLoanApplicationStatus() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: UpdateLoanApplicationStatusRequest }
+  >(
+    async (api, { id, data }) => {
+      return api.put<LoanApplicationDetail>(`/loan-applications/${id}/status`, data);
+    },
+    {
+      onSuccess: (_data, variables) => {
+        // Invalidate the specific loan application detail
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        // Invalidate timeline to show the new status change
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        // Invalidate lists to update status in tables
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        // Invalidate stats
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
 }
