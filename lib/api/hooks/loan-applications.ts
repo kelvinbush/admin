@@ -326,6 +326,7 @@ export interface LoanApplicationDetail {
     sector?: string | null;
     country?: string | null;
     city?: string | null;
+    entityType?: string | null;
   };
   
   // Related data - Entrepreneur
@@ -437,4 +438,54 @@ export function useSearchBusinesses(
     "/business/search",
     config
   );
+}
+
+// ===== TIMELINE TYPES =====
+
+export type TimelineEventType =
+  | "submitted"
+  | "cancelled"
+  | "review_in_progress"
+  | "rejected"
+  | "approved"
+  | "awaiting_disbursement"
+  | "disbursed";
+
+export interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  title: string;
+  description?: string;
+  date: string;
+  time?: string;
+  updatedDate?: string;
+  updatedTime?: string;
+  performedBy?: string;
+  performedById?: string;
+  lineColor?: "green" | "orange" | "grey";
+}
+
+export interface LoanApplicationTimelineResponse {
+  data: TimelineEvent[];
+}
+
+/**
+ * Get loan application timeline events
+ * GET /loan-applications/:id/timeline
+ */
+export function useLoanApplicationTimeline(applicationId: string) {
+  const query = useClientApiQuery<LoanApplicationTimelineResponse>(
+    queryKeys.loanApplications.timeline(applicationId),
+    `/loan-applications/${applicationId}/timeline`,
+    undefined,
+    {
+      enabled: !!applicationId,
+    }
+  );
+
+  // Transform the response to extract the data array
+  return {
+    ...query,
+    data: query.data?.data,
+  };
 }

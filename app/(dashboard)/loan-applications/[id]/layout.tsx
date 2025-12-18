@@ -81,7 +81,7 @@ export default function LoanApplicationDetailLayout({
     loanId: application.loanId,
     companyName: application.businessName || application.business?.name || "",
     companyLogo: null, // Logo not available in API response
-    legalEntityType: "", // Not available in new API structure
+    legalEntityType: application.business?.entityType || "",
     city: application.business?.city || "",
     country: application.business?.country || "",
     loanSource: application.loanSource || "",

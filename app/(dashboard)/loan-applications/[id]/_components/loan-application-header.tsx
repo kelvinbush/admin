@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { businessLegalEntityTypeOptions } from "@/lib/constants/business-options";
 
 type LoanApplicationStatus =
   | "kyc_kyb_verification"
@@ -206,6 +207,11 @@ function getInitials(name: string): string {
   return name.substring(0, 2).toUpperCase();
 }
 
+function getFormattedLegalEntityType(value: string): string {
+  const option = businessLegalEntityTypeOptions.find((opt) => opt.value === value);
+  return option?.label || value;
+}
+
 export function LoanApplicationHeader({
   application,
   onSendToNextStage,
@@ -280,11 +286,11 @@ export function LoanApplicationHeader({
                 {/* Top Row: Company Name and Action Buttons */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <h1 className="text-xl font-semibold text-white">
+                    <h1 className="text-xl font-medium text-white">
                       {application.companyName}
                     </h1>
                     <p className="text-xs text-[#B6BABC]">
-                      {application.legalEntityType} • {application.city}, {application.country}
+                      {getFormattedLegalEntityType(application.legalEntityType)} • {application.city}, {application.country}
                     </p>
                   </div>
 

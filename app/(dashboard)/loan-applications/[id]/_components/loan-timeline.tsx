@@ -17,7 +17,7 @@ export interface TimelineEvent {
   id: string;
   type: TimelineEventType;
   title: string;
-  description: string;
+  description?: string;
   date: string;
   time?: string;
   updatedDate?: string;
@@ -101,9 +101,11 @@ export function LoanTimeline({ events }: LoanTimelineProps) {
                     <h3 className="text-base text-primary-green mb-2">
                       {event.title}
                     </h3>
-                    <p className="text-sm text-primaryGrey-600 mb-3">
-                      {event.description}
-                    </p>
+                    {event.description && (
+                      <p className="text-sm text-primaryGrey-600 mb-3">
+                        {event.description}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-4 text-xs text-primaryGrey-500">
                       {event.date && (
                         <span>
