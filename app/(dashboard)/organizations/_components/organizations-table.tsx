@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
-import type { OrganizationResponse } from "@/lib/api/hooks/organizations";
 
 export type OrganizationTableItem = {
   id: string;
@@ -39,8 +37,6 @@ export function OrganizationsTable({
   onDelete,
   actionBusyId,
 }: OrganizationsTableProps) {
-  const router = useRouter();
-
   if (isLoading) {
     return (
       <Card className="shadow-none">
@@ -119,13 +115,12 @@ export function OrganizationsTable({
             <TableBody>
               {data.map((org) => {
                 const isBusy = actionBusyId === org.id;
-                const createdDate = new Date(org.createdAt).toLocaleDateString();
+                const createdDate = new Date(
+                  org.createdAt,
+                ).toLocaleDateString();
 
                 return (
-                  <TableRow
-                    key={org.id}
-                    className="hover:bg-gray-50"
-                  >
+                  <TableRow key={org.id} className="hover:bg-gray-50">
                     <TableCell className="py-4">
                       <div className="text-sm font-medium text-midnight-blue">
                         {org.name}
@@ -181,4 +176,3 @@ export function OrganizationsTable({
     </Card>
   );
 }
-

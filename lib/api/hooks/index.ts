@@ -9,4 +9,3 @@ export * from "./dashboard";
 export * from "./documents";
 export * from "./internal-users";
 export * from "./sme";
-export * from "./user-groups-businesses";

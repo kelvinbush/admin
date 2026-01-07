@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { LoanFee } from "@/lib/api/hooks/loan-fees";
 
 export type LoanFeeTableItem = {
   id: string;
@@ -46,7 +45,6 @@ export function LoanFeesTable({
   onDelete,
   onUnarchive,
   actionBusyId,
-  showArchived = false,
 }: LoanFeesTableProps) {
   if (isLoading) {
     return (

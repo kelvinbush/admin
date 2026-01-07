@@ -1,14 +1,21 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LoanProductsHeader,
   type LoanProductSort,
 } from "./_components/loan-products-header";
 import { LoanProductsEmptyState } from "./_components/loan-products-empty-state";
-import { LoanProductsTable, type LoanProductTableItem } from "./_components/loan-products-table";
+import {
+  LoanProductsTable,
+  type LoanProductTableItem,
+} from "./_components/loan-products-table";
 import { LoanProductDetailsSheet } from "./_components/loan-product-details-sheet";
-import { useLoanProducts, useUpdateLoanProductStatusMutation, useLoanProduct, type LoanProduct } from "@/lib/api/hooks/loan-products";
+import {
+  useLoanProduct,
+  useLoanProducts,
+  useUpdateLoanProductStatusMutation,
+} from "@/lib/api/hooks/loan-products";
 import { useOrganizations } from "@/lib/api/hooks/organizations";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
 import { toast } from "sonner";
@@ -21,10 +28,12 @@ export default function LoanProductsPage() {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [limit] = useState(20);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Build filters for API
@@ -37,13 +46,15 @@ export default function LoanProductsPage() {
   }, [searchValue, sort]);
 
   // Fetch loan products
-  const { data: loanProductsData, isLoading } = useLoanProducts(apiFilters, { page, limit });
-  
+  const { data: loanProductsData, isLoading } = useLoanProducts(apiFilters, {
+    page,
+    limit,
+  });
 
   // Fetch organizations and user groups for display names
   const { data: organizationsData } = useOrganizations();
   const { data: userGroupsData } = useUserGroups();
-  
+
   // Create lookup maps
   const organizationsMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -68,17 +79,19 @@ export default function LoanProductsPage() {
   // Transform API data to table format
   const tableData: LoanProductTableItem[] = useMemo(() => {
     if (!loanProductsData?.data) return [];
-    
+
     return loanProductsData.data.map((product) => {
-      const organizationName = organizationsMap.get(product.organizationId) || product.organizationId;
-      const userGroupNames = product.userGroupIds
-        .map((id) => userGroupsMap.get(id) || id)
-        .join(", ") || "All Users";
-      
+      const organizationName =
+        organizationsMap.get(product.organizationId) || product.organizationId;
+      const userGroupNames =
+        product.userGroupIds
+          .map((id) => userGroupsMap.get(id) || id)
+          .join(", ") || "All Users";
+
       // Map API status to table status
       // API has: "draft" | "active" | "archived" and isActive boolean
       // Table expects: "active" | "inactive"
-      const tableStatus: "active" | "inactive" = 
+      const tableStatus: "active" | "inactive" =
         product.status === "active" && product.isActive ? "active" : "inactive";
 
       return {
@@ -88,8 +101,7 @@ export default function LoanProductsPage() {
         provider: organizationName,
         visibility: userGroupNames,
         linkedLoans: product.loansCount ?? 0,
-        status: tableStatus,
-        // Store full product data for the sheet
+        status: tableStatus, // Store full product data for the sheet
         product: product,
       };
     });
@@ -102,7 +114,10 @@ export default function LoanProductsPage() {
   // Get organization and user group names for selected product
   const selectedOrgName = useMemo(() => {
     if (!selectedProduct) return undefined;
-    return organizationsMap.get(selectedProduct.organizationId) || selectedProduct.organizationId;
+    return (
+      organizationsMap.get(selectedProduct.organizationId) ||
+      selectedProduct.organizationId
+    );
   }, [selectedProduct, organizationsMap]);
 
   const selectedUserGroupNames = useMemo(() => {
@@ -133,13 +148,16 @@ export default function LoanProductsPage() {
     setTimeout(() => setSelectedProductId(null), 300);
   };
 
-  const handleToggleStatus = async (id: string, newStatus: "active" | "inactive") => {
+  const handleToggleStatus = async (
+    id: string,
+    newStatus: "active" | "inactive",
+  ) => {
     try {
       setActionBusyId(id);
-      
+
       // Map table status to API status
       const apiStatus = newStatus === "active" ? "active" : "archived";
-      
+
       await updateStatusMutation.mutateAsync({
         id,
         data: {
@@ -148,11 +166,16 @@ export default function LoanProductsPage() {
           approvedBy: "current-user-id", // TODO: Get from auth context
         },
       });
-      
-      toast.success(`Loan product ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+
+      toast.success(
+        `Loan product ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+      );
     } catch (error: any) {
       console.error("Failed to toggle status:", error);
-      toast.error(error?.response?.data?.message || "Failed to update loan product status");
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update loan product status",
+      );
     } finally {
       setActionBusyId(null);
     }

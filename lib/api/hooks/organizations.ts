@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useClientApiQuery, useClientApiPost, useClientApiPatch, useClientApiMutation, useClientApiPaginatedQuery } from '../hooks';
-import { queryKeys } from '../query-keys';
-import type {
-  Organization,
-  OrganizationFilters,
-  PaginationParams,
-  CreateOrganizationData,
-  UpdateOrganizationData,
-} from '../types';
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useClientApiMutation,
+  useClientApiPaginatedQuery,
+  useClientApiPatch,
+  useClientApiPost,
+  useClientApiQuery,
+} from "../hooks";
+import { queryKeys } from "@/lib/api";
+import type { PaginationParams } from "../types"; // ===== ORGANIZATION HOOKS =====
 
 // ===== ORGANIZATION HOOKS =====
 
 export interface CreateOrganizationRequest {
-  name: string;        // Required, max 255 chars
+  name: string; // Required, max 255 chars
   description?: string; // Optional
 }
 
 export interface UpdateOrganizationRequest {
-  name?: string;        // Optional, max 255 chars
-  description?: string;  // Optional
+  name?: string; // Optional, max 255 chars
+  description?: string; // Optional
 }
 
 export interface OrganizationResponse {
   id: string;
   name: string;
   description?: string | null;
-  createdAt: string;  // ISO 8601 timestamp
-  updatedAt: string;  // ISO 8601 timestamp
+  createdAt: string; // ISO 8601 timestamp
+  updatedAt: string; // ISO 8601 timestamp
 }
 
 export interface PaginatedOrganizationsResponse {
@@ -39,12 +39,15 @@ export interface PaginatedOrganizationsResponse {
   totalPages: number;
 }
 
-export function useOrganizations(filters?: OrganizationFilters, pagination?: PaginationParams) {
+export function useOrganizations(
+  filters?: { search: string | undefined },
+  pagination?: PaginationParams,
+) {
   return useClientApiPaginatedQuery<PaginatedOrganizationsResponse>(
     queryKeys.organizations.list(filters),
-    '/organizations',
+    "/organizations",
     pagination?.page || 1,
-    pagination?.limit || 10
+    pagination?.limit || 10,
   );
 }
 
@@ -55,46 +58,61 @@ export function useOrganization(organizationId: string) {
     undefined,
     {
       enabled: !!organizationId,
-    }
+    },
   );
 }
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
-  
+
   return useClientApiPost<OrganizationResponse, CreateOrganizationRequest>(
-    '/organizations',
+    "/organizations",
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
-      }
-    }
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.organizations.lists(),
+        });
+      },
+    },
   );
 }
 
 export function useUpdateOrganization(organizationId: string) {
   const queryClient = useQueryClient();
-  
+
   return useClientApiPatch<OrganizationResponse, UpdateOrganizationRequest>(
     `/organizations/${organizationId}`,
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.detail(organizationId) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
-      }
-    }
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.organizations.detail(organizationId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.organizations.lists(),
+        });
+      },
+    },
   );
 }
 
 export function useDeleteOrganization() {
   const queryClient = useQueryClient();
-  
-  return useClientApiMutation<{ success: boolean; message: string }, { id: string }>(
-    async (api, { id }) => api.delete<{ success: boolean; message: string }>(`/organizations/${id}`),
+
+  return useClientApiMutation<
+    { success: boolean; message: string },
+    { id: string }
+  >(
+    async (api, { id }) =>
+      api.delete<{
+        success: boolean;
+        message: string;
+      }>(`/organizations/${id}`),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
-      }
-    }
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.organizations.lists(),
+        });
+      },
+    },
   );
 }

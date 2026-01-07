@@ -2,14 +2,21 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
-import { LoanTimeline, type TimelineEvent as ComponentTimelineEvent } from "../_components/loan-timeline";
-import { useLoanApplicationTimeline, type TimelineEvent as ApiTimelineEvent } from "@/lib/api/hooks/loan-applications";
+import {
+  LoanTimeline,
+  type TimelineEvent as ComponentTimelineEvent,
+} from "../_components/loan-timeline";
+import { useLoanApplicationTimeline } from "@/lib/api/hooks/loan-applications";
 
 export default function LoanTimelinePage() {
   const params = useParams();
   const applicationId = params.id as string;
 
-  const { data: timelineEvents, isLoading, error } = useLoanApplicationTimeline(applicationId);
+  const {
+    data: timelineEvents,
+    isLoading,
+    error,
+  } = useLoanApplicationTimeline(applicationId);
 
   if (isLoading) {
     return (
@@ -20,7 +27,8 @@ export default function LoanTimelinePage() {
             Loan application progress
           </h2>
           <p className="text-sm text-primaryGrey-500">
-            Track the key loan application stages from submission to disbursement.
+            Track the key loan application stages from submission to
+            disbursement.
           </p>
         </div>
 
@@ -41,7 +49,8 @@ export default function LoanTimelinePage() {
             Loan application progress
           </h2>
           <p className="text-sm text-primaryGrey-500">
-            Track the key loan application stages from submission to disbursement.
+            Track the key loan application stages from submission to
+            disbursement.
           </p>
         </div>
 

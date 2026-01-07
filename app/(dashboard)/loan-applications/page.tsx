@@ -131,11 +131,11 @@ export default function LoanApplicationsPage() {
 
   // Fetch stats
   const statsFilters = useMemo(() => {
-    const { search, sortBy, sortOrder, ...statsOnlyFilters } = apiFilters;
+    const { ...statsOnlyFilters } = apiFilters;
     return statsOnlyFilters;
   }, [apiFilters]);
 
-  const { data: statsData, isLoading: isLoadingStats } = useLoanApplicationStats(statsFilters);
+  const { data: statsData } = useLoanApplicationStats(statsFilters);
 
   // Transform stats data for the header component
   const stats = useMemo(() => {

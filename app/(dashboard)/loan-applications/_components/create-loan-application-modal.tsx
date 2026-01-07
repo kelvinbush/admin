@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { InputWithCurrency, currencies } from "@/components/ui/input-with-currency";
-import { X, Check, Building2, Info, ExternalLink } from "lucide-react";
+import { InputWithCurrency } from "@/components/ui/input-with-currency";
+import { X, Building2, Info, ExternalLink } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { 
@@ -62,7 +62,7 @@ export function CreateLoanApplicationModal({
   const [fundingCurrency, setFundingCurrency] = useState("EUR");
   const [convertedAmount, setConvertedAmount] = useState("1500000.00");
   const [convertedCurrency, setConvertedCurrency] = useState("KES");
-  const [exchangeRate, setExchangeRate] = useState(150.90);
+  const [exchangeRate,] = useState(150.90);
   const [sliderValue, setSliderValue] = useState(10000);
   
   // Repayment period

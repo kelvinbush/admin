@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, MoreVertical, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -61,22 +60,23 @@ interface LoanApplicationHeaderProps {
 
 // Get the next stage based on current status
 function getNextStage(currentStatus: LoanApplicationStatus): string | null {
-  const stageFlow: Record<LoanApplicationStatus, LoanApplicationStatus | null> = {
-    kyc_kyb_verification: "eligibility_check",
-    eligibility_check: "credit_analysis",
-    credit_analysis: "head_of_credit_review",
-    head_of_credit_review: "internal_approval_ceo",
-    internal_approval_ceo: "committee_decision",
-    committee_decision: "sme_offer_approval",
-    sme_offer_approval: "document_generation",
-    document_generation: "signing_execution",
-    signing_execution: "awaiting_disbursement",
-    awaiting_disbursement: "disbursed",
-    approved: null,
-    rejected: null,
-    disbursed: null,
-    cancelled: null,
-  };
+  const stageFlow: Record<LoanApplicationStatus, LoanApplicationStatus | null> =
+    {
+      kyc_kyb_verification: "eligibility_check",
+      eligibility_check: "credit_analysis",
+      credit_analysis: "head_of_credit_review",
+      head_of_credit_review: "internal_approval_ceo",
+      internal_approval_ceo: "committee_decision",
+      committee_decision: "sme_offer_approval",
+      sme_offer_approval: "document_generation",
+      document_generation: "signing_execution",
+      signing_execution: "awaiting_disbursement",
+      awaiting_disbursement: "disbursed",
+      approved: null,
+      rejected: null,
+      disbursed: null,
+      cancelled: null,
+    };
   return stageFlow[currentStatus] || null;
 }
 
@@ -119,25 +119,26 @@ function getStatusBadge(status: LoanApplicationStatus) {
     case "signing_execution":
     case "awaiting_disbursement":
       return {
-        label: status === "kyc_kyb_verification"
-          ? "KYC-KYB Verification"
-          : status === "eligibility_check"
-            ? "Eligibility Check"
-            : status === "credit_analysis"
-              ? "Credit Assessment"
-              : status === "head_of_credit_review"
-                ? "Head of Credit Review"
-                : status === "internal_approval_ceo"
-                  ? "Internal Approval (CEO)"
-                  : status === "committee_decision"
-                    ? "Committee Decision"
-                    : status === "sme_offer_approval"
-                      ? "SME Offer Approval"
-                      : status === "document_generation"
-                        ? "Document Generation"
-                        : status === "signing_execution"
-                          ? "Signing & Execution"
-                          : "Awaiting Disbursement",
+        label:
+          status === "kyc_kyb_verification"
+            ? "KYC-KYB Verification"
+            : status === "eligibility_check"
+              ? "Eligibility Check"
+              : status === "credit_analysis"
+                ? "Credit Assessment"
+                : status === "head_of_credit_review"
+                  ? "Head of Credit Review"
+                  : status === "internal_approval_ceo"
+                    ? "Internal Approval (CEO)"
+                    : status === "committee_decision"
+                      ? "Committee Decision"
+                      : status === "sme_offer_approval"
+                        ? "SME Offer Approval"
+                        : status === "document_generation"
+                          ? "Document Generation"
+                          : status === "signing_execution"
+                            ? "Signing & Execution"
+                            : "Awaiting Disbursement",
         className: "border-0",
         style: {
           backgroundColor: "#FFE5B0",
@@ -200,16 +201,11 @@ function formatDate(dateString: string): string {
   return `${day}/${month}/${year}`;
 }
 
-function getInitials(name: string): string {
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-}
 
 function getFormattedLegalEntityType(value: string): string {
-  const option = businessLegalEntityTypeOptions.find((opt) => opt.value === value);
+  const option = businessLegalEntityTypeOptions.find(
+    (opt) => opt.value === value
+  );
   return option?.label || value;
 }
 
@@ -292,7 +288,8 @@ export function LoanApplicationHeader({
                       {application.companyName}
                     </h1>
                     <p className="text-xs text-[#B6BABC]">
-                      {getFormattedLegalEntityType(application.legalEntityType)} • {application.city}, {application.country}
+                      {getFormattedLegalEntityType(application.legalEntityType)}{" "}
+                      • {application.city}, {application.country}
                     </p>
                   </div>
 
@@ -321,7 +318,10 @@ export function LoanApplicationHeader({
                         {isUpdatingStatus ? "Updating..." : buttonText}
                       </Button>
                     )}
-                    <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                    <DropdownMenu
+                      open={isMenuOpen}
+                      onOpenChange={setIsMenuOpen}
+                    >
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="outline"
@@ -393,7 +393,7 @@ export function LoanApplicationHeader({
                   variant="outline"
                   className={cn(
                     "w-fit text-xs font-normal px-2 py-0.5 rounded-md",
-                    statusBadge.className,
+                    statusBadge.className
                   )}
                   style={statusBadge.style}
                 >

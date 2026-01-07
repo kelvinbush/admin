@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useOrganizations, useDeleteOrganization } from "@/lib/api/hooks/organizations";
-import { OrganizationsTable, type OrganizationTableItem } from "./_components/organizations-table";
+import {
+  useOrganizations,
+  useDeleteOrganization,
+} from "@/lib/api/hooks/organizations";
+import {
+  OrganizationsTable,
+  type OrganizationTableItem,
+} from "./_components/organizations-table";
 import { CreateOrganizationModal } from "./_components/create-organization-modal";
 import { EditOrganizationModal } from "./_components/edit-organization-modal";
 import { Button } from "@/components/ui/button";
@@ -10,12 +16,14 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
 export default function OrganizationsPage() {
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [limit] = useState(20);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingOrg, setEditingOrg] = useState<OrganizationTableItem | null>(null);
+  const [editingOrg, setEditingOrg] = useState<OrganizationTableItem | null>(
+    null,
+  );
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
 
   // Build filters for API
@@ -26,7 +34,10 @@ export default function OrganizationsPage() {
   }, [searchValue]);
 
   // Fetch organizations
-  const { data: organizationsData, isLoading } = useOrganizations(apiFilters, { page, limit });
+  const { data: organizationsData, isLoading } = useOrganizations(apiFilters, {
+    page,
+    limit,
+  });
   const deleteMutation = useDeleteOrganization();
 
   // Transform API data to table format
@@ -67,7 +78,9 @@ export default function OrganizationsPage() {
       toast.success("Organization deleted successfully");
     } catch (error: any) {
       console.error("Failed to delete organization:", error);
-      toast.error(error?.response?.data?.message || "Failed to delete organization");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete organization",
+      );
     } finally {
       setActionBusyId(null);
     }
@@ -79,7 +92,9 @@ export default function OrganizationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-midnight-blue">Organizations</h1>
+            <h1 className="text-2xl font-semibold text-midnight-blue">
+              Organizations
+            </h1>
             <p className="text-sm text-primaryGrey-500 mt-1">
               Manage loan provider organizations
             </p>
@@ -101,11 +116,10 @@ export default function OrganizationsPage() {
         {!hasOrganizations && !isLoading ? (
           <div className="flex-1 min-h-[320px] rounded-xl border border-dashed border-primaryGrey-200 bg-primaryGrey-25 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-primaryGrey-500 mb-4">No organizations found</p>
-              <Button
-                onClick={handleCreate}
-                variant="outline"
-              >
+              <p className="text-primaryGrey-500 mb-4">
+                No organizations found
+              </p>
+              <Button onClick={handleCreate} variant="outline">
                 Create Organization
               </Button>
             </div>
@@ -146,4 +160,3 @@ export default function OrganizationsPage() {
     </div>
   );
 }
-

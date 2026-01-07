@@ -29,13 +29,6 @@ type LoanProductsHeaderProps = {
   onAddLoanProduct?: () => void;
 };
 
-const sortOptions: LoanProductSort[] = [
-  { sortBy: "createdAt", sortOrder: "desc" },
-  { sortBy: "createdAt", sortOrder: "asc" },
-  { sortBy: "name", sortOrder: "asc" },
-  { sortBy: "name", sortOrder: "desc" },
-];
-
 const sortLabels: Record<string, string> = {
   "createdAt-desc": "Newest first",
   "createdAt-asc": "Oldest first",
@@ -50,7 +43,6 @@ export function LoanProductsHeader({
   sort,
   onSearchChange,
   onClearSearch,
-  onSortChange,
   onToggleFilters,
   onDownload,
   onAddLoanProduct,

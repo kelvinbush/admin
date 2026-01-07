@@ -3,7 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createLoanProductSchema, type CreateLoanProductFormData, LoanTermUnitEnum } from "@/lib/validations/loan-product";
+import {
+  createLoanProductSchema,
+  type CreateLoanProductFormData,
+  LoanTermUnitEnum,
+} from "@/lib/validations/loan-product";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +21,11 @@ import {
 import { InputWithCurrency } from "@/components/ui/input-with-currency";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -31,14 +39,23 @@ type Step1BasicDetailsProps = {
   onBack?: () => void;
 };
 
-export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps) {
+export function Step1BasicDetails({
+  onContinue,
+  onBack,
+}: Step1BasicDetailsProps) {
   const [createUserGroupOpen, setCreateUserGroupOpen] = useState(false);
   const { formState, updateStep1Data, isEditMode } = useLoanProductForm();
-  
+
   // Fetch organizations and user groups
-  const { data: organizationsData } = useOrganizations(undefined, { page: 1, limit: 100 });
-  const { data: userGroupsData } = useUserGroups(undefined, { page: 1, limit: 100 });
-  
+  const { data: organizationsData } = useOrganizations(undefined, {
+    page: 1,
+    limit: 100,
+  });
+  const { data: userGroupsData } = useUserGroups(undefined, {
+    page: 1,
+    limit: 100,
+  });
+
   // Transform organizations to options
   const organizationOptions = useMemo(() => {
     if (!organizationsData?.items) return [];
@@ -47,7 +64,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
       value: org.id,
     }));
   }, [organizationsData]);
-  
+
   // Transform user groups to options
   const userGroupOptions = useMemo(() => {
     if (!userGroupsData?.data) return [];
@@ -56,7 +73,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
       value: group.id,
     }));
   }, [userGroupsData]);
-  
+
   // Use untyped form instance here to avoid strict generic mismatch between
   // react-hook-form and the Zod resolver while still benefiting from runtime validation.
   const form = useForm({
@@ -90,7 +107,8 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
   useEffect(() => {
     if (formState.step1Data && Object.keys(formState.step1Data).length > 0) {
       Object.keys(formState.step1Data).forEach((key) => {
-        const value = formState.step1Data?.[key as keyof typeof formState.step1Data];
+        const value =
+          formState.step1Data?.[key as keyof typeof formState.step1Data];
         if (value !== undefined && value !== null) {
           form.setValue(key as any, value, { shouldValidate: false });
         }
@@ -110,7 +128,6 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
     label: unit.charAt(0).toUpperCase() + unit.slice(1),
     value: unit,
   }));
-
 
   return (
     <Form {...form}>
@@ -134,19 +151,14 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
 
         {/* Basic loan details */}
         <section className="space-y-4">
-          <h3 className="font-medium text-midnight-blue">
-            Basic loan details
-          </h3>
+          <h3 className="font-medium text-midnight-blue">Basic loan details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    required
-                    className="text-sm text-[#444C53]"
-                  >
+                  <FormLabel required className="text-sm text-[#444C53]">
                     Loan product name
                   </FormLabel>
                   <FormControl>
@@ -189,10 +201,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
               render={() => (
                 <FormItem>
                   <div className="flex items-center justify-between -mb-3.5">
-                    <FormLabel
-                      required
-                      className="text-sm text-[#444C53]"
-                    >
+                    <FormLabel required className="text-sm text-[#444C53]">
                       Loan visibility
                     </FormLabel>
                     <button
@@ -239,7 +248,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
                           variant="outline"
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -272,7 +281,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
                               variant="outline"
                               className={cn(
                                 "w-full justify-start text-left font-normal",
-                                !endField.value && "text-muted-foreground"
+                                !endField.value && "text-muted-foreground",
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -341,10 +350,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
                 name="minTerm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel
-                      required
-                      className="text-sm text-[#444C53]"
-                    >
+                    <FormLabel required className="text-sm text-[#444C53]">
                       Minimum loan duration
                     </FormLabel>
                     <FormControl>
@@ -398,10 +404,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
                 name="maxTerm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel
-                      required
-                      className="text-sm text-[#444C53]"
-                    >
+                    <FormLabel required className="text-sm text-[#444C53]">
                       Maximum loan duration
                     </FormLabel>
                     <FormControl>
@@ -456,10 +459,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
               name="minAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    required
-                    className="text-sm text-[#444C53]"
-                  >
+                  <FormLabel required className="text-sm text-[#444C53]">
                     Minimum loan amount
                   </FormLabel>
                   <FormControl>
@@ -489,10 +489,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
               name="maxAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    required
-                    className="text-sm text-[#444C53]"
-                  >
+                  <FormLabel required className="text-sm text-[#444C53]">
                     Maximum loan amount
                   </FormLabel>
                   <FormControl>
@@ -542,7 +539,7 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
       <CreateUserGroupModal
         open={createUserGroupOpen}
         onOpenChange={setCreateUserGroupOpen}
-        onCreated={(groupId) => {
+        onCreated={() => {
           // TODO: Refresh user groups list and optionally select the new group
           // For now, just close the modal
           setCreateUserGroupOpen(false);
@@ -551,5 +548,3 @@ export function Step1BasicDetails({ onContinue, onBack }: Step1BasicDetailsProps
     </Form>
   );
 }
-
-

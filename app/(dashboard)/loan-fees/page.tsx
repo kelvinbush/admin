@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
 export default function LoanFeesPage() {
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [limit] = useState(20);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
