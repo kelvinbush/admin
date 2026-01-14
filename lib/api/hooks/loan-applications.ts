@@ -597,6 +597,60 @@ export function useCompleteEligibilityAssessment() {
   );
 }
 
+// ===== CREDIT ASSESSMENT TYPES =====
+
+export interface CompleteCreditAssessmentBody {
+  comment: string;
+  supportingDocuments?: Array<{
+    docUrl: string;
+    docName?: string;
+    notes?: string;
+  }>;
+  nextApprover?: {
+    nextApproverEmail: string;
+    nextApproverName?: string;
+  };
+}
+
+// The response for credit assessment completion would likely be the updated LoanApplicationDetail
+// or a specific response object. Assuming LoanApplicationDetail for now.
+
+/**
+ * Complete Credit Assessment
+ * POST /loan-applications/:id/credit-assessment/complete
+ */
+export function useCompleteCreditAssessment() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: CompleteCreditAssessmentBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<LoanApplicationDetail>(
+        `/loan-applications/${id}/credit-assessment/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
 export function useUpdateLoanApplicationStatus() {
   const queryClient = useQueryClient();
 

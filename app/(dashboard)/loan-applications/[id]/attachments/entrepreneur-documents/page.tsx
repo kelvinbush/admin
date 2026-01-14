@@ -55,15 +55,17 @@ export default function EntrepreneurDocumentsPage() {
         ? "approved"
         : found.verificationStatus === "rejected"
         ? "rejected"
-        : "pending_review";
+        : found.verificationStatus === "pending"
+        ? "pending_review"
+        : "missing"; // Default to missing if status is unexpected
       return {
         id: found?.id || config.id,
         name: config.name,
         uploadedAt: found?.createdAt ?? null,
-        status: status as any,
+        status: status,
         url: found?.docUrl ?? null,
         docType: config.docType,
-      } as AttachmentDocument;
+      };
     });
   }, [kycData]);
 

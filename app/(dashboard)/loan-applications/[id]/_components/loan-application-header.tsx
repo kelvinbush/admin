@@ -306,7 +306,7 @@ export function LoanApplicationHeader({
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                       Email Applicant
                     </Button>
-                    {application.status === "eligibility_check" ? (
+                    {(application.status === "eligibility_check" || application.status === "credit_analysis") ? (
                       <>
                         <Button
                           variant="outline"
@@ -327,7 +327,7 @@ export function LoanApplicationHeader({
                               "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
                           }}
                         >
-                          {isUpdatingStatus ? "Updating..." : "Send for Credit Assessment"}
+                          {isUpdatingStatus ? "Updating..." : buttonText}
                         </Button>
                       </>
                     ) : (

@@ -11,10 +11,12 @@ import { IncompleteKycKybModal } from "./_components/incomplete-kyc-kyb-modal";
 import { NextApproverModal } from "./_components/next-approver-modal";
 import { EligibilityCheckModal, type EligibilityCheckFormValues } from "./_components/eligibility-check-modal";
 import { RejectLoanModal, type RejectLoanFormValues } from "./_components/reject-loan-modal";
+import { CreditAssessmentModal, type CreditAssessmentFormValues } from "./_components/credit-assessment-modal";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
   useCompleteEligibilityAssessment,
+  useCompleteCreditAssessment,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -65,15 +67,19 @@ export default function LoanApplicationDetailLayout({
   const completeKycKybMutation = useCompleteKycKyb(applicationId);
   const updateStatusMutation = useUpdateLoanApplicationStatus();
   const completeEligibilityAssessmentMutation = useCompleteEligibilityAssessment();
+  const completeCreditAssessmentMutation = useCompleteCreditAssessment();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
   const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [creditAssessmentModalOpen, setCreditAssessmentModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
       setEligibilityModalOpen(true);
+    } else if (loanApplication?.status === "credit_analysis") {
+      setCreditAssessmentModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -285,6 +291,44 @@ export default function LoanApplicationDetailLayout({
           }
         }}
         isLoading={updateStatusMutation.isPending}
+      />
+
+      <CreditAssessmentModal
+        open={creditAssessmentModalOpen}
+        onOpenChange={setCreditAssessmentModalOpen}
+        onSubmit={async (data: CreditAssessmentFormValues) => {
+          try {
+            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            const supportingDocuments = [
+              data.supportingDocuments,
+              data.creditMemo,
+              data.offTakerAgreement,
+              data.parentGuaranteeAgreement,
+            ].filter(Boolean) as { docUrl: string; docName: string }[];
+
+            await completeCreditAssessmentMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                comment: data.assessmentComment || "",
+                supportingDocuments,
+                nextApprover: {
+                  nextApproverEmail: approver?.email || "",
+                  nextApproverName: approver ? `${approver.firstName} ${approver.lastName}` : "",
+                },
+              },
+            });
+            toast.success("Credit assessment submitted successfully.");
+            setCreditAssessmentModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to submit credit assessment.");
+          }
+        }}
+        users={internalUsers.map((u) => ({
+          clerkId: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          email: u.email,
+        }))}
+        isLoading={completeCreditAssessmentMutation.isPending}
       />
 
       <NextApproverModal
