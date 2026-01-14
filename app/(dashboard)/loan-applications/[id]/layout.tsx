@@ -12,11 +12,17 @@ import { NextApproverModal } from "./_components/next-approver-modal";
 import { EligibilityCheckModal, type EligibilityCheckFormValues } from "./_components/eligibility-check-modal";
 import { RejectLoanModal, type RejectLoanFormValues } from "./_components/reject-loan-modal";
 import { CreditAssessmentModal, type CreditAssessmentFormValues } from "./_components/credit-assessment-modal";
+import { HeadOfCreditReviewModal, type HeadOfCreditReviewFormValues } from "./_components/head-of-credit-review-modal";
+import { InternalApprovalCEOModal, type InternalApprovalCEOFormValues } from "./_components/internal-approval-ceo-modal";
+import { SmeOfferApprovalModal, type SmeOfferApprovalFormValues } from "./_components/sme-offer-approval-modal";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
   useCompleteEligibilityAssessment,
   useCompleteCreditAssessment,
+  useCompleteHeadOfCreditReview,
+  useCompleteInternalApprovalCEO,
+  useCompleteCommitteeDecision,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -68,18 +74,30 @@ export default function LoanApplicationDetailLayout({
   const updateStatusMutation = useUpdateLoanApplicationStatus();
   const completeEligibilityAssessmentMutation = useCompleteEligibilityAssessment();
   const completeCreditAssessmentMutation = useCompleteCreditAssessment();
+  const completeHeadOfCreditReviewMutation = useCompleteHeadOfCreditReview();
+  const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
+  const completeCommitteeDecisionMutation = useCompleteCommitteeDecision();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
   const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [creditAssessmentModalOpen, setCreditAssessmentModalOpen] = useState(false);
+  const [headOfCreditReviewModalOpen, setHeadOfCreditReviewModalOpen] = useState(false);
+  const [internalApprovalCEOModalOpen, setInternalApprovalCEOModalOpen] = useState(false);
+  const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
       setEligibilityModalOpen(true);
     } else if (loanApplication?.status === "credit_analysis") {
       setCreditAssessmentModalOpen(true);
+    } else if (loanApplication?.status === "head_of_credit_review") {
+      setHeadOfCreditReviewModalOpen(true);
+    } else if (loanApplication?.status === "internal_approval_ceo") {
+      setInternalApprovalCEOModalOpen(true);
+    } else if (loanApplication?.status === "committee_decision") {
+      setSmeOfferApprovalModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -329,6 +347,102 @@ export default function LoanApplicationDetailLayout({
           email: u.email,
         }))}
         isLoading={completeCreditAssessmentMutation.isPending}
+      />
+
+      <HeadOfCreditReviewModal
+        open={headOfCreditReviewModalOpen}
+        onOpenChange={setHeadOfCreditReviewModalOpen}
+        onSubmit={async (data: HeadOfCreditReviewFormValues) => {
+          try {
+            const ceo = internalUsers.find((u) => u.id === data.ceoId);
+            if (!ceo) {
+              toast.error("Selected CEO not found.");
+              return;
+            }
+
+            await completeHeadOfCreditReviewMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                comment: data.assessmentComment,
+                supportingDocuments: [data.supportingDocument],
+                nextApprover: {
+                  nextApproverEmail: ceo.email,
+                  nextApproverName: `${ceo.firstName} ${ceo.lastName}`,
+                },
+              },
+            });
+
+            toast.success("Head of Credit review submitted successfully.");
+            setHeadOfCreditReviewModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to submit for CEO approval.");
+          }
+        }}
+        users={internalUsers.map((u) => ({
+          clerkId: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          email: u.email,
+        }))}
+        isLoading={completeHeadOfCreditReviewMutation.isPending}
+      />
+
+      <InternalApprovalCEOModal
+        open={internalApprovalCEOModalOpen}
+        onOpenChange={setInternalApprovalCEOModalOpen}
+        onSubmit={async (data: InternalApprovalCEOFormValues) => {
+          try {
+            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            if (!approver) {
+              toast.error("Selected approver not found.");
+              return;
+            }
+
+            await completeInternalApprovalCEOMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                comment: data.assessmentComment,
+                supportingDocuments: [data.supportingDocuments],
+                nextApprover: {
+                  nextApproverEmail: approver.email,
+                  nextApproverName: `${approver.firstName} ${approver.lastName}`,
+                },
+              },
+            });
+
+            toast.success("CEO approval request submitted successfully.");
+            setInternalApprovalCEOModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to submit for committee decision.");
+          }
+        }}
+        users={internalUsers.map((u) => ({
+          clerkId: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          email: u.email,
+        }))}
+        isLoading={completeInternalApprovalCEOMutation.isPending}
+      />
+
+      <SmeOfferApprovalModal
+        open={smeOfferApprovalModalOpen}
+        onOpenChange={setSmeOfferApprovalModalOpen}
+        onSubmit={async (data: SmeOfferApprovalFormValues) => {
+          try {
+            await completeCommitteeDecisionMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                termSheetUrl: data.termSheet.docUrl,
+              },
+            });
+            toast.success("Term sheet sent for SME approval successfully.");
+            setSmeOfferApprovalModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to send term sheet.");
+          }
+        }}
+        applicantName={applicationData.loanApplicant.name}
+        applicantEmail={applicationData.loanApplicant.email}
+        isLoading={completeCommitteeDecisionMutation.isPending}
       />
 
       <NextApproverModal

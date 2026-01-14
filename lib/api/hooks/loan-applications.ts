@@ -651,6 +651,148 @@ export function useCompleteCreditAssessment() {
   );
 }
 
+// ===== HEAD OF CREDIT REVIEW TYPES =====
+
+export interface CompleteHeadOfCreditReviewBody {
+  comment?: string;
+  supportingDocuments: {
+    docUrl: string;
+    docName?: string;
+  }[];
+  nextApprover: {
+    nextApproverEmail: string;
+    nextApproverName?: string;
+  };
+}
+
+/**
+ * Complete Head of Credit Review
+ * POST /loan-applications/:id/head-of-credit-review/complete
+ */
+export function useCompleteHeadOfCreditReview() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: CompleteHeadOfCreditReviewBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<LoanApplicationDetail>(
+        `/loan-applications/${id}/head-of-credit-review/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
+// ===== INTERNAL APPROVAL CEO TYPES =====
+
+export interface CompleteInternalApprovalCEOBody {
+  comment?: string;
+  supportingDocuments: {
+    docUrl: string;
+    docName?: string;
+  }[];
+  nextApprover: {
+    nextApproverEmail: string;
+    nextApproverName?: string;
+  };
+}
+
+/**
+ * Complete Internal Approval (CEO)
+ * POST /loan-applications/:id/internal-approval-ceo/complete
+ */
+export function useCompleteInternalApprovalCEO() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: CompleteInternalApprovalCEOBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<LoanApplicationDetail>(
+        `/loan-applications/${id}/internal-approval-ceo/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
+// ===== COMMITTEE DECISION TYPES =====
+
+export interface CompleteCommitteeDecisionBody {
+  termSheetUrl: string;
+}
+
+/**
+ * Complete Committee Decision
+ * POST /loan-applications/:id/committee-decision/complete
+ */
+export function useCompleteCommitteeDecision() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: CompleteCommitteeDecisionBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<LoanApplicationDetail>(
+        `/loan-applications/${id}/committee-decision/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
 export function useUpdateLoanApplicationStatus() {
   const queryClient = useQueryClient();
 
