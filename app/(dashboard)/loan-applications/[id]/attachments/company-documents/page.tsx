@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { AttachmentsHeader } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-header";
 import { AttachmentsTable, type AttachmentDocument } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-table";
 import { AttachmentsPagination } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-pagination";
@@ -9,15 +9,16 @@ import { DocumentUploadModal } from "@/app/(dashboard)/entrepreneurs/[id]/attach
 import { BankStatementUploadModal, type BankStatementEntry } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/bank-statement-upload-modal";
 import { FinancialStatementUploadModal, type FinancialStatementEntry } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/financial-statement-upload-modal";
 import {
-  useSMEBusinessDocuments,
   useSaveCompanyDocuments,
   useSaveFinancialDocuments,
   useSavePermitsAndPitchDeck,
 } from "@/lib/api/hooks/sme";
+import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
+import { VerificationActionModal } from "../_components/verification-action-modal";
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
+type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
 
 const COMPANY_DOC_CONFIGS: {
   id: string;
@@ -118,8 +119,10 @@ const COMPANY_DOC_CONFIGS: {
 ];
 
 export default function CompanyDocumentsPage() {
+  const params = useParams();
   const searchParams = useSearchParams();
   const entrepreneurId = searchParams.get("entrepreneurId");
+  const applicationId = params.id as string;
 
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<SortOption>("date-desc");
@@ -131,27 +134,34 @@ export default function CompanyDocumentsPage() {
   const [bankStatementModalOpen, setBankStatementModalOpen] = useState(false);
   const [financialStatementModalOpen, setFinancialStatementModalOpen] = useState(false);
 
-  const { data: businessDocuments, isLoading, isError } = useSMEBusinessDocuments(entrepreneurId || "", {
-    enabled: !!entrepreneurId,
-  });
+  const { data: kycData, isLoading, isError } = useKycKybDocuments(applicationId);
+  const verifyMutation = useVerifyKycKybDocument(applicationId);
 
   const saveCompanyDocumentsMutation = useSaveCompanyDocuments();
   const saveFinancialDocumentsMutation = useSaveFinancialDocuments();
   const savePermitsMutation = useSavePermitsAndPitchDeck();
 
   const allDocuments: AttachmentDocument[] = useMemo(() => {
+    const businessDocs = kycData?.businessDocuments || [];
     return COMPANY_DOC_CONFIGS.map((config) => {
-      const found = businessDocuments?.find((d) => config.docTypes.includes(d.docType));
+      const found = businessDocs.find((d: any) => config.docTypes.includes(d.docType));
+      const status = !found
+        ? "missing"
+        : found.verificationStatus === "approved"
+        ? "approved"
+        : found.verificationStatus === "rejected"
+        ? "rejected"
+        : "pending_review";
       return {
-        id: config.id,
+        id: found?.id || config.id,
         name: config.name,
         uploadedAt: found?.createdAt ?? null,
-        status: found ? "uploaded" : "pending",
+        status: status as any,
         url: found?.docUrl ?? null,
         docType: found?.docType ?? config.docTypes[0],
-      };
+      } as AttachmentDocument;
     });
-  }, [businessDocuments]);
+  }, [kycData]);
 
   const filteredDocuments = allDocuments.filter((doc) => {
     if (filterStatus !== "all" && doc.status !== filterStatus) return false;
@@ -327,29 +337,61 @@ export default function CompanyDocumentsPage() {
     }
   };
 
+  const [modalVariant, setModalVariant] = useState<"approve" | "reject" | null>(null);
+  const [decisionDoc, setDecisionDoc] = useState<AttachmentDocument | null>(null);
+
+  const onApprove = (doc: AttachmentDocument) => {
+    setDecisionDoc(doc);
+    setModalVariant("approve");
+  };
+
+  const onReject = (doc: AttachmentDocument) => {
+    setDecisionDoc(doc);
+    setModalVariant("reject");
+  };
+
+  const handleConfirmVerification = async (reason?: string) => {
+    if (!decisionDoc?.id) return;
+    const isApprove = modalVariant === "approve";
+    try {
+      await verifyMutation.mutateAsync({
+        documentId: decisionDoc.id,
+        documentType: "business",
+        status: isApprove ? "approved" : "rejected",
+        rejectionReason: reason,
+      });
+      toast.success(`Document ${isApprove ? "approved" : "rejected"}`);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || `Failed to ${modalVariant} document`);
+    } finally {
+      setDecisionDoc(null);
+      setModalVariant(null);
+    }
+  };
+
   const bankStatementInitialEntries: BankStatementEntry[] = useMemo(() => {
-    if (!businessDocuments) return [];
-    return businessDocuments
-      .filter((d) => d.docType === "annual_bank_statement")
-      .map((d) => ({
+    const businessDocs = kycData?.businessDocuments || [];
+    return businessDocs
+      .filter((d: any) => d.docType === "annual_bank_statement")
+      .map((d: any) => ({
         id: d.id,
         bankName: "other",
         specifyBankName: d.docBankName || "",
         statementFile: d.docUrl,
         password: d.docPassword || "",
       }));
-  }, [businessDocuments]);
+  }, [kycData]);
 
   const financialStatementInitialEntries: FinancialStatementEntry[] = useMemo(() => {
-    if (!businessDocuments) return [];
-    return businessDocuments
-      .filter((d) => d.docType === "audited_financial_statements")
-      .map((d) => ({
+    const businessDocs = kycData?.businessDocuments || [];
+    return businessDocs
+      .filter((d: any) => d.docType === "audited_financial_statements")
+      .map((d: any) => ({
         id: d.id,
         year: d.docYear ? d.docYear.toString() : "",
         statementFile: d.docUrl,
       }));
-  }, [businessDocuments]);
+  }, [kycData]);
 
   if (!entrepreneurId) {
     return (
@@ -394,6 +436,8 @@ export default function CompanyDocumentsPage() {
         onUpdate={openForDocument}
         onDownload={handleDownload}
         onUpload={openForDocument}
+        onApprove={onApprove}
+        onReject={onReject}
       />
 
       {totalPages > 1 && (
@@ -438,6 +482,14 @@ export default function CompanyDocumentsPage() {
         onSubmit={handleFinancialStatementSubmit}
         initialEntries={financialStatementInitialEntries}
         isLoading={saveFinancialDocumentsMutation.isPending}
+      />
+
+      <VerificationActionModal
+        open={!!modalVariant}
+        onOpenChange={(open) => !open && setModalVariant(null)}
+        onConfirm={handleConfirmVerification}
+        variant={modalVariant!}
+        isLoading={verifyMutation.isPending}
       />
     </div>
   );

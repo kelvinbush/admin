@@ -13,7 +13,7 @@ import { Search, X, ArrowDownWideNarrow, Filter, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
+type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
 
 interface AttachmentsHeaderProps {
   searchValue: string;
@@ -34,9 +34,10 @@ const sortOptions: { value: SortOption; label: string }[] = [
 ];
 
 const statusOptions: { value: FilterStatus; label: string }[] = [
-  { value: "all", label: "All status" },
-  { value: "uploaded", label: "Uploaded" },
-  { value: "pending", label: "Pending" },
+  { value: "all", label: "All Status" },
+  { value: "missing", label: "Missing" },
+  { value: "pending_review", label: "Pending Review" },
+  { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
 ];
 

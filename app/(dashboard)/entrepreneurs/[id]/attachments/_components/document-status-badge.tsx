@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-type DocumentStatus = "uploaded" | "pending" | "approved" | "rejected";
+type DocumentStatus = "approved" | "rejected" | "pending_review" | "missing";
 
 interface DocumentStatusBadgeProps {
   status: DocumentStatus;
@@ -10,14 +10,6 @@ interface DocumentStatusBadgeProps {
 }
 
 const statusConfig: Record<DocumentStatus, { label: string; className: string }> = {
-  uploaded: {
-    label: "Uploaded",
-    className: "bg-primary-green/20 text-primary-green border-primary-green/30",
-  },
-  pending: {
-    label: "Pending",
-    className: "bg-[#FFE5B0] text-[#8C5E00] border-[#FFE5B0]",
-  },
   approved: {
     label: "Approved",
     className: "bg-[#D4F7EF] text-[#017A5D] border-[#A6E8D8]",
@@ -25,6 +17,14 @@ const statusConfig: Record<DocumentStatus, { label: string; className: string }>
   rejected: {
     label: "Rejected",
     className: "bg-red-100 text-red-700 border-red-200",
+  },
+  pending_review: {
+    label: "Pending Review",
+    className: "bg-blue-100 text-blue-800 border-blue-200",
+  },
+  missing: {
+    label: "Missing",
+    className: "bg-[#FFE5B0] text-[#8C5E00] border-[#FFE5B0]",
   },
 };
 

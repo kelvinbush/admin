@@ -8,14 +8,13 @@ import { AttachmentsPagination } from "@/app/(dashboard)/entrepreneurs/[id]/atta
 import { DocumentUploadModal } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/document-upload-modal";
 import { useSavePersonalDocuments } from "@/lib/api/hooks/sme";
 import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
-import { ConfirmActionModal } from "@/app/(dashboard)/internal-users/_components/confirm-action-modal";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { VerificationActionModal } from "../_components/verification-action-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
+type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
 
 const PERSONAL_DOC_CONFIGS: { id: string; name: string; docType: string }[] = [
   { id: "national_id_front", name: "Front ID Image", docType: "national_id_front" },
@@ -48,7 +47,13 @@ export default function EntrepreneurDocumentsPage() {
     const personalDocs = kycData?.personalDocuments || [];
     return PERSONAL_DOC_CONFIGS.map((config) => {
       const found = personalDocs.find((d: any) => d.docType === config.docType);
-      const status = found ? (found.verificationStatus || "uploaded") : "pending";
+      const status = !found
+        ? "missing"
+        : found.verificationStatus === "approved"
+        ? "approved"
+        : found.verificationStatus === "rejected"
+        ? "rejected"
+        : "pending_review";
       return {
         id: found?.id || config.id,
         name: config.name,
@@ -93,59 +98,36 @@ export default function EntrepreneurDocumentsPage() {
     setUpdateModalOpen(true);
   };
 
-  // Approval/Rejection state and handlers
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [reason, setReason] = useState("");
+  // Verification modal state and handlers
+  const [modalVariant, setModalVariant] = useState<"approve" | "reject" | null>(null);
   const [decisionDoc, setDecisionDoc] = useState<AttachmentDocument | null>(null);
 
   const onApprove = (doc: AttachmentDocument) => {
     setDecisionDoc(doc);
-    setApproveOpen(true);
+    setModalVariant("approve");
   };
 
   const onReject = (doc: AttachmentDocument) => {
     setDecisionDoc(doc);
-    setRejectOpen(true);
+    setModalVariant("reject");
   };
 
-  const confirmApprove = async () => {
+  const handleConfirmVerification = async (reason?: string) => {
     if (!decisionDoc?.id) return;
+    const isApprove = modalVariant === "approve";
     try {
       await verifyMutation.mutateAsync({
         documentId: decisionDoc.id,
         documentType: "personal",
-        status: "approved",
+        status: isApprove ? "approved" : "rejected",
+        rejectionReason: reason,
       });
-      toast.success("Document approved");
+      toast.success(`Document ${isApprove ? "approved" : "rejected"}`);
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || "Failed to approve document");
+      toast.error(e?.response?.data?.error || `Failed to ${modalVariant} document`);
     } finally {
-      setApproveOpen(false);
       setDecisionDoc(null);
-    }
-  };
-
-  const confirmReject = async () => {
-    if (!decisionDoc?.id) return;
-    if (!reason.trim()) {
-      toast.error("Rejection reason is required");
-      return;
-    }
-    try {
-      await verifyMutation.mutateAsync({
-        documentId: decisionDoc.id,
-        documentType: "personal",
-        status: "rejected",
-        rejectionReason: reason.trim(),
-      });
-      toast.success("Document rejected");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.error || "Failed to reject document");
-    } finally {
-      setRejectOpen(false);
-      setReason("");
-      setDecisionDoc(null);
+      setModalVariant(null);
     }
   };
 
@@ -249,38 +231,13 @@ export default function EntrepreneurDocumentsPage() {
         />
       )}
 
-      {/* Approve modal */}
-      <ConfirmActionModal
-        open={approveOpen}
-        onOpenChange={setApproveOpen}
-        onConfirm={confirmApprove}
-        title="Are you sure you want to approve this document?"
-        description="Approving this document confirms it is valid and meets all required criteria. You may still reject or update later if needed."
-        confirmButtonText="Yes, Approve"
+      <VerificationActionModal
+        open={!!modalVariant}
+        onOpenChange={(open) => !open && setModalVariant(null)}
+        onConfirm={handleConfirmVerification}
+        variant={modalVariant!}
+        isLoading={verifyMutation.isPending}
       />
-
-      {/* Reject modal */}
-      <Dialog open={rejectOpen} onOpenChange={(o) => { setRejectOpen(o); if (!o) setReason(""); }}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>Are you sure you want to reject this document?</DialogTitle>
-          </DialogHeader>
-          <div className="mt-2">
-            <Textarea
-              placeholder="Please provide a clear reason for rejecting this document to help the user understand what needs to be provided"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              maxLength={1000}
-              className="min-h-[120px]"
-            />
-            <div className="text-right text-xs text-primaryGrey-400 mt-1">{reason.length}/1000</div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectOpen(false)}>No, Cancel</Button>
-            <Button className="bg-red-600 text-white" onClick={confirmReject} disabled={verifyMutation.isPending}>Yes, Reject</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {selectedDocument && (
         <DocumentUploadModal
