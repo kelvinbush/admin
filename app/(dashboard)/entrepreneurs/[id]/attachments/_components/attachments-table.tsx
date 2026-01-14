@@ -11,7 +11,7 @@ export interface AttachmentDocument {
   id: string;
   name: string;
   uploadedAt?: string | null;
-  status: "uploaded" | "pending" | "rejected";
+  status: "uploaded" | "pending" | "approved" | "rejected";
   url?: string | null;
   docType?: string;
 }
@@ -23,6 +23,8 @@ interface AttachmentsTableProps {
   onDownload?: (document: AttachmentDocument) => void;
   onUpload?: (document: AttachmentDocument) => void;
   onUploadNew?: () => void; // For uploading unnamed documents
+  onApprove?: (document: AttachmentDocument) => void;
+  onReject?: (document: AttachmentDocument) => void;
 }
 
 export function AttachmentsTable({
@@ -31,6 +33,8 @@ export function AttachmentsTable({
   onUpdate,
   onDownload,
   onUpload,
+  onApprove,
+  onReject,
 }: AttachmentsTableProps) {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
 
@@ -133,6 +137,8 @@ export function AttachmentsTable({
                       onUpdate={() => onUpdate?.(document)}
                       onDownload={() => onDownload?.(document)}
                       onUpload={() => onUpload?.(document)}
+                      onApprove={onApprove ? () => onApprove(document) : undefined}
+                      onReject={onReject ? () => onReject(document) : undefined}
                     />
                   </td>
                 </tr>

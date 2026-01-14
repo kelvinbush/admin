@@ -133,6 +133,110 @@ export interface Document {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+// ===== KYC/KYB TYPES =====
+
+export type KycKybDocumentType = 'personal' | 'business';
+
+export interface KycKybDocumentItem {
+  id: string;
+  docType: string;
+  docUrl: string;
+  docYear?: number;
+  docBankName?: string;
+  createdAt: string;
+  verificationStatus: 'pending' | 'approved' | 'rejected';
+  verifiedBy?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+  verifiedAt?: string;
+  rejectionReason?: string;
+  notes?: string;
+  lockedAt?: string;
+}
+
+export interface KycKybDocumentsSummary {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
+export interface GetKycKybDocumentsResponse {
+  personalDocuments: KycKybDocumentItem[];
+  businessDocuments: KycKybDocumentItem[];
+  summary: KycKybDocumentsSummary;
+}
+
+export interface VerifyKycKybDocumentBody {
+  status: 'approved' | 'rejected';
+  rejectionReason?: string;
+  notes?: string;
+}
+
+export interface VerifyKycKybDocumentResponse {
+  documentId: string;
+  documentType: KycKybDocumentType;
+  verificationStatus: 'pending' | 'approved' | 'rejected';
+  verifiedBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+  verifiedAt: string;
+  rejectionReason?: string;
+  notes?: string;
+  lockedAt: string;
+}
+
+export interface VerifyKycKybDocumentVariables
+  extends VerifyKycKybDocumentBody {
+  documentId: string;
+  documentType: KycKybDocumentType;
+}
+
+export interface BulkVerifyKycKybDocumentsBody {
+  verifications: Array<{
+    documentId: string;
+    documentType: KycKybDocumentType;
+    status: 'approved' | 'rejected';
+    rejectionReason?: string;
+    notes?: string;
+  }>;
+}
+
+export interface BulkVerifyKycKybDocumentsResponse {
+  successful: number;
+  failed: number;
+  results: Array<{
+    documentId: string;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
+export interface CompleteKycKybRequestBody {
+  nextApprover?: {
+    nextApproverEmail: string;
+    nextApproverName?: string;
+  };
+}
+
+export interface CompleteKycKybResponse {
+  loanApplicationId: string;
+  status: 'eligibility_check';
+  completedAt: string;
+  completedBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+}
+
 // Loan Product types
 export interface LoanProductLegacy {
   id: string;

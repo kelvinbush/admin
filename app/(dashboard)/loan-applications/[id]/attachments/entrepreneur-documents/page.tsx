@@ -1,12 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { AttachmentsHeader } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-header";
 import { AttachmentsTable, type AttachmentDocument } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-table";
 import { AttachmentsPagination } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-pagination";
 import { DocumentUploadModal } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/document-upload-modal";
-import { useSMEPersonalDocuments, useSavePersonalDocuments } from "@/lib/api/hooks/sme";
+import { useSavePersonalDocuments } from "@/lib/api/hooks/sme";
+import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
+import { ConfirmActionModal } from "@/app/(dashboard)/internal-users/_components/confirm-action-modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
@@ -21,8 +26,10 @@ const PERSONAL_DOC_CONFIGS: { id: string; name: string; docType: string }[] = [
 ];
 
 export default function EntrepreneurDocumentsPage() {
+  const params = useParams();
   const searchParams = useSearchParams();
   const entrepreneurId = searchParams.get("entrepreneurId");
+  const applicationId = params.id as string;
 
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<SortOption>("date-desc");
@@ -32,25 +39,26 @@ export default function EntrepreneurDocumentsPage() {
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
 
-  const { data: personalDocuments, isLoading, isError } = useSMEPersonalDocuments(entrepreneurId || "", {
-    enabled: !!entrepreneurId,
-  });
+  const { data: kycData, isLoading, isError } = useKycKybDocuments(applicationId);
+  const verifyMutation = useVerifyKycKybDocument(applicationId);
 
   const savePersonalDocumentsMutation = useSavePersonalDocuments();
 
   const allDocuments: AttachmentDocument[] = useMemo(() => {
+    const personalDocs = kycData?.personalDocuments || [];
     return PERSONAL_DOC_CONFIGS.map((config) => {
-      const found = personalDocuments?.find((d) => d.docType === config.docType);
+      const found = personalDocs.find((d: any) => d.docType === config.docType);
+      const status = found ? (found.verificationStatus || "uploaded") : "pending";
       return {
-        id: config.id,
+        id: found?.id || config.id,
         name: config.name,
         uploadedAt: found?.createdAt ?? null,
-        status: found ? "uploaded" : "pending",
+        status: status as any,
         url: found?.docUrl ?? null,
         docType: config.docType,
-      };
+      } as AttachmentDocument;
     });
-  }, [personalDocuments]);
+  }, [kycData]);
 
   const filteredDocuments = allDocuments.filter((doc) => {
     if (filterStatus !== "all" && doc.status !== filterStatus) return false;
@@ -83,6 +91,62 @@ export default function EntrepreneurDocumentsPage() {
   const handleUploadOrUpdate = (document: AttachmentDocument) => {
     setSelectedDocument(document);
     setUpdateModalOpen(true);
+  };
+
+  // Approval/Rejection state and handlers
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [decisionDoc, setDecisionDoc] = useState<AttachmentDocument | null>(null);
+
+  const onApprove = (doc: AttachmentDocument) => {
+    setDecisionDoc(doc);
+    setApproveOpen(true);
+  };
+
+  const onReject = (doc: AttachmentDocument) => {
+    setDecisionDoc(doc);
+    setRejectOpen(true);
+  };
+
+  const confirmApprove = async () => {
+    if (!decisionDoc?.id) return;
+    try {
+      await verifyMutation.mutateAsync({
+        documentId: decisionDoc.id,
+        documentType: "personal",
+        status: "approved",
+      });
+      toast.success("Document approved");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Failed to approve document");
+    } finally {
+      setApproveOpen(false);
+      setDecisionDoc(null);
+    }
+  };
+
+  const confirmReject = async () => {
+    if (!decisionDoc?.id) return;
+    if (!reason.trim()) {
+      toast.error("Rejection reason is required");
+      return;
+    }
+    try {
+      await verifyMutation.mutateAsync({
+        documentId: decisionDoc.id,
+        documentType: "personal",
+        status: "rejected",
+        rejectionReason: reason.trim(),
+      });
+      toast.success("Document rejected");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Failed to reject document");
+    } finally {
+      setRejectOpen(false);
+      setReason("");
+      setDecisionDoc(null);
+    }
   };
 
   const handleView = (document: AttachmentDocument) => {
@@ -171,6 +235,8 @@ export default function EntrepreneurDocumentsPage() {
         onUpdate={handleUploadOrUpdate}
         onDownload={handleDownload}
         onUpload={handleUploadOrUpdate}
+        onApprove={onApprove}
+        onReject={onReject}
       />
 
       {totalPages > 1 && (
@@ -182,6 +248,39 @@ export default function EntrepreneurDocumentsPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      {/* Approve modal */}
+      <ConfirmActionModal
+        open={approveOpen}
+        onOpenChange={setApproveOpen}
+        onConfirm={confirmApprove}
+        title="Are you sure you want to approve this document?"
+        description="Approving this document confirms it is valid and meets all required criteria. You may still reject or update later if needed."
+        confirmButtonText="Yes, Approve"
+      />
+
+      {/* Reject modal */}
+      <Dialog open={rejectOpen} onOpenChange={(o) => { setRejectOpen(o); if (!o) setReason(""); }}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to reject this document?</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2">
+            <Textarea
+              placeholder="Please provide a clear reason for rejecting this document to help the user understand what needs to be provided"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={1000}
+              className="min-h-[120px]"
+            />
+            <div className="text-right text-xs text-primaryGrey-400 mt-1">{reason.length}/1000</div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>No, Cancel</Button>
+            <Button className="bg-red-600 text-white" onClick={confirmReject} disabled={verifyMutation.isPending}>Yes, Reject</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selectedDocument && (
         <DocumentUploadModal

@@ -9,3 +9,4 @@ export * from "./dashboard";
 export * from "./documents";
 export * from "./internal-users";
 export * from "./sme";
+export * from "./kyc-kyb";

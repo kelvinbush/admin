@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-type DocumentStatus = "uploaded" | "pending" | "rejected";
+type DocumentStatus = "uploaded" | "pending" | "approved" | "rejected";
 
 interface DocumentStatusBadgeProps {
   status: DocumentStatus;
@@ -17,6 +17,10 @@ const statusConfig: Record<DocumentStatus, { label: string; className: string }>
   pending: {
     label: "Pending",
     className: "bg-[#FFE5B0] text-[#8C5E00] border-[#FFE5B0]",
+  },
+  approved: {
+    label: "Approved",
+    className: "bg-[#D4F7EF] text-[#017A5D] border-[#A6E8D8]",
   },
   rejected: {
     label: "Rejected",
