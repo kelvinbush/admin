@@ -32,7 +32,7 @@ interface LoanTimelineProps {
 
 const eventIcons: Record<TimelineEventType, React.ComponentType<{ className?: string }>> = {
   submitted: FileText,
-  cancelled: FileText,
+  cancelled: XCircle, // Using XCircle for cancelled status
   review_in_progress: Clock,
   rejected: XCircle,
   approved: CheckCircle,
@@ -46,7 +46,7 @@ export function LoanTimeline({ events }: LoanTimelineProps) {
       {/* Timeline Events */}
       <div className="space-y-0">
         {events.map((event, index) => {
-          const Icon = eventIcons[event.type];
+          const Icon = eventIcons[event.type] || FileText;
           const isLast = index === events.length - 1;
           const nextEvent = events[index + 1];
           const nextLineColor = nextEvent?.lineColor || "green";
