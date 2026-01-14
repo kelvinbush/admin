@@ -7,6 +7,7 @@ import { AttachmentsTable, type AttachmentDocument } from "@/app/(dashboard)/ent
 import { AttachmentsPagination } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-pagination";
 import { DocumentUploadModal } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/document-upload-modal";
 import { useSavePersonalDocuments } from "@/lib/api/hooks/sme";
+import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
 import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
 import { VerificationActionModal } from "../_components/verification-action-modal";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export default function EntrepreneurDocumentsPage() {
   const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
 
   const { data: kycData, isLoading, isError } = useKycKybDocuments(applicationId);
+  const { data: loanApp } = useLoanApplication(applicationId);
   const verifyMutation = useVerifyKycKybDocument(applicationId);
 
   const savePersonalDocumentsMutation = useSavePersonalDocuments();
@@ -217,8 +219,8 @@ export default function EntrepreneurDocumentsPage() {
         onUpdate={handleUploadOrUpdate}
         onDownload={handleDownload}
         onUpload={handleUploadOrUpdate}
-        onApprove={onApprove}
-        onReject={onReject}
+        onApprove={loanApp?.status === "kyc_kyb_verification" ? onApprove : undefined}
+        onReject={loanApp?.status === "kyc_kyb_verification" ? onReject : undefined}
       />
 
       {totalPages > 1 && (

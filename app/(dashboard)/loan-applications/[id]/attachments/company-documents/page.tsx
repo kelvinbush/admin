@@ -14,6 +14,7 @@ import {
   useSavePermitsAndPitchDeck,
 } from "@/lib/api/hooks/sme";
 import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
+import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
 import { VerificationActionModal } from "../_components/verification-action-modal";
 import { toast } from "sonner";
 
@@ -135,6 +136,7 @@ export default function CompanyDocumentsPage() {
   const [financialStatementModalOpen, setFinancialStatementModalOpen] = useState(false);
 
   const { data: kycData, isLoading, isError } = useKycKybDocuments(applicationId);
+  const { data: loanApp } = useLoanApplication(applicationId);
   const verifyMutation = useVerifyKycKybDocument(applicationId);
 
   const saveCompanyDocumentsMutation = useSaveCompanyDocuments();
@@ -436,8 +438,8 @@ export default function CompanyDocumentsPage() {
         onUpdate={openForDocument}
         onDownload={handleDownload}
         onUpload={openForDocument}
-        onApprove={onApprove}
-        onReject={onReject}
+        onApprove={loanApp?.status === "kyc_kyb_verification" ? onApprove : undefined}
+        onReject={loanApp?.status === "kyc_kyb_verification" ? onReject : undefined}
       />
 
       {totalPages > 1 && (
