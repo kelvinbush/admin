@@ -38,6 +38,22 @@ export function AttachmentsTable({
 }: AttachmentsTableProps) {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
 
+  const mapStatus = (
+    status: AttachmentDocument["status"],
+  ): "approved" | "rejected" | "pending_review" | "missing" => {
+    switch (status) {
+      case "approved":
+        return "approved";
+      case "rejected":
+        return "rejected";
+      case "uploaded":
+      case "pending":
+        return "pending_review";
+      default:
+        return "missing";
+    }
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedDocuments(new Set(documents.map((doc) => doc.id)));
@@ -127,11 +143,11 @@ export function AttachmentsTable({
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <DocumentStatusBadge status={document.status} />
+                    <DocumentStatusBadge status={mapStatus(document.status)} />
                   </td>
                   <td className="px-6 py-4">
                     <DocumentActions
-                      status={document.status}
+                      status={mapStatus(document.status)}
                       documentName={document.name}
                       onView={() => onView?.(document)}
                       onUpdate={() => onUpdate?.(document)}
