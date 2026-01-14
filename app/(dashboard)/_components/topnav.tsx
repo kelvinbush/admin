@@ -60,9 +60,9 @@ const Topnav = () => {
     const newTitle = getTitleFromPath(pathname);
     setTitle(newTitle);
   }, [pathname, setTitle]);
-  
+
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between bg-white py-3 pl-[308px] pr-4">
+    <div className="sticky top-0 z-50 flex items-center justify-between bg-white py-3 pl-[308px] pr-4">
       <p className={"text-xl font-medium leading-tight text-midnight-blue"}>
         {title}
       </p>

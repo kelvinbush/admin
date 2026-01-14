@@ -1,18 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { LoanApplicationBreadcrumb } from "./_components/loan-application-breadcrumb";
 import { LoanApplicationHeader } from "./_components/loan-application-header";
 import { LoanApplicationStagesCard } from "./_components/loan-application-stages-card";
 import { LoanApplicationTabs } from "./_components/loan-application-tabs";
+import { IncompleteKycKybModal } from "./_components/incomplete-kyc-kyb-modal";
+import { NextApproverModal } from "./_components/next-approver-modal";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
+import { useCompleteKycKyb } from "@/lib/api/hooks/kyc-kyb";
+import {
+  useInternalUsers,
+  type InternalUserItem,
+} from "@/lib/api/hooks/internal-users";
 
 type LoanApplicationStage =
   | "kyc_kyb_verification"
@@ -35,33 +42,75 @@ export default function LoanApplicationDetailLayout({
   const params = useParams();
   const applicationId = params.id as string;
 
-  const { data: application, isLoading, error } = useLoanApplication(applicationId);
+  const {
+    data: loanApplication,
+    isLoading,
+    isError,
+  } = useLoanApplication(applicationId);
+  const { data: internalUsersData } = useInternalUsers();
+  const internalUsers = useMemo(() => {
+    return (internalUsersData?.items || []).map((user: InternalUserItem) => {
+      const nameParts = user.name?.split(" ") || [];
+      return {
+        id: user.clerkId || "",
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        email: user.email,
+      };
+    });
+  }, [internalUsersData]);
+  const completeKycKybMutation = useCompleteKycKyb(applicationId);
   const updateStatusMutation = useUpdateLoanApplicationStatus();
 
-  const handleSendToNextStage = async () => {
-    if (!application) return;
+  const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
+  const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
 
-    const nextStatus = getNextStage(application.status);
-    if (!nextStatus) {
-      toast.error("No next stage available");
-      return;
-    }
+  const handleNextStage = () => {
+    setNextApproverModalOpen(true);
+  };
+
+  const handleNextApproverSubmit = async (data: {
+    approverId: string;
+    approverEmail: string;
+  }) => {
+    if (!loanApplication) return;
 
     try {
-      await updateStatusMutation.mutateAsync({
-        id: applicationId,
-        data: {
-          status: nextStatus,
-          reason: `Moving application from ${application.status} to ${nextStatus}`,
-        },
-      });
-      toast.success(`Application status updated to ${getStatusLabel(nextStatus)}`);
+      if (loanApplication.status === "kyc_kyb_verification") {
+        const approver = internalUsers.find((u) => u.id === data.approverId);
+        await completeKycKybMutation.mutateAsync({
+          nextApprover: {
+            nextApproverEmail: data.approverEmail,
+            nextApproverName: approver
+              ? `${approver.firstName} ${approver.lastName}`
+              : "",
+          },
+        });
+      } else {
+        const nextStatus = getNextStage(loanApplication.status);
+        if (!nextStatus) {
+          toast.error("No next stage available");
+          return;
+        }
+        await updateStatusMutation.mutateAsync({
+          id: applicationId,
+          data: {
+            status: nextStatus,
+            reason: `Advanced to ${getStatusLabel(nextStatus)} by approver.`,
+          },
+        });
+      }
+      toast.success("Loan application has been advanced to the next stage.");
+      setNextApproverModalOpen(false);
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error ||
-        error?.message ||
-        "Failed to update application status";
-      toast.error(errorMessage);
+      if (error?.response?.data?.error?.includes("[NO_DOCUMENTS_REVIEWED]")) {
+        setNextApproverModalOpen(false);
+        setIncompleteModalOpen(true);
+      } else {
+        toast.error(
+          error?.response?.data?.error || "Failed to advance loan stage.",
+        );
+      }
     }
   };
 
@@ -86,16 +135,6 @@ export default function LoanApplicationDetailLayout({
     return labels[status] || status;
   };
 
-  const handleEmailApplicant = () => {
-    // TODO: Implement email functionality
-    console.log("Email applicant");
-  };
-
-  const handleArchive = () => {
-    // TODO: Implement archive functionality
-    console.log("Archive loan");
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -108,18 +147,22 @@ export default function LoanApplicationDetailLayout({
   }
 
   // Error state
-  if (error || !application) {
+  if (isError || !loanApplication) {
     return (
       <div className="space-y-6">
         <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50 p-8 flex items-center justify-center min-h-[400px]">
-          <p className="text-red-500">Error loading loan application. Please try again.</p>
+          <p className="text-red-500">
+            Error loading loan application. Please try again.
+          </p>
         </div>
       </div>
     );
   }
 
   // Helper function to get full name from user object
-  const getFullName = (user: { firstName?: string | null; lastName?: string | null } | undefined) => {
+  const getFullName = (
+    user: { firstName?: string | null; lastName?: string | null } | undefined,
+  ) => {
     if (!user) return "";
     const parts = [user.firstName, user.lastName].filter(Boolean);
     return parts.length > 0 ? parts.join(" ") : "";
@@ -127,52 +170,66 @@ export default function LoanApplicationDetailLayout({
 
   // Transform API data to match component expectations
   const applicationData = {
-    id: application.id,
-    loanId: application.loanId,
-    companyName: application.businessName || application.business?.name || "",
+    id: loanApplication.id,
+    loanId: loanApplication.loanId,
+    companyName:
+      loanApplication.businessName || loanApplication.business?.name || "",
     companyLogo: null, // Logo not available in API response
-    legalEntityType: application.business?.entityType || "",
-    city: application.business?.city || "",
-    country: application.business?.country || "",
-    loanSource: application.loanSource || "",
+    legalEntityType: loanApplication.business?.entityType || "",
+    city: loanApplication.business?.city || "",
+    country: loanApplication.business?.country || "",
+    loanSource: loanApplication.loanSource || "",
     loanApplicant: {
-      name: application.applicantName || getFullName(application.entrepreneur) || "N/A",
-      email: application.entrepreneur?.email || "",
-      phone: application.entrepreneur?.phoneNumber || "",
-      avatar: application.entrepreneur?.imageUrl || undefined,
+      name:
+        loanApplication.applicantName ||
+        getFullName(loanApplication.entrepreneur) ||
+        "N/A",
+      email: loanApplication.entrepreneur?.email || "",
+      phone: loanApplication.entrepreneur?.phoneNumber || "",
+      avatar: loanApplication.entrepreneur?.imageUrl || undefined,
     },
-    loanProduct: application.loanProduct?.name || "",
-    status: application.status as LoanApplicationStage,
-    createdAt: application.createdAt || "",
-    createdBy: application.creatorName || getFullName(application.creator) || application.createdBy || "",
+    loanProduct: loanApplication.loanProduct?.name || "",
+    status: loanApplication.status as LoanApplicationStage,
+    createdAt: loanApplication.createdAt || "",
+    createdBy:
+      loanApplication.creatorName ||
+      getFullName(loanApplication.creator) ||
+      loanApplication.createdBy ||
+      "",
   };
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <LoanApplicationBreadcrumb
-        companyName={applicationData.companyName}
-      />
-
-      {/* Header with Banner */}
+      <LoanApplicationBreadcrumb companyName={applicationData.companyName} />
       <LoanApplicationHeader
         application={applicationData}
-        onSendToNextStage={handleSendToNextStage}
-        onEmailApplicant={handleEmailApplicant}
-        onArchive={handleArchive}
-        isUpdatingStatus={updateStatusMutation.isPending}
+        onSendToNextStage={handleNextStage}
+        isUpdatingStatus={
+          isLoading ||
+          completeKycKybMutation.isPending ||
+          updateStatusMutation.isPending
+        }
       />
-
-      {/* Stages Card */}
       <LoanApplicationStagesCard currentStage={applicationData.status} />
-
-      {/* Main Card - Tabs */}
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50">
         <LoanApplicationTabs applicationId={applicationId} />
-        <div className="p-8">
-          {children}
-        </div>
+        <div className="p-8">{children}</div>
       </div>
+
+      <IncompleteKycKybModal
+        open={incompleteModalOpen}
+        onOpenChange={setIncompleteModalOpen}
+      />
+
+      <NextApproverModal
+        open={nextApproverModalOpen}
+        onOpenChange={setNextApproverModalOpen}
+        onSubmit={handleNextApproverSubmit}
+        users={internalUsers}
+        isLoading={
+          completeKycKybMutation.isPending || updateStatusMutation.isPending
+        }
+      />
     </div>
   );
 }
