@@ -523,6 +523,80 @@ export function useLoanApplicationTimeline(applicationId: string) {
  * Update loan application status
  * PUT /loan-applications/:id/status
  */
+// ===== ELIGIBILITY ASSESSMENT TYPES =====
+
+export interface CompleteEligibilityAssessmentBody {
+  comment: string;
+  supportingDocuments?: Array<{
+    docUrl: string;
+    docName?: string;
+    notes?: string;
+  }>;
+  nextApprover?: {
+    nextApproverEmail: string;
+    nextApproverName?: string;
+  };
+}
+
+export interface CompleteEligibilityAssessmentResponse {
+  loanApplicationId: string;
+  status: "credit_analysis";
+  completedAt: string;
+  completedBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+  eligibilityAssessmentComment: string;
+  supportingDocuments: Array<{
+    id: string;
+    docUrl: string;
+    docName?: string;
+    notes?: string;
+  }>;
+}
+
+/**
+ * Complete Eligibility Assessment
+ * POST /loan-applications/:id/eligibility-assessment/complete
+ */
+export function useCompleteEligibilityAssessment() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    CompleteEligibilityAssessmentResponse,
+    { id: string; data: CompleteEligibilityAssessmentBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<CompleteEligibilityAssessmentResponse>(
+        `/loan-applications/${id}/eligibility-assessment/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        // Invalidate the specific loan application detail
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        // Invalidate timeline to show the new status change
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        // Invalidate lists to update status in tables
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        // Invalidate stats
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
 export function useUpdateLoanApplicationStatus() {
   const queryClient = useQueryClient();
 

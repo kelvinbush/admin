@@ -9,9 +9,12 @@ import { LoanApplicationStagesCard } from "./_components/loan-application-stages
 import { LoanApplicationTabs } from "./_components/loan-application-tabs";
 import { IncompleteKycKybModal } from "./_components/incomplete-kyc-kyb-modal";
 import { NextApproverModal } from "./_components/next-approver-modal";
+import { EligibilityCheckModal, type EligibilityCheckFormValues } from "./_components/eligibility-check-modal";
+import { RejectLoanModal, type RejectLoanFormValues } from "./_components/reject-loan-modal";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
+  useCompleteEligibilityAssessment,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -61,12 +64,23 @@ export default function LoanApplicationDetailLayout({
   }, [internalUsersData]);
   const completeKycKybMutation = useCompleteKycKyb(applicationId);
   const updateStatusMutation = useUpdateLoanApplicationStatus();
+  const completeEligibilityAssessmentMutation = useCompleteEligibilityAssessment();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
+  const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
   const handleNextStage = () => {
-    setNextApproverModalOpen(true);
+    if (loanApplication?.status === "eligibility_check") {
+      setEligibilityModalOpen(true);
+    } else {
+      setNextApproverModalOpen(true);
+    }
+  };
+
+  const handleReject = () => {
+    setRejectModalOpen(true);
   };
 
   const handleNextApproverSubmit = async (data: {
@@ -204,6 +218,7 @@ export default function LoanApplicationDetailLayout({
       <LoanApplicationHeader
         application={applicationData}
         onSendToNextStage={handleNextStage}
+        onReject={handleReject}
         isUpdatingStatus={
           isLoading ||
           completeKycKybMutation.isPending ||
@@ -219,6 +234,57 @@ export default function LoanApplicationDetailLayout({
       <IncompleteKycKybModal
         open={incompleteModalOpen}
         onOpenChange={setIncompleteModalOpen}
+      />
+
+      <EligibilityCheckModal
+        open={eligibilityModalOpen}
+        onOpenChange={setEligibilityModalOpen}
+        onSubmit={async (data: EligibilityCheckFormValues) => {
+          try {
+            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            await completeEligibilityAssessmentMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                comment: data.assessmentComment,
+                supportingDocuments: data.supportingDocument ? [data.supportingDocument] : undefined,
+                nextApprover: {
+                  nextApproverEmail: approver?.email || "",
+                  nextApproverName: approver ? `${approver.firstName} ${approver.lastName}` : "",
+                },
+              },
+            });
+            toast.success("Eligibility check submitted successfully.");
+            setEligibilityModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to submit eligibility check.");
+          }
+        }}
+        users={internalUsers.map((u) => ({
+          clerkId: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+        }))}
+        isLoading={completeEligibilityAssessmentMutation.isPending}
+      />
+
+      <RejectLoanModal
+        open={rejectModalOpen}
+        onOpenChange={setRejectModalOpen}
+        onSubmit={async (data: RejectLoanFormValues) => {
+          try {
+            await updateStatusMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                status: "rejected",
+                rejectionReason: data.reason,
+              },
+            });
+            toast.success("Loan has been rejected.");
+            setRejectModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to reject loan.");
+          }
+        }}
+        isLoading={updateStatusMutation.isPending}
       />
 
       <NextApproverModal

@@ -53,6 +53,7 @@ interface LoanApplicationData {
 interface LoanApplicationHeaderProps {
   application: LoanApplicationData;
   onSendToNextStage?: () => void;
+  onReject?: () => void;
   onEmailApplicant?: () => void;
   onArchive?: () => void;
   isUpdatingStatus?: boolean;
@@ -212,6 +213,7 @@ function getFormattedLegalEntityType(value: string): string {
 export function LoanApplicationHeader({
   application,
   onSendToNextStage,
+  onReject,
   onEmailApplicant,
   onArchive,
   isUpdatingStatus = false,
@@ -304,19 +306,45 @@ export function LoanApplicationHeader({
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                       Email Applicant
                     </Button>
-                    {canAdvance && (
-                      <Button
-                        size="sm"
-                        onClick={onSendToNextStage}
-                        disabled={isUpdatingStatus}
-                        className="h-9 px-4 text-sm text-white border-0"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-                        }}
-                      >
-                        {isUpdatingStatus ? "Updating..." : buttonText}
-                      </Button>
+                    {application.status === "eligibility_check" ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={onReject}
+                          disabled={isUpdatingStatus}
+                          className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0 h-9"
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={onSendToNextStage}
+                          disabled={isUpdatingStatus}
+                          className="h-9 px-4 text-sm text-white border-0"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                          }}
+                        >
+                          {isUpdatingStatus ? "Updating..." : "Send for Credit Assessment"}
+                        </Button>
+                      </>
+                    ) : (
+                      canAdvance && (
+                        <Button
+                          size="sm"
+                          onClick={onSendToNextStage}
+                          disabled={isUpdatingStatus}
+                          className="h-9 px-4 text-sm text-white border-0"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                          }}
+                        >
+                          {isUpdatingStatus ? "Updating..." : buttonText}
+                        </Button>
+                      )
                     )}
                     <DropdownMenu
                       open={isMenuOpen}
