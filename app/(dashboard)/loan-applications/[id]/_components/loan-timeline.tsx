@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FileText, Clock, XCircle, CheckCircle, Loader2, Wallet } from "lucide-react";
+import { FileText, Clock, XCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type TimelineEventType =
@@ -37,7 +37,7 @@ const eventIcons: Record<TimelineEventType, React.ComponentType<{ className?: st
   rejected: XCircle,
   approved: CheckCircle,
   awaiting_disbursement: Loader2,
-  disbursed: Wallet,
+  disbursed: CheckCircle,
 };
 
 export function LoanTimeline({ events }: LoanTimelineProps) {
