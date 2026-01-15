@@ -24,6 +24,15 @@ const attachmentTabs = [
       return query ? `${base}?${query}` : base;
     },
   },
+  {
+    id: "loan-documents",
+    label: "Loan Documents",
+    href: (applicationId: string, queryParams: URLSearchParams) => {
+      const base = `/loan-applications/${applicationId}/attachments/loan-documents`;
+      const query = queryParams.toString();
+      return query ? `${base}?${query}` : base;
+    },
+  },
 ];
 
 export default function AttachmentsLayout({

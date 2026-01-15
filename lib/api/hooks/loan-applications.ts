@@ -498,6 +498,23 @@ export interface LoanApplicationTimelineResponse {
   data: TimelineEvent[];
 }
 
+// ===== LOAN DOCUMENTS TYPES =====
+
+export interface LoanApplicationDocumentItem {
+  id: string;
+  documentType: string;
+  docUrl: string;
+  docName: string | null;
+  notes: string | null;
+  uploadedBy: string;
+  createdAt: string;
+}
+
+export interface GetLoanDocumentsResponse {
+  termSheetUrl: string | null;
+  documents: LoanApplicationDocumentItem[];
+}
+
 /**
  * Get loan application timeline events
  * GET /loan-applications/:id/timeline
@@ -517,6 +534,21 @@ export function useLoanApplicationTimeline(applicationId: string) {
     ...query,
     data: query.data?.data,
   };
+}
+
+/**
+ * Get loan application documents
+ * GET /loan-applications/:id/documents
+ */
+export function useLoanDocuments(applicationId: string) {
+  return useClientApiQuery<GetLoanDocumentsResponse>(
+    queryKeys.loanApplications.documents(applicationId),
+    `/loan-applications/${applicationId}/documents`,
+    undefined,
+    {
+      enabled: !!applicationId,
+    }
+  );
 }
 
 /**

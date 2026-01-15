@@ -1,11 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { useTitle } from "@/context/title-context";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Bell, Settings, LogOut, Moon } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Bell,
+  Settings,
+  LogOut,
+  Moon,
+} from "lucide-react";
 import Link from "next/link";
 import { SvgIcon } from "@/components/ui/svg-icon";
 
@@ -50,7 +56,9 @@ const sidenavLinks = [
       {
         title: "Investor Opportunities",
         href: "/investor-opportunities",
-        icon: <SvgIcon src="/investor-opportunities.svg" width={16} height={16} />,
+        icon: (
+          <SvgIcon src="/investor-opportunities.svg" width={16} height={16} />
+        ),
       },
       {
         title: "Loan Applications",
@@ -80,7 +88,7 @@ const Sidenav = () => {
 
   return (
     <div
-      className="fixed left-0 top-0 z-20 flex min-h-svh w-[290px] flex-col bg-midnight-blue pb-3 pt-2 text-white shadow-lg"
+      className="fixed left-0 top-0 z-[99] flex min-h-svh w-[290px] flex-col bg-midnight-blue pb-3 pt-2 text-white shadow-lg"
       style={{
         backgroundImage: `url(/images/branding.png)`,
         backgroundSize: "cover",
@@ -107,7 +115,9 @@ const Sidenav = () => {
           </div>
         </div>
         <div className={"px-4 mt-4"}>
-          <h3 className="py-2.5 text-sm font-medium text-primaryGrey-200">MENU</h3>
+          <h3 className="py-2.5 text-sm font-medium text-primaryGrey-200">
+            MENU
+          </h3>
           <div className="space-y-2">
             {sidenavLinks.map((link) => (
               <SidenavItem
