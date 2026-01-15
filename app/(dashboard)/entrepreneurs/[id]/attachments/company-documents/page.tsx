@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
+type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
 
 const COMPANY_DOC_CONFIGS: {
   id: string;
@@ -146,7 +146,7 @@ export default function CompanyDocumentsPage() {
         id: config.id,
         name: config.name,
         uploadedAt: found?.createdAt ?? null,
-        status: found ? "uploaded" : "pending",
+        status: found ? "pending_review" : "missing",
         url: found?.docUrl ?? null,
         docType: found?.docType ?? config.docTypes[0],
       };

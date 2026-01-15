@@ -18,7 +18,10 @@ export function FileUploadInput({
 }: FileUploadInputProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<{ docUrl: string; docName: string } | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{
+    docUrl: string;
+    docName: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload } = useUploadThing("documentUploader");
@@ -45,6 +48,7 @@ export function FileUploadInput({
         setUploadError("Upload failed.");
       }
     } catch (error) {
+      console.log(error);
       setUploadError("Upload failed.");
     } finally {
       setIsUploading(false);
@@ -64,7 +68,9 @@ export function FileUploadInput({
 
   return (
     <div className="space-y-2">
-      <div className={cn("flex items-center space-x-2", disabled && "opacity-50")}>
+      <div
+        className={cn("flex items-center space-x-2", disabled && "opacity-50")}
+      >
         <Button
           type="button"
           variant="outline"
@@ -106,7 +112,9 @@ export function FileUploadInput({
           <span className="text-sm text-gray-500">No file chosen</span>
         )}
       </div>
-      {uploadError && <p className="text-sm text-red-500 mt-1">{uploadError}</p>}
+      {uploadError && (
+        <p className="text-sm text-red-500 mt-1">{uploadError}</p>
+      )}
     </div>
   );
 }

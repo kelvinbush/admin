@@ -1,28 +1,53 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { AttachmentsHeader } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-header";
-import { AttachmentsTable, type AttachmentDocument } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-table";
+import {
+  type AttachmentDocument,
+  AttachmentsTable,
+} from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-table";
 import { AttachmentsPagination } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/attachments-pagination";
 import { DocumentUploadModal } from "@/app/(dashboard)/entrepreneurs/[id]/attachments/_components/document-upload-modal";
 import { useSavePersonalDocuments } from "@/lib/api/hooks/sme";
 import { useLoanApplication } from "@/lib/api/hooks/loan-applications";
-import { useKycKybDocuments, useVerifyKycKybDocument } from "@/lib/api/hooks/kyc-kyb";
+import {
+  useKycKybDocuments,
+  useVerifyKycKybDocument,
+} from "@/lib/api/hooks/kyc-kyb";
 import { VerificationActionModal } from "../_components/verification-action-modal";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
+type FilterStatus =
+  | "all"
+  | "missing"
+  | "pending_review"
+  | "approved"
+  | "rejected";
 
 const PERSONAL_DOC_CONFIGS: { id: string; name: string; docType: string }[] = [
-  { id: "national_id_front", name: "Front ID Image", docType: "national_id_front" },
-  { id: "national_id_back", name: "Back ID Image", docType: "national_id_back" },
-  { id: "passport_bio_page", name: "Passport bio page", docType: "passport_bio_page" },
+  {
+    id: "national_id_front",
+    name: "Front ID Image",
+    docType: "national_id_front",
+  },
+  {
+    id: "national_id_back",
+    name: "Back ID Image",
+    docType: "national_id_back",
+  },
+  {
+    id: "passport_bio_page",
+    name: "Passport bio page",
+    docType: "passport_bio_page",
+  },
   { id: "user_photo", name: "Passport photo", docType: "user_photo" },
-  { id: "personal_tax_document", name: "Tax registration certificate", docType: "personal_tax_document" },
+  {
+    id: "personal_tax_document",
+    name: "Tax registration certificate",
+    docType: "personal_tax_document",
+  },
 ];
 
 export default function EntrepreneurDocumentsPage() {
@@ -37,9 +62,14 @@ export default function EntrepreneurDocumentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
+  const [selectedDocument, setSelectedDocument] =
+    useState<AttachmentDocument | null>(null);
 
-  const { data: kycData, isLoading, isError } = useKycKybDocuments(applicationId);
+  const {
+    data: kycData,
+    isLoading,
+    isError,
+  } = useKycKybDocuments(applicationId);
   const { data: loanApp } = useLoanApplication(applicationId);
   const verifyMutation = useVerifyKycKybDocument(applicationId);
 
@@ -52,12 +82,12 @@ export default function EntrepreneurDocumentsPage() {
       const status = !found
         ? "missing"
         : found.verificationStatus === "approved"
-        ? "approved"
-        : found.verificationStatus === "rejected"
-        ? "rejected"
-        : found.verificationStatus === "pending"
-        ? "pending_review"
-        : "missing"; // Default to missing if status is unexpected
+          ? "approved"
+          : found.verificationStatus === "rejected"
+            ? "rejected"
+            : found.verificationStatus === "pending"
+              ? "pending_review"
+              : "missing"; // Default to missing if status is unexpected
       return {
         id: found?.id || config.id,
         name: config.name,
@@ -71,7 +101,11 @@ export default function EntrepreneurDocumentsPage() {
 
   const filteredDocuments = allDocuments.filter((doc) => {
     if (filterStatus !== "all" && doc.status !== filterStatus) return false;
-    if (searchValue && !doc.name.toLowerCase().includes(searchValue.toLowerCase())) return false;
+    if (
+      searchValue &&
+      !doc.name.toLowerCase().includes(searchValue.toLowerCase())
+    )
+      return false;
     return true;
   });
 
@@ -94,7 +128,7 @@ export default function EntrepreneurDocumentsPage() {
   const totalPages = Math.ceil(sortedDocuments.length / itemsPerPage);
   const paginatedDocuments = sortedDocuments.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const handleUploadOrUpdate = (document: AttachmentDocument) => {
@@ -103,8 +137,12 @@ export default function EntrepreneurDocumentsPage() {
   };
 
   // Verification modal state and handlers
-  const [modalVariant, setModalVariant] = useState<"approve" | "reject" | null>(null);
-  const [decisionDoc, setDecisionDoc] = useState<AttachmentDocument | null>(null);
+  const [modalVariant, setModalVariant] = useState<"approve" | "reject" | null>(
+    null,
+  );
+  const [decisionDoc, setDecisionDoc] = useState<AttachmentDocument | null>(
+    null,
+  );
 
   const onApprove = (doc: AttachmentDocument) => {
     setDecisionDoc(doc);
@@ -128,7 +166,9 @@ export default function EntrepreneurDocumentsPage() {
       });
       toast.success(`Document ${isApprove ? "approved" : "rejected"}`);
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || `Failed to ${modalVariant} document`);
+      toast.error(
+        e?.response?.data?.error || `Failed to ${modalVariant} document`,
+      );
     } finally {
       setDecisionDoc(null);
       setModalVariant(null);
@@ -139,7 +179,9 @@ export default function EntrepreneurDocumentsPage() {
     if (document.url) {
       window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      toast.error("Document not available. This document has not been uploaded yet.");
+      toast.error(
+        "Document not available. This document has not been uploaded yet.",
+      );
     }
   };
 
@@ -147,7 +189,9 @@ export default function EntrepreneurDocumentsPage() {
     if (document.url) {
       window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      toast.error("Document not available. This document has not been uploaded yet.");
+      toast.error(
+        "Document not available. This document has not been uploaded yet.",
+      );
     }
   };
 
@@ -173,7 +217,9 @@ export default function EntrepreneurDocumentsPage() {
       setSelectedDocument(null);
     } catch (error: any) {
       const errorMessage =
-        error?.response?.data?.error || error?.message || "Failed to upload document.";
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to upload document.";
       toast.error(errorMessage);
     }
   };
@@ -181,7 +227,8 @@ export default function EntrepreneurDocumentsPage() {
   if (!entrepreneurId) {
     return (
       <div className="text-sm text-red-500">
-        Entrepreneur ID is required. Please navigate from the loan application list.
+        Entrepreneur ID is required. Please navigate from the loan application
+        list.
       </div>
     );
   }
@@ -221,8 +268,12 @@ export default function EntrepreneurDocumentsPage() {
         onUpdate={handleUploadOrUpdate}
         onDownload={handleDownload}
         onUpload={handleUploadOrUpdate}
-        onApprove={loanApp?.status === "kyc_kyb_verification" ? onApprove : undefined}
-        onReject={loanApp?.status === "kyc_kyb_verification" ? onReject : undefined}
+        onApprove={
+          loanApp?.status === "kyc_kyb_verification" ? onApprove : undefined
+        }
+        onReject={
+          loanApp?.status === "kyc_kyb_verification" ? onReject : undefined
+        }
       />
 
       {totalPages > 1 && (

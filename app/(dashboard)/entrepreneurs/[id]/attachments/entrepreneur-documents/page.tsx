@@ -10,7 +10,7 @@ import { useSMEPersonalDocuments, useSavePersonalDocuments } from "@/lib/api/hoo
 import { toast } from "sonner";
 
 type SortOption = "name-asc" | "name-desc" | "date-asc" | "date-desc";
-type FilterStatus = "all" | "uploaded" | "pending" | "rejected";
+type FilterStatus = "all" | "missing" | "pending_review" | "approved" | "rejected";
 
 const PERSONAL_DOC_CONFIGS: { id: string; name: string; docType: string }[] = [
   { id: "national_id_front", name: "Front ID Image", docType: "national_id_front" },
@@ -45,7 +45,7 @@ export default function EntrepreneurDocumentsPage() {
         id: config.id,
         name: config.name,
         uploadedAt: found?.createdAt ?? null,
-        status: found ? "uploaded" : "pending",
+        status: found ? "pending_review" : "missing",
         url: found?.docUrl ?? null,
         docType: config.docType,
       };

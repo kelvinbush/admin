@@ -4,9 +4,22 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FileUploadInput } from "./file-upload-input";
 
@@ -60,7 +73,9 @@ export function SmeOfferApprovalModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium">Additional details</DialogTitle>
+          <DialogTitle className="text-2xl font-medium">
+            Additional details
+          </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-500">
           Fill in the required information below to proceed to the next step
@@ -88,15 +103,17 @@ export function SmeOfferApprovalModal({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Loan applicant's details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Loan applicant&apos;s details
+              </h3>
               <FormItem>
-                <FormLabel>Loan applicant's name *</FormLabel>
+                <FormLabel>Loan applicant&apos;s name *</FormLabel>
                 <FormControl>
                   <Input readOnly value={applicantName} />
                 </FormControl>
               </FormItem>
               <FormItem>
-                <FormLabel>Loan applicant's email *</FormLabel>
+                <FormLabel>Loan applicant&apos;s email *</FormLabel>
                 <FormControl>
                   <Input readOnly value={applicantEmail} />
                 </FormControl>
@@ -104,11 +121,17 @@ export function SmeOfferApprovalModal({
             </div>
 
             <div className="text-sm text-blue-800 bg-blue-50 p-3 rounded-md border border-blue-200">
-              A loan approval email notification will be sent to the loan applicant with the attached term sheet for approval.
+              A loan approval email notification will be sent to the loan
+              applicant with the attached term sheet for approval.
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" size="lg" disabled={isLoading}>

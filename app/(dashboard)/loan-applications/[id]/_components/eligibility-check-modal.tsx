@@ -4,13 +4,31 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploadInput } from "./file-upload-input";
-
 
 interface SimplifiedUser {
   clerkId?: string;
@@ -64,7 +82,9 @@ export function EligibilityCheckModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium">Additional details</DialogTitle>
+          <DialogTitle className="text-2xl font-medium">
+            Additional details
+          </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-500">
           Fill in the required information below to proceed to the next step
@@ -72,7 +92,9 @@ export function EligibilityCheckModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Eligibility check details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Eligibility check details
+              </h3>
               <FormField
                 control={form.control}
                 name="assessmentComment"
@@ -94,7 +116,9 @@ export function EligibilityCheckModal({
                 name="supportingDocument"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Upload supporting documents (optional)</FormLabel>
+                    <FormLabel>
+                      Upload supporting documents (optional)
+                    </FormLabel>
                     <FormControl>
                       <FileUploadInput
                         value={field.value}
@@ -109,14 +133,19 @@ export function EligibilityCheckModal({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Next approver's details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Next approver&apos;s details
+              </h3>
               <FormField
                 control={form.control}
                 name="nextApproverId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select approver(s) *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select approver" />
@@ -137,7 +166,12 @@ export function EligibilityCheckModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" size="lg" disabled={isLoading}>

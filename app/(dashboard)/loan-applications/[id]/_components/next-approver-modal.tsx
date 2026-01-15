@@ -1,13 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Info } from "lucide-react";
 
 const schema = z.object({
@@ -30,7 +42,13 @@ interface NextApproverModalProps {
   isLoading?: boolean;
 }
 
-export function NextApproverModal({ open, onOpenChange, onSubmit, users, isLoading }: NextApproverModalProps) {
+export function NextApproverModal({
+  open,
+  onOpenChange,
+  onSubmit,
+  users,
+  isLoading,
+}: NextApproverModalProps) {
   const {
     control,
     handleSubmit,
@@ -60,20 +78,31 @@ export function NextApproverModal({ open, onOpenChange, onSubmit, users, isLoadi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] p-8">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium text-midnight-blue mb-2">Additional details</DialogTitle>
-          <p className="text-primaryGrey-400">Fill in the required information below to proceed to the next step</p>
+          <DialogTitle className="text-2xl font-medium text-midnight-blue mb-2">
+            Additional details
+          </DialogTitle>
+          <p className="text-primaryGrey-400">
+            Fill in the required information below to proceed to the next step
+          </p>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
           <div>
-            <h3 className="text-lg font-medium text-midnight-blue mb-4">Next approver's details</h3>
+            <h3 className="text-lg font-medium text-midnight-blue mb-4">
+              Next approver&apos;s details
+            </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-primaryGrey-500 mb-1">Select approver(s) *</label>
+                <label className="block text-sm font-medium text-primaryGrey-500 mb-1">
+                  Select approver(s) *
+                </label>
                 <Controller
                   name="approverId"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
@@ -87,16 +116,28 @@ export function NextApproverModal({ open, onOpenChange, onSubmit, users, isLoadi
                     </Select>
                   )}
                 />
-                {errors.approverId && <p className="text-red-500 text-xs mt-1">{errors.approverId.message}</p>}
+                {errors.approverId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.approverId.message}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-primaryGrey-500 mb-1">Approver's email(s) *</label>
+                <label className="block text-sm font-medium text-primaryGrey-500 mb-1">
+                  Approver&apos;s email(s) *
+                </label>
                 <Controller
                   name="approverEmail"
                   control={control}
-                  render={({ field }) => <Input {...field} placeholder="Enter email" readOnly />}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="Enter email" readOnly />
+                  )}
                 />
-                {errors.approverEmail && <p className="text-red-500 text-xs mt-1">{errors.approverEmail.message}</p>}
+                {errors.approverEmail && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.approverEmail.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -104,12 +145,19 @@ export function NextApproverModal({ open, onOpenChange, onSubmit, users, isLoadi
           <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-md">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-blue-700">
-              Please review the above details before submitting. An email notification will be sent to inform them that this loan request requires their attention.
+              Please review the above details before submitting. An email
+              notification will be sent to inform them that this loan request
+              requires their attention.
             </p>
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button
@@ -117,7 +165,7 @@ export function NextApproverModal({ open, onOpenChange, onSubmit, users, isLoadi
               disabled={isLoading}
               className="text-white border-0"
               style={{
-                background: 'linear-gradient(90deg, #0C9 0%, #F0459C 100%)',
+                background: "linear-gradient(90deg, #0C9 0%, #F0459C 100%)",
               }}
             >
               {isLoading ? "Submitting..." : "Submit"}

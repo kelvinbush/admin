@@ -17,7 +17,11 @@ interface MultiFileUploadInputProps {
   disabled?: boolean;
 }
 
-export function MultiFileUploadInput({ value = [], onChange, disabled = false }: MultiFileUploadInputProps) {
+export function MultiFileUploadInput({
+  value = [],
+  onChange,
+  disabled = false,
+}: MultiFileUploadInputProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,12 +43,16 @@ export function MultiFileUploadInput({ value = [], onChange, disabled = false }:
     try {
       const res = await startUpload(files);
       if (res) {
-        const newFiles = res.map((r, i) => ({ docUrl: r.url, docName: files[i].name }));
+        const newFiles = res.map((r, i) => ({
+          docUrl: r.url,
+          docName: files[i].name,
+        }));
         onChange([...value, ...newFiles]);
       } else {
         setUploadError("Upload failed.");
       }
     } catch (error) {
+      console.log(error);
       setUploadError("Upload failed.");
     } finally {
       setIsUploading(false);
@@ -73,7 +81,9 @@ export function MultiFileUploadInput({ value = [], onChange, disabled = false }:
 
   return (
     <div className="space-y-2">
-      <div className={cn("flex items-center space-x-2", disabled && "opacity-50")}>
+      <div
+        className={cn("flex items-center space-x-2", disabled && "opacity-50")}
+      >
         <Button
           type="button"
           variant="outline"
@@ -97,7 +107,10 @@ export function MultiFileUploadInput({ value = [], onChange, disabled = false }:
       {value.length > 0 && (
         <div className="mt-2 space-y-2">
           {value.map((file, index) => (
-            <div key={index} className="flex items-center justify-between gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-md"
+            >
               <span className="truncate">{file.docName}</span>
               <Button
                 type="button"
@@ -116,7 +129,9 @@ export function MultiFileUploadInput({ value = [], onChange, disabled = false }:
       {value.length === 0 && !isUploading && (
         <span className="text-sm text-gray-500">No files chosen</span>
       )}
-      {uploadError && <p className="text-sm text-red-500 mt-1">{uploadError}</p>}
+      {uploadError && (
+        <p className="text-sm text-red-500 mt-1">{uploadError}</p>
+      )}
     </div>
   );
 }

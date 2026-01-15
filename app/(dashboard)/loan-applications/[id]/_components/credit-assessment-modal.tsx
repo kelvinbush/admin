@@ -4,10 +4,29 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploadInput } from "./file-upload-input";
 
@@ -27,7 +46,9 @@ const formSchema = z.object({
   creditMemo: fileSchema,
   offTakerAgreement: fileSchema.optional(),
   parentGuaranteeAgreement: fileSchema.optional(),
-  assessmentComment: z.string().min(1, "Credit assessment comment is required."),
+  assessmentComment: z
+    .string()
+    .min(1, "Credit assessment comment is required."),
   nextApproverId: z.string().min(1, "Next approver is required."),
 });
 
@@ -62,13 +83,16 @@ export function CreditAssessmentModal({
     }
   }, [open, form]);
 
-  const selectedApproverEmail = users.find(u => u.clerkId === form.watch("nextApproverId"))?.email || "";
+  const selectedApproverEmail =
+    users.find((u) => u.clerkId === form.watch("nextApproverId"))?.email || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium">Additional details</DialogTitle>
+          <DialogTitle className="text-2xl font-medium">
+            Additional details
+          </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-500">
           Fill in the required information below to proceed to the next step
@@ -76,15 +100,24 @@ export function CreditAssessmentModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Credit assessment details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Credit assessment details
+              </h3>
               <FormField
                 control={form.control}
                 name="supportingDocuments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Upload supporting loan documents (e.g., invoices, purchase orders, etc.) *</FormLabel>
+                    <FormLabel>
+                      Upload supporting loan documents (e.g., invoices, purchase
+                      orders, etc.) *
+                    </FormLabel>
                     <FormControl>
-                      <FileUploadInput value={field.value} onChange={field.onChange} disabled={isLoading} />
+                      <FileUploadInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -97,7 +130,11 @@ export function CreditAssessmentModal({
                   <FormItem>
                     <FormLabel>Upload credit memo *</FormLabel>
                     <FormControl>
-                      <FileUploadInput value={field.value} onChange={field.onChange} disabled={isLoading} />
+                      <FileUploadInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -108,9 +145,15 @@ export function CreditAssessmentModal({
                 name="offTakerAgreement"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Upload off-taker agreement (if applicable)</FormLabel>
+                    <FormLabel>
+                      Upload off-taker agreement (if applicable)
+                    </FormLabel>
                     <FormControl>
-                      <FileUploadInput value={field.value} onChange={field.onChange} disabled={isLoading} />
+                      <FileUploadInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,9 +164,15 @@ export function CreditAssessmentModal({
                 name="parentGuaranteeAgreement"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Upload parent guarantee agreement (if applicable)</FormLabel>
+                    <FormLabel>
+                      Upload parent guarantee agreement (if applicable)
+                    </FormLabel>
                     <FormControl>
-                      <FileUploadInput value={field.value} onChange={field.onChange} disabled={isLoading} />
+                      <FileUploadInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,14 +197,19 @@ export function CreditAssessmentModal({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Next approver's details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Next approver&apos;s details
+              </h3>
               <FormField
                 control={form.control}
                 name="nextApproverId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select approver(s) *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select approver" />
@@ -173,8 +227,8 @@ export function CreditAssessmentModal({
                   </FormItem>
                 )}
               />
-               <FormItem>
-                <FormLabel>Approver's email(s) *</FormLabel>
+              <FormItem>
+                <FormLabel>Approver&apos;s email(s) *</FormLabel>
                 <FormControl>
                   <Textarea readOnly value={selectedApproverEmail} />
                 </FormControl>
@@ -182,7 +236,12 @@ export function CreditAssessmentModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" size="lg" disabled={isLoading}>

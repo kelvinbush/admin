@@ -4,10 +4,29 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploadInput } from "./file-upload-input";
 
@@ -59,13 +78,16 @@ export function InternalApprovalCEOModal({
     }
   }, [open, form]);
 
-  const selectedApproverEmail = users.find(u => u.clerkId === form.watch("nextApproverId"))?.email || "";
+  const selectedApproverEmail =
+    users.find((u) => u.clerkId === form.watch("nextApproverId"))?.email || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-medium">Additional details</DialogTitle>
+          <DialogTitle className="text-2xl font-medium">
+            Additional details
+          </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-500">
           Fill in the required information below to proceed to the next step
@@ -73,7 +95,9 @@ export function InternalApprovalCEOModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Credit assessment details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Credit assessment details
+              </h3>
               <FormField
                 control={form.control}
                 name="supportingDocuments"
@@ -81,7 +105,11 @@ export function InternalApprovalCEOModal({
                   <FormItem>
                     <FormLabel>Upload final credit memo *</FormLabel>
                     <FormControl>
-                      <FileUploadInput value={field.value} onChange={field.onChange} disabled={isLoading} />
+                      <FileUploadInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,14 +134,19 @@ export function InternalApprovalCEOModal({
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-primary-green">Next approver's details</h3>
+              <h3 className="text-sm font-medium text-primary-green">
+                Next approver&apos;s details
+              </h3>
               <FormField
                 control={form.control}
                 name="nextApproverId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select approver(s) *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select approver" />
@@ -131,8 +164,8 @@ export function InternalApprovalCEOModal({
                   </FormItem>
                 )}
               />
-               <FormItem>
-                <FormLabel>Approver's email(s) *</FormLabel>
+              <FormItem>
+                <FormLabel>Approver&apos;s email(s) *</FormLabel>
                 <FormControl>
                   <Textarea readOnly value={selectedApproverEmail} />
                 </FormControl>
@@ -140,7 +173,12 @@ export function InternalApprovalCEOModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" size="lg" disabled={isLoading}>

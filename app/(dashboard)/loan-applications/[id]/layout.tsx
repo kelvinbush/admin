@@ -98,8 +98,35 @@ export default function LoanApplicationDetailLayout({
       setInternalApprovalCEOModalOpen(true);
     } else if (loanApplication?.status === "committee_decision") {
       setSmeOfferApprovalModalOpen(true);
+    } else if (loanApplication?.status === "sme_offer_approval") {
+      handleSmeOfferApprovalAdvance();
     } else {
       setNextApproverModalOpen(true);
+    }
+  };
+
+  const handleSmeOfferApprovalAdvance = async () => {
+    if (!loanApplication) return;
+
+    const nextStatus = getNextStage(loanApplication.status);
+    if (!nextStatus) {
+      toast.error("No next stage available");
+      return;
+    }
+
+    try {
+      await updateStatusMutation.mutateAsync({
+        id: applicationId,
+        data: {
+          status: nextStatus,
+          reason: `Advanced to ${getStatusLabel(nextStatus)}. Gunning for disbursement.`,
+        },
+      });
+      toast.success("Loan application has been advanced to the next stage.");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.error || "Failed to advance loan stage.",
+      );
     }
   };
 
