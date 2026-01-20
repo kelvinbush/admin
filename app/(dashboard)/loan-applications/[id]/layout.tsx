@@ -19,6 +19,7 @@ import { GenerateRepaymentScheduleModal, type GenerateRepaymentScheduleFormValue
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
+  useSubmitCounterOffer,
   useCompleteEligibilityAssessment,
   useCompleteCreditAssessment,
   useCompleteHeadOfCreditReview,
@@ -78,6 +79,7 @@ export default function LoanApplicationDetailLayout({
   const completeHeadOfCreditReviewMutation = useCompleteHeadOfCreditReview();
   const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
   const completeCommitteeDecisionMutation = useCompleteCommitteeDecision();
+  const submitCounterOfferMutation = useSubmitCounterOffer();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
@@ -479,39 +481,77 @@ export default function LoanApplicationDetailLayout({
         onOpenChange={setGenerateRepaymentScheduleModalOpen}
         onSubmit={async (data: GenerateRepaymentScheduleFormValues, fees) => {
           try {
-            // TODO: Implement API call to generate repayment schedule
-            // For now, just advance to the next stage
-            console.log("Repayment schedule data:", data);
-            console.log("Loan fees:", fees);
-            
-            const nextStatus = getNextStage(loanApplication!.status);
-            if (!nextStatus) {
-              toast.error("No next stage available");
-              return;
+            // Transform form data to API payload
+            const repaymentCycleMap: Record<string, "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly"> = {
+              every_30_days: "monthly",
+              every_45_days: "monthly", // Fallback to monthly
+              every_60_days: "bi_weekly", // Approximate
+              every_90_days: "quarterly",
+            };
+
+            const repaymentStructureMap: Record<string, "principal_and_interest" | "bullet_repayment"> = {
+              principal_interest_amortized: "principal_and_interest",
+              bullet_repayment: "bullet_repayment",
+            };
+
+            const returnTypeMap: Record<string, "interest_based" | "revenue_sharing"> = {
+              interest_based: "interest_based",
+              revenue_share: "revenue_sharing",
+            };
+
+            // Transform custom fees
+            const customFees = fees.map((fee) => ({
+              name: fee.name,
+              amount: parseFloat(fee.rate),
+              type: fee.calculationMethod as "flat" | "percentage",
+            }));
+
+            // Calculate grace period in days
+            let gracePeriodInDays: number | undefined;
+            if (data.gracePeriod) {
+              const gracePeriodValue = parseInt(data.gracePeriod);
+              if (data.gracePeriodUnit === "months") {
+                gracePeriodInDays = gracePeriodValue * 30; // Approximate
+              } else {
+                gracePeriodInDays = gracePeriodValue;
+              }
             }
 
-            await updateStatusMutation.mutateAsync({
+            await submitCounterOfferMutation.mutateAsync({
               id: applicationId,
               data: {
-                status: nextStatus,
-                reason: `Repayment schedule generated and advanced to ${nextStatus}`,
+                fundingAmount: parseFloat(data.approvedLoanAmount),
+                repaymentPeriod: parseInt(data.approvedLoanTenure),
+                returnType: returnTypeMap[data.returnType] || "interest_based",
+                interestRate: parseFloat(data.interestRate),
+                repaymentStructure: repaymentStructureMap[data.repaymentStructure] || "principal_and_interest",
+                repaymentCycle: repaymentCycleMap[data.repaymentCycle] || "monthly",
+                gracePeriod: gracePeriodInDays,
+                firstPaymentDate: data.firstPaymentDate,
+                customFees: customFees.length > 0 ? customFees : undefined,
               },
             });
             
-            toast.success("Repayment schedule generated successfully.");
+            toast.success("Counter offer submitted successfully.");
             setGenerateRepaymentScheduleModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to generate repayment schedule.");
+            toast.error(error?.response?.data?.error || "Failed to submit counter offer.");
           }
         }}
-        isLoading={updateStatusMutation.isPending}
+        isLoading={submitCounterOfferMutation.isPending}
         loanApplicationData={
           loanApplication
             ? {
-                fundingAmount: loanApplication.fundingAmount,
+                fundingAmount: loanApplication.activeVersion?.fundingAmount ?? loanApplication.fundingAmount,
                 fundingCurrency: loanApplication.fundingCurrency,
-                repaymentPeriod: loanApplication.repaymentPeriod,
-                interestRate: loanApplication.interestRate,
+                repaymentPeriod: loanApplication.activeVersion?.repaymentPeriod ?? loanApplication.repaymentPeriod,
+                interestRate: loanApplication.activeVersion?.interestRate ?? loanApplication.interestRate,
+                returnType: loanApplication.activeVersion?.returnType,
+                repaymentStructure: loanApplication.activeVersion?.repaymentStructure,
+                repaymentCycle: loanApplication.activeVersion?.repaymentCycle,
+                gracePeriod: loanApplication.activeVersion?.gracePeriod,
+                firstPaymentDate: loanApplication.activeVersion?.firstPaymentDate,
+                customFees: loanApplication.activeVersion?.customFees,
               }
             : undefined
         }

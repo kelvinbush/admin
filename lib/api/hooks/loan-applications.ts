@@ -392,6 +392,25 @@ export interface LoanApplicationDetail {
     lastName?: string | null;
     email: string;
   };
+
+  // Active Version - Counter Offer details (if exists)
+  activeVersion?: {
+    id: string;
+    status: string;
+    fundingAmount: number;
+    repaymentPeriod: number;
+    returnType: "interest_based" | "revenue_sharing";
+    interestRate: number;
+    repaymentStructure: "principal_and_interest" | "bullet_repayment";
+    repaymentCycle: "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly";
+    gracePeriod?: number;
+    firstPaymentDate?: string;
+    customFees?: Array<{
+      name: string;
+      amount: number;
+      type: "flat" | "percentage";
+    }>;
+  };
 }
 
 /**
@@ -803,6 +822,62 @@ export function useCompleteCommitteeDecision() {
     async (api, { id, data }) => {
       return api.post<LoanApplicationDetail>(
         `/loan-applications/${id}/committee-decision/complete`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}
+
+// ===== COUNTER OFFER TYPES =====
+
+export interface CounterOfferCustomFee {
+  name: string;
+  amount: number;
+  type: "flat" | "percentage";
+}
+
+export interface CounterOfferBody {
+  fundingAmount: number;
+  repaymentPeriod: number;
+  returnType: "interest_based" | "revenue_sharing";
+  interestRate: number;
+  repaymentStructure: "principal_and_interest" | "bullet_repayment";
+  repaymentCycle: "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly";
+  gracePeriod?: number;
+  firstPaymentDate?: string;
+  customFees?: CounterOfferCustomFee[];
+}
+
+/**
+ * Submit Counter Offer (Generate Repayment Schedule)
+ * PATCH /loan-applications/:id/counter-offer
+ */
+export function useSubmitCounterOffer() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: CounterOfferBody }
+  >(
+    async (api, { id, data }) => {
+      return api.patch<LoanApplicationDetail>(
+        `/loan-applications/${id}/counter-offer`,
         data
       );
     },

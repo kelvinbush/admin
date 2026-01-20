@@ -71,6 +71,16 @@ interface GenerateRepaymentScheduleModalProps {
     fundingCurrency?: string;
     repaymentPeriod?: number;
     interestRate?: number;
+    returnType?: "interest_based" | "revenue_sharing";
+    repaymentStructure?: "principal_and_interest" | "bullet_repayment";
+    repaymentCycle?: "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly";
+    gracePeriod?: number;
+    firstPaymentDate?: string;
+    customFees?: Array<{
+      name: string;
+      amount: number;
+      type: "flat" | "percentage";
+    }>;
   };
   loanProductId?: string;
 }
@@ -164,35 +174,111 @@ export function GenerateRepaymentScheduleModal({
 
   useEffect(() => {
     if (open && loanApplicationData) {
-      // Map loan product repayment frequency to repayment cycle
+      // Check if we have activeVersion data (counter-offer exists)
+      const hasActiveVersion = !!(
+        loanApplicationData.returnType ||
+        loanApplicationData.repaymentStructure ||
+        loanApplicationData.repaymentCycle
+      );
+
       let repaymentCycle = "";
-      if (loanProduct?.repaymentFrequency) {
-        const frequencyMap: Record<string, string> = {
-          monthly: "every_30_days",
-          quarterly: "every_90_days",
-        };
-        repaymentCycle = frequencyMap[loanProduct.repaymentFrequency] || "";
-      }
-
-      // Map loan product rate period to interest rate period
-      let interestRatePeriod = "per_month";
-      if (loanProduct?.ratePeriod) {
-        const periodMap: Record<string, string> = {
-          per_year: "per_annum",
-          per_month: "per_month",
-        };
-        interestRatePeriod = periodMap[loanProduct.ratePeriod] || "per_month";
-      }
-
-      // Calculate grace period from loan product
+      let repaymentStructure = "";
       let gracePeriod = "";
       let gracePeriodUnit = "days";
-      if (loanProduct?.maxGracePeriod) {
-        gracePeriod = loanProduct.maxGracePeriod.toString();
-        gracePeriodUnit = loanProduct.maxGraceUnit || "days";
-      } else if (loanProduct?.gracePeriodDays) {
-        gracePeriod = loanProduct.gracePeriodDays.toString();
-        gracePeriodUnit = "days";
+      let interestRatePeriod = "per_month";
+      let returnType = "interest_based";
+      let firstPaymentDate = "";
+
+      if (hasActiveVersion) {
+        // Use activeVersion data for re-counter offer
+        if (loanApplicationData.repaymentCycle) {
+          const cycleMap: Record<string, string> = {
+            monthly: "every_30_days",
+            quarterly: "every_90_days",
+            bi_weekly: "every_60_days",
+            weekly: "every_7_days",
+            daily: "every_1_day",
+          };
+          repaymentCycle = cycleMap[loanApplicationData.repaymentCycle] || "";
+        }
+
+        if (loanApplicationData.repaymentStructure) {
+          const structureMap: Record<string, string> = {
+            principal_and_interest: "principal_interest_amortized",
+            bullet_repayment: "bullet_repayment",
+          };
+          repaymentStructure = structureMap[loanApplicationData.repaymentStructure] || "";
+        }
+
+        if (loanApplicationData.returnType) {
+          const typeMap: Record<string, string> = {
+            interest_based: "interest_based",
+            revenue_sharing: "revenue_share",
+          };
+          returnType = typeMap[loanApplicationData.returnType] || "interest_based";
+        }
+
+        if (loanApplicationData.gracePeriod) {
+          gracePeriod = loanApplicationData.gracePeriod.toString();
+          gracePeriodUnit = "days";
+        }
+
+        if (loanApplicationData.firstPaymentDate) {
+          firstPaymentDate = loanApplicationData.firstPaymentDate.split("T")[0];
+        }
+
+        // Populate custom fees from activeVersion
+        if (loanApplicationData.customFees && loanApplicationData.customFees.length > 0) {
+          const customFees: LocalLoanFee[] = loanApplicationData.customFees.map((fee, index) => ({
+            id: `custom-fee-${index}`,
+            name: fee.name,
+            calculationMethod: fee.type,
+            rate: fee.amount.toString(),
+            collectionRule: "upfront", // Default value
+            allocationMethod: "first_installment", // Default value
+            calculationBasis: "principal", // Default value
+          }));
+          setLoanFees(customFees);
+        }
+      } else {
+        // Use loan product data for initial counter-offer
+        if (loanProduct?.repaymentFrequency) {
+          const frequencyMap: Record<string, string> = {
+            monthly: "every_30_days",
+            quarterly: "every_90_days",
+          };
+          repaymentCycle = frequencyMap[loanProduct.repaymentFrequency] || "";
+        }
+
+        if (loanProduct?.ratePeriod) {
+          const periodMap: Record<string, string> = {
+            per_year: "per_annum",
+            per_month: "per_month",
+          };
+          interestRatePeriod = periodMap[loanProduct.ratePeriod] || "per_month";
+        }
+
+        if (loanProduct?.maxGracePeriod) {
+          gracePeriod = loanProduct.maxGracePeriod.toString();
+          gracePeriodUnit = loanProduct.maxGraceUnit || "days";
+        } else if (loanProduct?.gracePeriodDays) {
+          gracePeriod = loanProduct.gracePeriodDays.toString();
+          gracePeriodUnit = "days";
+        }
+
+        // Populate loan fees from loan product
+        if (loanProduct?.fees && loanProduct.fees.length > 0) {
+          const productFees: LocalLoanFee[] = loanProduct.fees.map((fee, index) => ({
+            id: `product-fee-${index}`,
+            name: fee.feeName || `Fee ${index + 1}`,
+            calculationMethod: fee.calculationMethod,
+            rate: fee.rate.toString(),
+            collectionRule: fee.collectionRule,
+            allocationMethod: fee.allocationMethod,
+            calculationBasis: fee.calculationBasis,
+          }));
+          setLoanFees(productFees);
+        }
       }
 
       // Repopulate form when modal opens with latest data
@@ -200,29 +286,15 @@ export function GenerateRepaymentScheduleModal({
         approvedLoanAmount: loanApplicationData.fundingAmount?.toString() || "",
         currency: loanApplicationData.fundingCurrency || "KES",
         approvedLoanTenure: loanApplicationData.repaymentPeriod?.toString() || "",
-        returnType: "interest_based",
+        returnType: returnType as "interest_based" | "revenue_share",
         interestRate: loanApplicationData.interestRate?.toString() || "",
         interestRatePeriod,
-        repaymentStructure: "", // Leave empty - no direct mapping from loan product
+        repaymentStructure,
         repaymentCycle,
         gracePeriod,
         gracePeriodUnit,
-        firstPaymentDate: "",
+        firstPaymentDate,
       });
-
-      // Populate loan fees from loan product if available
-      if (loanProduct?.fees && loanProduct.fees.length > 0) {
-        const productFees: LocalLoanFee[] = loanProduct.fees.map((fee, index) => ({
-          id: `product-fee-${index}`,
-          name: fee.feeName || `Fee ${index + 1}`,
-          calculationMethod: fee.calculationMethod,
-          rate: fee.rate.toString(),
-          collectionRule: fee.collectionRule,
-          allocationMethod: fee.allocationMethod,
-          calculationBasis: fee.calculationBasis,
-        }));
-        setLoanFees(productFees);
-      }
     } else if (!open) {
       setLoanFees([]);
       setEditingFee(null);
@@ -697,17 +769,21 @@ function LoanFeeModal({
   });
 
   useEffect(() => {
-    if (open && initialValues) {
-      form.reset(initialValues);
-    } else if (!open) {
-      form.reset({
-        name: "",
-        calculationMethod: "",
-        rate: "",
-        collectionRule: "",
-        allocationMethod: "",
-        calculationBasis: "",
-      });
+    if (open) {
+      if (initialValues) {
+        // Edit mode - populate with existing values
+        form.reset(initialValues);
+      } else {
+        // Add mode - reset to empty
+        form.reset({
+          name: "",
+          calculationMethod: "",
+          rate: "",
+          collectionRule: "",
+          allocationMethod: "",
+          calculationBasis: "",
+        });
+      }
     }
   }, [open, initialValues, form]);
 
