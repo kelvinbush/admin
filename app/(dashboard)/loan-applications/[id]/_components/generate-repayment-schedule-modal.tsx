@@ -435,7 +435,11 @@ export function GenerateRepaymentScheduleModal({
                     name="interestRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Interest rate (%) *</FormLabel>
+                        <FormLabel>
+                          {form.watch("returnType") === "revenue_share"
+                            ? "Revenue share percentage (%) *"
+                            : "Interest rate (%) *"}
+                        </FormLabel>
                         <div className="flex gap-2">
                           <FormControl>
                             <Input
@@ -446,29 +450,31 @@ export function GenerateRepaymentScheduleModal({
                               className="flex-1"
                             />
                           </FormControl>
-                          <FormField
-                            control={form.control}
-                            name="interestRatePeriod"
-                            render={({ field: periodField }) => (
-                              <Select
-                                onValueChange={periodField.onChange}
-                                defaultValue={periodField.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="w-[140px]">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {interestRatePeriodOptions.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
+                          {form.watch("returnType") === "interest_based" && (
+                            <FormField
+                              control={form.control}
+                              name="interestRatePeriod"
+                              render={({ field: periodField }) => (
+                                <Select
+                                  onValueChange={periodField.onChange}
+                                  defaultValue={periodField.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="w-[140px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {interestRatePeriodOptions.map((opt) => (
+                                      <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          )}
                         </div>
                         <FormMessage />
                       </FormItem>
