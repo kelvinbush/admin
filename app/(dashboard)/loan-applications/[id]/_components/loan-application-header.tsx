@@ -93,7 +93,7 @@ function getButtonText(currentStatus: LoanApplicationStatus): string {
     head_of_credit_review: "Send for Internal Approval (CEO)",
     internal_approval_ceo: "Send for Committee Decision",
     committee_decision: "Send for SME Offer Approval",
-    sme_offer_approval: "Send for Document Generation",
+    sme_offer_approval: "Generate Repayment Schedule",
     document_generation: "Send for Signing & Execution",
     signing_execution: "Send for Awaiting Disbursement",
     awaiting_disbursement: "Disburse Loan",

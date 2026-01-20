@@ -15,6 +15,7 @@ import { CreditAssessmentModal, type CreditAssessmentFormValues } from "./_compo
 import { HeadOfCreditReviewModal, type HeadOfCreditReviewFormValues } from "./_components/head-of-credit-review-modal";
 import { InternalApprovalCEOModal, type InternalApprovalCEOFormValues } from "./_components/internal-approval-ceo-modal";
 import { SmeOfferApprovalModal, type SmeOfferApprovalFormValues } from "./_components/sme-offer-approval-modal";
+import { GenerateRepaymentScheduleModal, type GenerateRepaymentScheduleFormValues } from "./_components/generate-repayment-schedule-modal";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
@@ -86,6 +87,7 @@ export default function LoanApplicationDetailLayout({
   const [headOfCreditReviewModalOpen, setHeadOfCreditReviewModalOpen] = useState(false);
   const [internalApprovalCEOModalOpen, setInternalApprovalCEOModalOpen] = useState(false);
   const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] = useState(false);
+  const [generateRepaymentScheduleModalOpen, setGenerateRepaymentScheduleModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
@@ -99,7 +101,7 @@ export default function LoanApplicationDetailLayout({
     } else if (loanApplication?.status === "committee_decision") {
       setSmeOfferApprovalModalOpen(true);
     } else if (loanApplication?.status === "sme_offer_approval") {
-      handleSmeOfferApprovalAdvance();
+      setGenerateRepaymentScheduleModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -470,6 +472,50 @@ export default function LoanApplicationDetailLayout({
         applicantName={applicationData.loanApplicant.name}
         applicantEmail={applicationData.loanApplicant.email}
         isLoading={completeCommitteeDecisionMutation.isPending}
+      />
+
+      <GenerateRepaymentScheduleModal
+        open={generateRepaymentScheduleModalOpen}
+        onOpenChange={setGenerateRepaymentScheduleModalOpen}
+        onSubmit={async (data: GenerateRepaymentScheduleFormValues, fees) => {
+          try {
+            // TODO: Implement API call to generate repayment schedule
+            // For now, just advance to the next stage
+            console.log("Repayment schedule data:", data);
+            console.log("Loan fees:", fees);
+            
+            const nextStatus = getNextStage(loanApplication!.status);
+            if (!nextStatus) {
+              toast.error("No next stage available");
+              return;
+            }
+
+            await updateStatusMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                status: nextStatus,
+                reason: `Repayment schedule generated and advanced to ${nextStatus}`,
+              },
+            });
+            
+            toast.success("Repayment schedule generated successfully.");
+            setGenerateRepaymentScheduleModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to generate repayment schedule.");
+          }
+        }}
+        isLoading={updateStatusMutation.isPending}
+        loanApplicationData={
+          loanApplication
+            ? {
+                fundingAmount: loanApplication.fundingAmount,
+                fundingCurrency: loanApplication.fundingCurrency,
+                repaymentPeriod: loanApplication.repaymentPeriod,
+                interestRate: loanApplication.interestRate,
+              }
+            : undefined
+        }
+        loanProductId={loanApplication?.loanProductId}
       />
 
       <NextApproverModal
