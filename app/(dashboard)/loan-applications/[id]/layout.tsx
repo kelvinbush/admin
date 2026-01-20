@@ -16,6 +16,8 @@ import { HeadOfCreditReviewModal, type HeadOfCreditReviewFormValues } from "./_c
 import { InternalApprovalCEOModal, type InternalApprovalCEOFormValues } from "./_components/internal-approval-ceo-modal";
 import { SmeOfferApprovalModal, type SmeOfferApprovalFormValues } from "./_components/sme-offer-approval-modal";
 import { GenerateRepaymentScheduleModal, type GenerateRepaymentScheduleFormValues } from "./_components/generate-repayment-schedule-modal";
+import { ContractualAgreementModal } from "./_components/contractual-agreement-modal";
+import { useCompleteDocumentGeneration } from "@/lib/api/hooks";
 import {
   useLoanApplication,
   useUpdateLoanApplicationStatus,
@@ -80,6 +82,7 @@ export default function LoanApplicationDetailLayout({
   const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
   const completeCommitteeDecisionMutation = useCompleteCommitteeDecision();
   const submitCounterOfferMutation = useSubmitCounterOffer();
+  const completeDocumentGenerationMutation = useCompleteDocumentGeneration();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
@@ -90,6 +93,7 @@ export default function LoanApplicationDetailLayout({
   const [internalApprovalCEOModalOpen, setInternalApprovalCEOModalOpen] = useState(false);
   const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] = useState(false);
   const [generateRepaymentScheduleModalOpen, setGenerateRepaymentScheduleModalOpen] = useState(false);
+  const [contractualAgreementModalOpen, setContractualAgreementModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
@@ -104,6 +108,8 @@ export default function LoanApplicationDetailLayout({
       setSmeOfferApprovalModalOpen(true);
     } else if (loanApplication?.status === "sme_offer_approval") {
       setGenerateRepaymentScheduleModalOpen(true);
+    } else if (loanApplication?.status === "document_generation") {
+      setContractualAgreementModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -556,6 +562,29 @@ export default function LoanApplicationDetailLayout({
             : undefined
         }
         loanProductId={loanApplication?.loanProductId}
+      />
+
+      <ContractualAgreementModal
+        open={contractualAgreementModalOpen}
+        onOpenChange={setContractualAgreementModalOpen}
+        onSubmit={async (file: { docUrl: string; docName: string }) => {
+          try {
+            await completeDocumentGenerationMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                contractUrl: file.docUrl,
+                docName: file.docName,
+                notes: "Contractual agreement uploaded",
+              },
+            });
+
+            toast.success("Contractual agreement uploaded successfully.");
+            setContractualAgreementModalOpen(false);
+          } catch (error: any) {
+            toast.error(error?.response?.data?.error || "Failed to upload contractual agreement.");
+          }
+        }}
+        isLoading={completeDocumentGenerationMutation.isPending}
       />
 
       <NextApproverModal

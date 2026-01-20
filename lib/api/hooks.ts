@@ -26,6 +26,19 @@ export function useClientApiQuery<TData = unknown, TError = AxiosError>(
   });
 }
 
+export interface CompleteDocumentGenerationBody {
+  contractUrl: string;
+  docName?: string;
+  notes?: string;
+}
+
+export function useCompleteDocumentGeneration() {
+  return useClientApiMutation<unknown, { id: string; data: CompleteDocumentGenerationBody }>(
+    (api, { id, data }) =>
+      api.post<unknown>(`/loan-applications/${id}/document-generation/complete`, data),
+  );
+}
+
 // Generic hook for mutations with authentication
 export function useClientApiMutation<
   TData = unknown,
