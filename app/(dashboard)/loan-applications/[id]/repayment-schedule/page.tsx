@@ -153,6 +153,290 @@ export default function RepaymentSchedulePage() {
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
+  const generatePDF = () => {
+    if (!loanApplication) {
+      toast.error('Loan application data not available');
+      return;
+    }
+
+    // Create a new window for PDF generation
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Please allow popups to download the PDF');
+      return;
+    }
+
+    // Generate PDF content
+    const pdfContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Loan Repayment Schedule - ${loanApplication.businessName}</title>
+        <style>
+          @page {
+            margin: 20mm;
+            size: A4;
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+          }
+          
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #00CC99;
+            padding-bottom: 20px;
+          }
+          
+          .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00CC99;
+            margin-bottom: 10px;
+          }
+          
+          .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 5px;
+          }
+          
+          .subtitle {
+            font-size: 14px;
+            color: #666;
+          }
+          
+          .loan-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+          }
+          
+          .summary-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1a365d;
+          }
+          
+          .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          
+          .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          
+          .summary-label {
+            font-weight: 500;
+            color: #4a5568;
+          }
+          
+          .summary-value {
+            font-weight: bold;
+            color: #1a365d;
+          }
+          
+          .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+          }
+          
+          .schedule-table th {
+            background: #1a365d;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 10px;
+            text-transform: uppercase;
+          }
+          
+          .schedule-table th:nth-child(n+3) {
+            text-align: right;
+          }
+          
+          .schedule-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          
+          .schedule-table td:nth-child(n+3) {
+            text-align: right;
+          }
+          
+          .schedule-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+          }
+          
+          .total-row {
+            background: #1a365d !important;
+            color: white;
+            font-weight: bold;
+          }
+          
+          .disclaimer {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            font-size: 10px;
+            line-height: 1.5;
+          }
+          
+          .disclaimer-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #856404;
+          }
+          
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+          }
+          
+          @media print {
+            body { print-color-adjust: exact; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">LOAN MANAGEMENT SYSTEM</div>
+          <div class="title">LOAN REPAYMENT SCHEDULE</div>
+          <div class="subtitle">${loanApplication.businessName}</div>
+        </div>
+        
+        <div class="loan-summary">
+          <div class="summary-title">LOAN SUMMARY</div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Loan Amount</span>
+              <span class="summary-value">${currency} ${formatCurrency(loanAmount)}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Loan Term</span>
+              <span class="summary-value">${repaymentPeriod} months</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">${returnType === "revenue_sharing" ? "Revenue Share Rate" : "Annual Interest Rate"}</span>
+              <span class="summary-value">${interestRate}%</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Payment Frequency</span>
+              <span class="summary-value">${cycleDisplayMap[repaymentCycle] || "Monthly"}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Grace Period</span>
+              <span class="summary-value">${gracePeriodMonths > 0 ? `${gracePeriodMonths} months` : "-"}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">First Payment Date</span>
+              <span class="summary-value">${format(new Date(firstPaymentDate), "do MMMM yyyy")}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Monthly Payment</span>
+              <span class="summary-value">${currency} ${formatCurrency(monthlyPayment)}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">${returnType === "revenue_sharing" ? "Total Revenue Share" : "Total Payable Interest"}</span>
+              <span class="summary-value">${currency} ${formatCurrency(totalInterest)}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Facility Fee</span>
+              <span class="summary-value">${currency} ${formatCurrency(facilityFee)} ${customFees.length > 0 ? 'incl. VAT' : ''}</span>
+            </div>
+          </div>
+        </div>
+        
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Payment No.</th>
+              <th>Due Date</th>
+              <th>Payment Due</th>
+              ${returnType === "revenue_sharing" ? 
+                '<th>Rev. Share Distribution</th><th>Capital Redemption</th>' : 
+                '<th>Interest</th><th>Principal</th><th>Outstanding Balance</th>'
+              }
+            </tr>
+          </thead>
+          <tbody>
+            ${schedule.map(row => `
+              <tr>
+                <td>${row.paymentNo}</td>
+                <td>${format(row.dueDate, "do-MMM-yyyy")}</td>
+                <td>${currency} ${formatCurrency(row.paymentDue)}</td>
+                <td>${currency} ${formatCurrency(row.interest)}</td>
+                <td>${currency} ${formatCurrency(row.principal)}</td>
+                ${returnType !== "revenue_sharing" ? `<td>${currency} ${formatCurrency(row.outstandingBalance)}</td>` : ''}
+              </tr>
+            `).join('')}
+            <tr class="total-row">
+              <td colspan="2">TOTAL</td>
+              <td>${currency} ${formatCurrency(totalPaymentDue)}</td>
+              <td>${currency} ${formatCurrency(totalInterest)}</td>
+              <td>${currency} ${formatCurrency(totalPrincipal)}</td>
+              ${returnType !== "revenue_sharing" ? '<td></td>' : ''}
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="disclaimer">
+          <div class="disclaimer-title">IMPORTANT DISCLAIMER</div>
+          <p>This repayment schedule is provided for informational purposes only and represents the current terms of the loan agreement. Actual payment amounts and dates may vary based on the final loan agreement terms and conditions. This document does not constitute a binding agreement or guarantee of loan approval.</p>
+          <br>
+          <p>Interest calculations are based on the specified rate and repayment structure. Early repayment, late payments, or changes to the loan terms may affect the actual repayment schedule. Please refer to your signed loan agreement for the definitive terms and conditions.</p>
+          <br>
+          <p>For questions regarding this repayment schedule or your loan terms, please contact your loan officer or our customer service team.</p>
+        </div>
+        
+        <div class="footer">
+          <p>Generated on ${format(new Date(), "PPPP 'at' p")}</p>
+          <p>Loan Application ID: ${loanApplication.loanId}</p>
+        </div>
+        
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+  };
+
   const handleRegenerateSubmit = async (
     data: GenerateRepaymentScheduleFormValues,
     fees: LocalLoanFee[]
@@ -228,6 +512,25 @@ export default function RepaymentSchedulePage() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-primaryGrey-500">Loan application not found</div>
+      </div>
+    );
+  }
+
+  // Only show repayment schedule at document_generation stage
+  if (loanApplication.status !== "document_generation") {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-4">
+          <div className="text-lg font-medium text-midnight-blue">
+            Repayment Schedule Not Available
+          </div>
+          <div className="text-primaryGrey-500 max-w-md">
+            The repayment schedule will be available once the loan reaches the document generation stage.
+          </div>
+          <div className="text-sm text-primaryGrey-400">
+            Current stage: <span className="font-medium capitalize">{loanApplication.status.replace(/_/g, ' ')}</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -324,7 +627,7 @@ export default function RepaymentSchedulePage() {
           <Button
             size="sm"
             className="gap-2 bg-midnight-blue hover:bg-midnight-blue/90"
-            onClick={() => window.print()}
+            onClick={generatePDF}
           >
             <Download className="w-4 h-4" />
             Download Schedule
