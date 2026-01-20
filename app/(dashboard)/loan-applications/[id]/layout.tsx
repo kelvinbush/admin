@@ -28,6 +28,7 @@ import {
   useCompleteHeadOfCreditReview,
   useCompleteInternalApprovalCEO,
   useCompleteCommitteeDecision,
+  useSetContractSignatories,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -82,6 +83,7 @@ export default function LoanApplicationDetailLayout({
   const completeHeadOfCreditReviewMutation = useCompleteHeadOfCreditReview();
   const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
   const completeCommitteeDecisionMutation = useCompleteCommitteeDecision();
+  const setContractSignatoriesMutation = useSetContractSignatories();
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const completeDocumentGenerationMutation = useCompleteDocumentGeneration();
 
@@ -594,11 +596,33 @@ export default function LoanApplicationDetailLayout({
       <SigningExecutionModal
         open={signingExecutionModalOpen}
         onOpenChange={setSigningExecutionModalOpen}
-        onSubmit={async () => {
-          toast.success("Signing execution details saved.");
-          setSigningExecutionModalOpen(false);
+        onSubmit={async ({ smeSignatories, mkSignatories }) => {
+          try {
+            await setContractSignatoriesMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                clientSignatories: smeSignatories.map((s, index) => ({
+                  fullName: s.name,
+                  email: s.email,
+                  signingOrder: index + 1,
+                })),
+                mkSignatories: mkSignatories.map((s, index) => ({
+                  fullName: s.name,
+                  email: s.email,
+                  signingOrder: index + 1,
+                })),
+              },
+            });
+            toast.success("Signing execution details saved.");
+            setSigningExecutionModalOpen(false);
+          } catch (error: any) {
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to save signing execution details.",
+            );
+          }
         }}
-        isLoading={false}
+        isLoading={setContractSignatoriesMutation.isPending}
       />
 
       <NextApproverModal

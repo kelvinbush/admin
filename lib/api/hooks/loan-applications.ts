@@ -534,6 +534,33 @@ export interface GetLoanDocumentsResponse {
   documents: LoanApplicationDocumentItem[];
 }
 
+export interface ContractTimelineEvent {
+  id: string;
+  type: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  performedBy?: string;
+  performedById?: string;
+}
+
+export interface ContractTimelineResponse {
+  currentStatus: string | null;
+  events: ContractTimelineEvent[];
+}
+
+export interface ContractSignatoryPayload {
+  fullName: string;
+  email: string;
+  roleTitle?: string;
+  signingOrder?: number;
+}
+
+export interface SetContractSignatoriesBody {
+  mkSignatories: ContractSignatoryPayload[];
+  clientSignatories: ContractSignatoryPayload[];
+}
+
 /**
  * Get loan application timeline events
  * GET /loan-applications/:id/timeline
@@ -556,6 +583,21 @@ export function useLoanApplicationTimeline(applicationId: string) {
 }
 
 /**
+ * Get loan application contract timeline events
+ * GET /loan-applications/:id/contract-timeline
+ */
+export function useLoanApplicationContractTimeline(applicationId: string) {
+  return useClientApiQuery<ContractTimelineResponse>(
+    queryKeys.loanApplications.contractTimeline(applicationId),
+    `/loan-applications/${applicationId}/contract-timeline`,
+    undefined,
+    {
+      enabled: !!applicationId,
+    }
+  );
+}
+
+/**
  * Get loan application documents
  * GET /loan-applications/:id/documents
  */
@@ -567,6 +609,33 @@ export function useLoanDocuments(applicationId: string) {
     {
       enabled: !!applicationId,
     }
+  );
+}
+
+export function useSetContractSignatories() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    unknown,
+    { id: string; data: SetContractSignatoriesBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<unknown>(
+        `/loan-applications/${id}/contract-signatories`,
+        data,
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        // Keep contract-related views in sync
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.contractTimeline(variables.id),
+        });
+      },
+    },
   );
 }
 
