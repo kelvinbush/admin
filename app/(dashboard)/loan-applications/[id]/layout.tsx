@@ -17,6 +17,7 @@ import { InternalApprovalCEOModal, type InternalApprovalCEOFormValues } from "./
 import { SmeOfferApprovalModal, type SmeOfferApprovalFormValues } from "./_components/sme-offer-approval-modal";
 import { GenerateRepaymentScheduleModal, type GenerateRepaymentScheduleFormValues } from "./_components/generate-repayment-schedule-modal";
 import { ContractualAgreementModal } from "./_components/contractual-agreement-modal";
+import { SigningExecutionModal } from "./_components/signing-execution-modal";
 import { useCompleteDocumentGeneration } from "@/lib/api/hooks";
 import {
   useLoanApplication,
@@ -94,6 +95,7 @@ export default function LoanApplicationDetailLayout({
   const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] = useState(false);
   const [generateRepaymentScheduleModalOpen, setGenerateRepaymentScheduleModalOpen] = useState(false);
   const [contractualAgreementModalOpen, setContractualAgreementModalOpen] = useState(false);
+  const [signingExecutionModalOpen, setSigningExecutionModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
@@ -110,6 +112,8 @@ export default function LoanApplicationDetailLayout({
       setGenerateRepaymentScheduleModalOpen(true);
     } else if (loanApplication?.status === "document_generation") {
       setContractualAgreementModalOpen(true);
+    } else if (loanApplication?.status === "signing_execution") {
+      setSigningExecutionModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -585,6 +589,16 @@ export default function LoanApplicationDetailLayout({
           }
         }}
         isLoading={completeDocumentGenerationMutation.isPending}
+      />
+
+      <SigningExecutionModal
+        open={signingExecutionModalOpen}
+        onOpenChange={setSigningExecutionModalOpen}
+        onSubmit={async () => {
+          toast.success("Signing execution details saved.");
+          setSigningExecutionModalOpen(false);
+        }}
+        isLoading={false}
       />
 
       <NextApproverModal

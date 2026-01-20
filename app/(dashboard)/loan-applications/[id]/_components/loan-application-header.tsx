@@ -95,7 +95,7 @@ function getButtonText(currentStatus: LoanApplicationStatus): string {
     committee_decision: "Send for SME Offer Approval",
     sme_offer_approval: "Generate Repayment Schedule",
     document_generation: "Send for Signing & Execution",
-    signing_execution: "Send for Awaiting Disbursement",
+    signing_execution: "Send for signing",
     awaiting_disbursement: "Disburse Loan",
     approved: "No Next Stage",
     rejected: "No Next Stage",
