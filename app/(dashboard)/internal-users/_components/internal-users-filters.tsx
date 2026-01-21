@@ -23,7 +23,8 @@ type InternalUsersFiltersProps = {
     key: K,
     value?: InternalUserFiltersState[K],
   ) => void;
-  onApply?: () => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 };
 
 const roleOptions: Array<{
@@ -62,7 +63,8 @@ export function InternalUsersFilters({
   values,
   visible = true,
   onValueChange,
-  onApply,
+  hasActiveFilters = false,
+  onClearFilters,
 }: InternalUsersFiltersProps) {
   if (!visible) {
     return null;
@@ -92,15 +94,18 @@ export function InternalUsersFilters({
           options={createdAtOptions}
           onChange={(value) => onValueChange("createdAt", value)}
         />
-        <div className="flex items-stretch">
-          <Button
-            type="button"
-            className="w-full h-10 bg-primary-green text-white hover:bg-primary-green/90 uppercase tracking-[0.08em]"
-            onClick={onApply}
-          >
-            Apply
-          </Button>
-        </div>
+        {hasActiveFilters && onClearFilters && (
+          <div className="flex items-stretch">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-10 border-primaryGrey-300 text-midnight-blue uppercase tracking-[0.08em]"
+              onClick={onClearFilters}
+            >
+              Clear filters
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -134,7 +139,7 @@ function FilterSelect<T extends string | undefined>({
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (
-          <SelectItem key={option.label} value={option.value ?? ""}>
+          <SelectItem key={option.label} value={option.value as string}>
             {option.label}
           </SelectItem>
         ))}

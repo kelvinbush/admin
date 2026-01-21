@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateInternalInvite } from "@/lib/api/hooks/internal-users";
+import { toast } from "sonner";
 import InviteSuccessModal from "./invite-success-modal";
 
 interface InviteUserModalProps {
@@ -48,6 +49,9 @@ export default function InviteUserModal({
 
   const createInvite = useCreateInternalInvite();
 
+  const isValidEmail = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
   const reset = () => {
     setFullName("");
     setEmail("");
@@ -55,19 +59,38 @@ export default function InviteUserModal({
   };
 
   const onSubmit = async () => {
-    if (!email.trim()) return;
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      toast.error("Please enter the user's full name.");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      toast.error("Please enter the user's email address.");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
 
     try {
-      await createInvite.mutateAsync({ email: email.trim(), role });
-      const emailToShow = email.trim();
+      await createInvite.mutateAsync({ email: trimmedEmail, role });
+      const emailToShow = trimmedEmail;
       reset();
       onOpenChange(false);
       setInvitedEmail(emailToShow);
       setSuccessModalOpen(true);
       if (onInvited) onInvited();
-    } catch (error) {
-      // Error handling is done by the mutation
-      console.error("Failed to invite user:", error);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to send invitation. Please try again.";
+      toast.error(message);
     }
   };
 
@@ -158,7 +181,7 @@ export default function InviteUserModal({
               onClick={onSubmit}
               disabled={disableSubmit}
             >
-              Send Invitation
+              {createInvite.isPending ? "Sending..." : "Send Invitation"}
             </Button>
           </DialogFooter>
         </div>

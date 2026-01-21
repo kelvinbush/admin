@@ -69,12 +69,17 @@ export default function ForgotPasswordPage() {
         toast.error("Invalid or expired code. Please try again.");
       }
     } catch (err: any) {
-      const message =
+      const rawMessage =
         err?.errors?.[0]?.message ||
         err?.message ||
         "Invalid code. Please try again.";
-      setError(message);
-      toast.error(message);
+
+      const normalized = /expired/i.test(rawMessage) || /invalid/i.test(rawMessage)
+        ? "Invalid Code! Please check your code and try again or request a new one"
+        : rawMessage;
+
+      setError(normalized);
+      toast.error(normalized);
     } finally {
       setIsSubmitting(false);
     }

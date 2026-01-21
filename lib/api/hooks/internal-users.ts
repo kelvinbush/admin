@@ -71,4 +71,22 @@ export function useActivateInternalUser() {
   );
 }
 
+export interface UpdateInternalUserBody {
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
+  role?: "super-admin" | "admin" | "member";
+}
+
+export function useUpdateInternalUser() {
+  return useClientApiMutation<
+    void,
+    { clerkId: string; data: UpdateInternalUserBody }
+  >(
+    async (api, { clerkId, data }) => {
+      return api.put<void>(`/admin/internal-users/${clerkId}`, data);
+    },
+  );
+}
+
 

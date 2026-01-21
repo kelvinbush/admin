@@ -40,12 +40,15 @@ interface InternalUsersTableProps {
   data: InternalUserTableItem[];
   isLoading?: boolean;
   onAddUser?: () => void;
+  onManageUser?: (user: InternalUserTableItem) => void;
   onResendInvitation?: (invitationId: string) => void;
   onRevokeInvitation?: (invitationId: string) => void;
   onActivate?: (clerkId: string) => void;
   onDeactivate?: (clerkId: string) => void;
   onRemove?: (clerkId: string) => void;
   actionBusyId?: string | null;
+  canManage?: boolean;
+  currentUserId?: string;
 }
 
 function getInitials(name?: string, email?: string): string {
@@ -74,12 +77,15 @@ export function InternalUsersTable({
   data,
   isLoading = false,
   onAddUser,
+  onManageUser,
   onResendInvitation,
   onRevokeInvitation,
   onActivate,
   onDeactivate,
   onRemove,
   actionBusyId,
+  canManage = false,
+  currentUserId,
 }: InternalUsersTableProps) {
   const [confirmModal, setConfirmModal] = React.useState<{
     type: "deactivate" | "activate" | "remove" | "revoke";
@@ -399,9 +405,9 @@ export function InternalUsersTable({
               </defs>
             </svg>
             <p className="text-primaryGrey-500 mb-6">
-              No internal users have been added yet!
+              No user record found. Try refining your search or adjusting your filters.
             </p>
-            {onAddUser && (
+            {onAddUser && canManage && (
               <Button
                 className="h-10 border-0 text-white"
                 style={{
@@ -452,7 +458,10 @@ export function InternalUsersTable({
                 const isPending = user.status === "pending";
                 const isActive = user.status === "active";
                 const isInactive = user.status === "inactive";
-                const isBusy = actionBusyId === user.invitationId || actionBusyId === user.clerkId;
+                const isBusy =
+                  actionBusyId === user.invitationId || actionBusyId === user.clerkId;
+                const isSelf =
+                  !!currentUserId && !!user.clerkId && user.clerkId === currentUserId;
 
                 return (
                   <TableRow key={user.email} className="hover:bg-gray-50">
@@ -532,13 +541,24 @@ export function InternalUsersTable({
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            disabled={isBusy}
+                            disabled={isBusy || !canManage || isSelf}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {isPending && user.invitationId && (
+                          {onManageUser && (
+                            <DropdownMenuItem
+                              onClick={() => onManageUser(user)}
+                              disabled={isBusy || !canManage}
+                            >
+                              Manage user details
+                            </DropdownMenuItem>
+                          )}
+                          {onManageUser && canManage && !isSelf && (
+                            <DropdownMenuSeparator />
+                          )}
+                          {canManage && !isSelf && isPending && user.invitationId && (
                             <>
                               {onResendInvitation && (
                                 <DropdownMenuItem
@@ -569,7 +589,7 @@ export function InternalUsersTable({
                               )}
                             </>
                           )}
-                          {isActive && user.clerkId && (
+                          {canManage && !isSelf && isActive && user.clerkId && (
                             <>
                               {onDeactivate && (
                                 <DropdownMenuItem
@@ -607,7 +627,7 @@ export function InternalUsersTable({
                               )}
                             </>
                           )}
-                          {isInactive && user.clerkId && (
+                          {canManage && !isSelf && isInactive && user.clerkId && (
                             <>
                               {onActivate && (
                                 <DropdownMenuItem

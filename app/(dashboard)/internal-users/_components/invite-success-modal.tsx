@@ -24,7 +24,7 @@ export default function InviteSuccessModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[500px] p-0 overflow-hidden">
-        <div className="px-8 py-8 flex flex-col items-center text-center">
+        <div className="px-8 py-8 flex flex-col items-center">
           <DialogHeader className="w-full">
             <div className="flex justify-center mb-4">
               <div className="relative">
@@ -45,13 +45,13 @@ export default function InviteSuccessModal({
                 </div>
               </div>
             </div>
-            <DialogTitle className="text-2xl font-medium text-midnight-blue mb-4">
+            <DialogTitle className="text-2xl font-medium text-midnight-blue mb-4 text-center">
               Invite Sent Successfully!
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full mb-6">
-            <p className="text-sm text-primaryGrey-500">
+          <div className="w-full mb-6 text-center">
+            <p className="text-sm text-primaryGrey-500 text-center">
               An email has been sent to{" "}
               <span className="text-blue-600 font-medium">{email}</span>.
               Please advise the user to check their inbox and follow the

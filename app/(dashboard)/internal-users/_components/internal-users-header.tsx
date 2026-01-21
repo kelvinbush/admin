@@ -35,6 +35,8 @@ type InternalUsersHeaderProps = {
   onToggleFilters: () => void;
   onDownload?: () => void;
   onAddUser?: () => void;
+  canManage?: boolean;
+  hasData?: boolean;
 };
 
 const sortOptions: InternalUsersSort[] = [
@@ -62,6 +64,8 @@ export function InternalUsersHeader({
   onToggleFilters,
   onDownload,
   onAddUser,
+  canManage = false,
+  hasData = false,
 }: InternalUsersHeaderProps) {
   const sortKey = `${sort.sortBy}-${sort.sortOrder}`;
 
@@ -131,13 +135,15 @@ export function InternalUsersHeader({
           className="h-10 w-10 p-0 justify-center"
           onClick={onDownload}
           aria-label="Download internal users"
+          disabled={!hasData}
         >
           <Download className="h-4 w-4" />
         </Button>
 
         <Button
-          className="h-10 bg-black hover:bg-black/90 text-white"
+          className="h-10 bg-black hover:bg-black/90 text-white disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={onAddUser}
+          disabled={!canManage}
         >
           <Plus className="h-4 w-4 mr-2" />
           New User

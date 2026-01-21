@@ -1,6 +1,6 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import Link from "next/link";
 
 export default function Page() {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const { signOut } = useClerk();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,31 +21,62 @@ export default function Page() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const performSignIn = async () => {
+    if (!signIn) {
+      throw new Error("Authentication not ready. Please try again.");
+    }
+
+    const result = await signIn.create({
+      identifier: email,
+      password,
+    });
+
+    if (result.status === "complete") {
+      await setActive({ session: result.createdSessionId });
+      toast.success("Signed in successfully!");
+      router.push("/");
+    } else {
+      throw new Error("Sign in incomplete. Please try again.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        toast.success("Signed in successfully!");
-        router.push("/");
-      } else {
-        const errorMessage = "Sign in incomplete. Please try again.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
+      // First attempt
+      await performSignIn();
     } catch (err: any) {
-      const message =
+      const rawMessage =
         err?.errors?.[0]?.message || err?.message || "Invalid email or password.";
+      const code = err?.errors?.[0]?.code;
+
+      const sessionConflict =
+        code === "session_exists" ||
+        (/session/i.test(rawMessage) && /exist|already/i.test(rawMessage));
+
+      if (sessionConflict) {
+        try {
+          // If a session already exists, sign out and retry once
+          await signOut();
+          await performSignIn();
+          return;
+        } catch (retryErr: any) {
+          const retryMessage =
+            retryErr?.errors?.[0]?.message ||
+            retryErr?.message ||
+            "Failed to sign in after resetting your session. Please try again.";
+          setError(retryMessage);
+          toast.error(retryMessage);
+          return;
+        }
+      }
+
+      const message = rawMessage;
       setError(message);
       toast.error(message);
     } finally {

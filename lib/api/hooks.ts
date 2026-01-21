@@ -39,6 +39,35 @@ export function useCompleteDocumentGeneration() {
   );
 }
 
+// ===== INTERNAL USERS HELPERS =====
+
+export interface UpdateInvitationBody {
+  email?: string;
+  role?: "super-admin" | "admin" | "member";
+}
+
+export function useUpdateInternalInvitation() {
+  return useClientApiMutation<
+    unknown,
+    { id: string; data: UpdateInvitationBody }
+  >((api, { id, data }) =>
+    api.patch<unknown>(`/admin/internal-users/invitations/${id}`, data),
+  );
+}
+
+export interface UpdateUserRoleBody {
+  role: "super-admin" | "admin" | "member";
+}
+
+export function useUpdateInternalUserRole() {
+  return useClientApiMutation<
+    unknown,
+    { clerkUserId: string; data: UpdateUserRoleBody }
+  >((api, { clerkUserId, data }) =>
+    api.patch<unknown>(`/admin/internal-users/${clerkUserId}/role`, data),
+  );
+}
+
 // Generic hook for mutations with authentication
 export function useClientApiMutation<
   TData = unknown,
