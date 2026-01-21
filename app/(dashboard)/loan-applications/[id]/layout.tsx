@@ -9,13 +9,34 @@ import { LoanApplicationStagesCard } from "./_components/loan-application-stages
 import { LoanApplicationTabs } from "./_components/loan-application-tabs";
 import { IncompleteKycKybModal } from "./_components/incomplete-kyc-kyb-modal";
 import { NextApproverModal } from "./_components/next-approver-modal";
-import { EligibilityCheckModal, type EligibilityCheckFormValues } from "./_components/eligibility-check-modal";
-import { RejectLoanModal, type RejectLoanFormValues } from "./_components/reject-loan-modal";
-import { CreditAssessmentModal, type CreditAssessmentFormValues } from "./_components/credit-assessment-modal";
-import { HeadOfCreditReviewModal, type HeadOfCreditReviewFormValues } from "./_components/head-of-credit-review-modal";
-import { InternalApprovalCEOModal, type InternalApprovalCEOFormValues } from "./_components/internal-approval-ceo-modal";
-import { SmeOfferApprovalModal, type SmeOfferApprovalFormValues } from "./_components/sme-offer-approval-modal";
-import { GenerateRepaymentScheduleModal, type GenerateRepaymentScheduleFormValues } from "./_components/generate-repayment-schedule-modal";
+import {
+  EligibilityCheckModal,
+  type EligibilityCheckFormValues,
+} from "./_components/eligibility-check-modal";
+import {
+  RejectLoanModal,
+  type RejectLoanFormValues,
+} from "./_components/reject-loan-modal";
+import {
+  CreditAssessmentModal,
+  type CreditAssessmentFormValues,
+} from "./_components/credit-assessment-modal";
+import {
+  HeadOfCreditReviewModal,
+  type HeadOfCreditReviewFormValues,
+} from "./_components/head-of-credit-review-modal";
+import {
+  InternalApprovalCEOModal,
+  type InternalApprovalCEOFormValues,
+} from "./_components/internal-approval-ceo-modal";
+import {
+  SmeOfferApprovalModal,
+  type SmeOfferApprovalFormValues,
+} from "./_components/sme-offer-approval-modal";
+import {
+  GenerateRepaymentScheduleModal,
+  type GenerateRepaymentScheduleFormValues,
+} from "./_components/generate-repayment-schedule-modal";
 import { ContractualAgreementModal } from "./_components/contractual-agreement-modal";
 import { SigningExecutionModal } from "./_components/signing-execution-modal";
 import { useCompleteDocumentGeneration } from "@/lib/api/hooks";
@@ -79,7 +100,8 @@ export default function LoanApplicationDetailLayout({
   }, [internalUsersData]);
   const completeKycKybMutation = useCompleteKycKyb(applicationId);
   const updateStatusMutation = useUpdateLoanApplicationStatus();
-  const completeEligibilityAssessmentMutation = useCompleteEligibilityAssessment();
+  const completeEligibilityAssessmentMutation =
+    useCompleteEligibilityAssessment();
   const completeCreditAssessmentMutation = useCompleteCreditAssessment();
   const completeHeadOfCreditReviewMutation = useCompleteHeadOfCreditReview();
   const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
@@ -93,13 +115,22 @@ export default function LoanApplicationDetailLayout({
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
   const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [creditAssessmentModalOpen, setCreditAssessmentModalOpen] = useState(false);
-  const [headOfCreditReviewModalOpen, setHeadOfCreditReviewModalOpen] = useState(false);
-  const [internalApprovalCEOModalOpen, setInternalApprovalCEOModalOpen] = useState(false);
-  const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] = useState(false);
-  const [generateRepaymentScheduleModalOpen, setGenerateRepaymentScheduleModalOpen] = useState(false);
-  const [contractualAgreementModalOpen, setContractualAgreementModalOpen] = useState(false);
-  const [signingExecutionModalOpen, setSigningExecutionModalOpen] = useState(false);
+  const [creditAssessmentModalOpen, setCreditAssessmentModalOpen] =
+    useState(false);
+  const [headOfCreditReviewModalOpen, setHeadOfCreditReviewModalOpen] =
+    useState(false);
+  const [internalApprovalCEOModalOpen, setInternalApprovalCEOModalOpen] =
+    useState(false);
+  const [smeOfferApprovalModalOpen, setSmeOfferApprovalModalOpen] =
+    useState(false);
+  const [
+    generateRepaymentScheduleModalOpen,
+    setGenerateRepaymentScheduleModalOpen,
+  ] = useState(false);
+  const [contractualAgreementModalOpen, setContractualAgreementModalOpen] =
+    useState(false);
+  const [signingExecutionModalOpen, setSigningExecutionModalOpen] =
+    useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
@@ -120,31 +151,6 @@ export default function LoanApplicationDetailLayout({
       setSigningExecutionModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
-    }
-  };
-
-  const handleSmeOfferApprovalAdvance = async () => {
-    if (!loanApplication) return;
-
-    const nextStatus = getNextStage(loanApplication.status);
-    if (!nextStatus) {
-      toast.error("No next stage available");
-      return;
-    }
-
-    try {
-      await updateStatusMutation.mutateAsync({
-        id: applicationId,
-        data: {
-          status: nextStatus,
-          reason: `Advanced to ${getStatusLabel(nextStatus)}. Gunning for disbursement.`,
-        },
-      });
-      toast.success("Loan application has been advanced to the next stage.");
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.error || "Failed to advance loan stage.",
-      );
     }
   };
 
@@ -291,11 +297,13 @@ export default function LoanApplicationDetailLayout({
         onReject={handleReject}
         onResendSigningEmail={async () => {
           try {
-            await remindContractSignersMutation.mutateAsync({ id: applicationId });
+            await remindContractSignersMutation.mutateAsync({
+              id: applicationId,
+            });
             toast.success("Reminder emails sent to signers.");
           } catch (error: any) {
             toast.error(
-              error?.response?.data?.error || "Failed to send reminder emails."
+              error?.response?.data?.error || "Failed to send reminder emails.",
             );
           }
         }}
@@ -322,22 +330,31 @@ export default function LoanApplicationDetailLayout({
         onOpenChange={setEligibilityModalOpen}
         onSubmit={async (data: EligibilityCheckFormValues) => {
           try {
-            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            const approver = internalUsers.find(
+              (u) => u.id === data.nextApproverId,
+            );
             await completeEligibilityAssessmentMutation.mutateAsync({
               id: applicationId,
               data: {
                 comment: data.assessmentComment,
-                supportingDocuments: data.supportingDocument ? [data.supportingDocument] : undefined,
+                supportingDocuments: data.supportingDocument
+                  ? [data.supportingDocument]
+                  : undefined,
                 nextApprover: {
                   nextApproverEmail: approver?.email || "",
-                  nextApproverName: approver ? `${approver.firstName} ${approver.lastName}` : "",
+                  nextApproverName: approver
+                    ? `${approver.firstName} ${approver.lastName}`
+                    : "",
                 },
               },
             });
             toast.success("Eligibility check submitted successfully.");
             setEligibilityModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to submit eligibility check.");
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to submit eligibility check.",
+            );
           }
         }}
         users={internalUsers.map((u) => ({
@@ -362,7 +379,9 @@ export default function LoanApplicationDetailLayout({
             toast.success("Loan has been rejected.");
             setRejectModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to reject loan.");
+            toast.error(
+              error?.response?.data?.error || "Failed to reject loan.",
+            );
           }
         }}
         isLoading={updateStatusMutation.isPending}
@@ -373,7 +392,9 @@ export default function LoanApplicationDetailLayout({
         onOpenChange={setCreditAssessmentModalOpen}
         onSubmit={async (data: CreditAssessmentFormValues) => {
           try {
-            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            const approver = internalUsers.find(
+              (u) => u.id === data.nextApproverId,
+            );
             const supportingDocuments = [
               data.supportingDocuments,
               data.creditMemo,
@@ -388,14 +409,19 @@ export default function LoanApplicationDetailLayout({
                 supportingDocuments,
                 nextApprover: {
                   nextApproverEmail: approver?.email || "",
-                  nextApproverName: approver ? `${approver.firstName} ${approver.lastName}` : "",
+                  nextApproverName: approver
+                    ? `${approver.firstName} ${approver.lastName}`
+                    : "",
                 },
               },
             });
             toast.success("Credit assessment submitted successfully.");
             setCreditAssessmentModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to submit credit assessment.");
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to submit credit assessment.",
+            );
           }
         }}
         users={internalUsers.map((u) => ({
@@ -432,7 +458,10 @@ export default function LoanApplicationDetailLayout({
             toast.success("Head of Credit review submitted successfully.");
             setHeadOfCreditReviewModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to submit for CEO approval.");
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to submit for CEO approval.",
+            );
           }
         }}
         users={internalUsers.map((u) => ({
@@ -448,7 +477,9 @@ export default function LoanApplicationDetailLayout({
         onOpenChange={setInternalApprovalCEOModalOpen}
         onSubmit={async (data: InternalApprovalCEOFormValues) => {
           try {
-            const approver = internalUsers.find((u) => u.id === data.nextApproverId);
+            const approver = internalUsers.find(
+              (u) => u.id === data.nextApproverId,
+            );
             if (!approver) {
               toast.error("Selected approver not found.");
               return;
@@ -469,7 +500,10 @@ export default function LoanApplicationDetailLayout({
             toast.success("CEO approval request submitted successfully.");
             setInternalApprovalCEOModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to submit for committee decision.");
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to submit for committee decision.",
+            );
           }
         }}
         users={internalUsers.map((u) => ({
@@ -494,7 +528,9 @@ export default function LoanApplicationDetailLayout({
             toast.success("Term sheet sent for SME approval successfully.");
             setSmeOfferApprovalModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to send term sheet.");
+            toast.error(
+              error?.response?.data?.error || "Failed to send term sheet.",
+            );
           }
         }}
         applicantName={applicationData.loanApplicant.name}
@@ -508,19 +544,28 @@ export default function LoanApplicationDetailLayout({
         onSubmit={async (data: GenerateRepaymentScheduleFormValues, fees) => {
           try {
             // Transform form data to API payload
-            const repaymentCycleMap: Record<string, "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly"> = {
+            const repaymentCycleMap: Record<
+              string,
+              "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly"
+            > = {
               every_30_days: "monthly",
               every_45_days: "monthly", // Fallback to monthly
               every_60_days: "bi_weekly", // Approximate
               every_90_days: "quarterly",
             };
 
-            const repaymentStructureMap: Record<string, "principal_and_interest" | "bullet_repayment"> = {
+            const repaymentStructureMap: Record<
+              string,
+              "principal_and_interest" | "bullet_repayment"
+            > = {
               principal_interest_amortized: "principal_and_interest",
               bullet_repayment: "bullet_repayment",
             };
 
-            const returnTypeMap: Record<string, "interest_based" | "revenue_sharing"> = {
+            const returnTypeMap: Record<
+              string,
+              "interest_based" | "revenue_sharing"
+            > = {
               interest_based: "interest_based",
               revenue_share: "revenue_sharing",
             };
@@ -550,33 +595,46 @@ export default function LoanApplicationDetailLayout({
                 repaymentPeriod: parseInt(data.approvedLoanTenure),
                 returnType: returnTypeMap[data.returnType] || "interest_based",
                 interestRate: parseFloat(data.interestRate),
-                repaymentStructure: repaymentStructureMap[data.repaymentStructure] || "principal_and_interest",
-                repaymentCycle: repaymentCycleMap[data.repaymentCycle] || "monthly",
+                repaymentStructure:
+                  repaymentStructureMap[data.repaymentStructure] ||
+                  "principal_and_interest",
+                repaymentCycle:
+                  repaymentCycleMap[data.repaymentCycle] || "monthly",
                 gracePeriod: gracePeriodInDays,
                 firstPaymentDate: data.firstPaymentDate,
                 customFees: customFees.length > 0 ? customFees : undefined,
               },
             });
-            
+
             toast.success("Counter offer submitted successfully.");
             setGenerateRepaymentScheduleModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to submit counter offer.");
+            toast.error(
+              error?.response?.data?.error || "Failed to submit counter offer.",
+            );
           }
         }}
         isLoading={submitCounterOfferMutation.isPending}
         loanApplicationData={
           loanApplication
             ? {
-                fundingAmount: loanApplication.activeVersion?.fundingAmount ?? loanApplication.fundingAmount,
+                fundingAmount:
+                  loanApplication.activeVersion?.fundingAmount ??
+                  loanApplication.fundingAmount,
                 fundingCurrency: loanApplication.fundingCurrency,
-                repaymentPeriod: loanApplication.activeVersion?.repaymentPeriod ?? loanApplication.repaymentPeriod,
-                interestRate: loanApplication.activeVersion?.interestRate ?? loanApplication.interestRate,
+                repaymentPeriod:
+                  loanApplication.activeVersion?.repaymentPeriod ??
+                  loanApplication.repaymentPeriod,
+                interestRate:
+                  loanApplication.activeVersion?.interestRate ??
+                  loanApplication.interestRate,
                 returnType: loanApplication.activeVersion?.returnType,
-                repaymentStructure: loanApplication.activeVersion?.repaymentStructure,
+                repaymentStructure:
+                  loanApplication.activeVersion?.repaymentStructure,
                 repaymentCycle: loanApplication.activeVersion?.repaymentCycle,
                 gracePeriod: loanApplication.activeVersion?.gracePeriod,
-                firstPaymentDate: loanApplication.activeVersion?.firstPaymentDate,
+                firstPaymentDate:
+                  loanApplication.activeVersion?.firstPaymentDate,
                 customFees: loanApplication.activeVersion?.customFees,
               }
             : undefined
@@ -601,7 +659,10 @@ export default function LoanApplicationDetailLayout({
             toast.success("Contractual agreement uploaded successfully.");
             setContractualAgreementModalOpen(false);
           } catch (error: any) {
-            toast.error(error?.response?.data?.error || "Failed to upload contractual agreement.");
+            toast.error(
+              error?.response?.data?.error ||
+                "Failed to upload contractual agreement.",
+            );
           }
         }}
         isLoading={completeDocumentGenerationMutation.isPending}

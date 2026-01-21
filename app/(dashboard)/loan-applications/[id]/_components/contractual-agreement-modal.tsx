@@ -42,6 +42,7 @@ export function ContractualAgreementModal({
       setUploadedFile(null);
     } catch (error) {
       // Error handling is done in the parent component
+      console.error(error);
     }
   };
 
@@ -81,7 +82,8 @@ export function ContractualAgreementModal({
             </h3>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-900">
-                Upload contractual agreement <span className="text-red-500">*</span>
+                Upload contractual agreement{" "}
+                <span className="text-red-500">*</span>
               </label>
               <FileUploadInput
                 value={uploadedFile || undefined}
