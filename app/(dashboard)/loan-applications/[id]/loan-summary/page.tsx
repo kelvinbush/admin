@@ -135,6 +135,74 @@ export default function LoanSummaryPage() {
             className="h-10 bg-white border-primaryGrey-200"
           />
         </div>
+
+        {/* Review Comments */}
+        {(application.eligibilityAssessmentComment ||
+          application.creditAssessmentComment ||
+          application.headOfCreditReviewComment ||
+          application.internalApprovalCeoComment) && (
+          <div className="space-y-3 pt-4 border-t border-primaryGrey-100">
+            <h3 className="text-sm font-medium text-midnight-blue">
+              Internal review comments
+            </h3>
+
+            {application.eligibilityAssessmentComment && (
+              <div className="space-y-1">
+                <Label className="text-primaryGrey-400">
+                  Eligibility assessment comment
+                </Label>
+                <Textarea
+                  value={application.eligibilityAssessmentComment}
+                  readOnly
+                  rows={3}
+                  className="bg-white border-primaryGrey-200 resize-none"
+                />
+              </div>
+            )}
+
+            {application.creditAssessmentComment && (
+              <div className="space-y-1">
+                <Label className="text-primaryGrey-400">
+                  Credit assessment comment
+                </Label>
+                <Textarea
+                  value={application.creditAssessmentComment}
+                  readOnly
+                  rows={3}
+                  className="bg-white border-primaryGrey-200 resize-none"
+                />
+              </div>
+            )}
+
+            {application.headOfCreditReviewComment && (
+              <div className="space-y-1">
+                <Label className="text-primaryGrey-400">
+                  Head of Credit review comment
+                </Label>
+                <Textarea
+                  value={application.headOfCreditReviewComment}
+                  readOnly
+                  rows={3}
+                  className="bg-white border-primaryGrey-200 resize-none"
+                />
+              </div>
+            )}
+
+            {application.internalApprovalCeoComment && (
+              <div className="space-y-1">
+                <Label className="text-primaryGrey-400">
+                  Internal Approval (CEO) comment
+                </Label>
+                <Textarea
+                  value={application.internalApprovalCeoComment}
+                  readOnly
+                  rows={3}
+                  className="bg-white border-primaryGrey-200 resize-none"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

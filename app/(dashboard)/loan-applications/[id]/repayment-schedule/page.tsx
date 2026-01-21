@@ -516,8 +516,15 @@ export default function RepaymentSchedulePage() {
     );
   }
 
-  // Only show repayment schedule at document_generation stage
-  if (loanApplication.status !== "document_generation") {
+  // Only show repayment schedule at document_generation stage or later
+  const canViewSchedule = [
+    "document_generation",
+    "signing_execution",
+    "awaiting_disbursement",
+    "disbursed",
+  ].includes(loanApplication.status);
+
+  if (!canViewSchedule) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-4">
@@ -608,6 +615,7 @@ export default function RepaymentSchedulePage() {
     }
   };
   const monthlyPayment = getMonthlyPayment();
+  const canRegenerateSchedule = loanApplication.status === "document_generation";
 
   return (
     <div className="space-y-6">
@@ -619,7 +627,8 @@ export default function RepaymentSchedulePage() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => setRegenerateModalOpen(true)}
+            disabled={!canRegenerateSchedule}
+            onClick={() => canRegenerateSchedule && setRegenerateModalOpen(true)}
           >
             <RefreshCw className="w-4 h-4" />
             Regenerate Schedule

@@ -325,6 +325,10 @@ export interface LoanApplicationDetail {
   loanSource: string;
   status: LoanApplicationStatus;
   contractStatus?: ContractStatus | null;
+  eligibilityAssessmentComment?: string | null;
+  creditAssessmentComment?: string | null;
+  headOfCreditReviewComment?: string | null;
+  internalApprovalCeoComment?: string | null;
   
   // Timeline (optional - only set when status changes)
   submittedAt?: string; // ISO 8601 timestamp
