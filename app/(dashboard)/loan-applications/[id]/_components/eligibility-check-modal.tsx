@@ -63,6 +63,11 @@ export function EligibilityCheckModal({
   users,
   isLoading,
 }: EligibilityCheckModalProps) {
+  const selectableUsers = users.filter(
+    (user): user is SimplifiedUser & { clerkId: string; name: string } =>
+      !!user.clerkId && user.clerkId.trim() !== "" && !!user.name,
+  );
+
   const form = useForm<EligibilityCheckFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -152,8 +157,8 @@ export function EligibilityCheckModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.clerkId} value={user.clerkId!}>
+                        {selectableUsers.map((user) => (
+                          <SelectItem key={user.clerkId} value={user.clerkId}>
                             {user.name}
                           </SelectItem>
                         ))}

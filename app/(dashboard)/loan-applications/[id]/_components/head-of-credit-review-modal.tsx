@@ -64,6 +64,11 @@ export function HeadOfCreditReviewModal({
   users,
   isLoading,
 }: HeadOfCreditReviewModalProps) {
+  const selectableUsers = users.filter(
+    (user): user is SimplifiedUser & { clerkId: string; name: string } =>
+      !!user.clerkId && user.clerkId.trim() !== "" && !!user.name,
+  );
+
   const form = useForm<HeadOfCreditReviewFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -79,7 +84,7 @@ export function HeadOfCreditReviewModal({
   }, [open, form]);
 
   const selectedCeoEmail =
-    users.find((u) => u.clerkId === form.watch("ceoId"))?.email || "";
+    selectableUsers.find((u) => u.clerkId === form.watch("ceoId"))?.email || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -153,8 +158,8 @@ export function HeadOfCreditReviewModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.clerkId} value={user.clerkId!}>
+                        {selectableUsers.map((user) => (
+                          <SelectItem key={user.clerkId} value={user.clerkId}>
                             {user.name}
                           </SelectItem>
                         ))}

@@ -69,6 +69,11 @@ export function CreditAssessmentModal({
   users,
   isLoading,
 }: CreditAssessmentModalProps) {
+  const selectableUsers = users.filter(
+    (user): user is SimplifiedUser & { clerkId: string; name: string } =>
+      !!user.clerkId && user.clerkId.trim() !== "" && !!user.name,
+  );
+
   const form = useForm<CreditAssessmentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,7 +89,7 @@ export function CreditAssessmentModal({
   }, [open, form]);
 
   const selectedApproverEmail =
-    users.find((u) => u.clerkId === form.watch("nextApproverId"))?.email || "";
+    selectableUsers.find((u) => u.clerkId === form.watch("nextApproverId"))?.email || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -216,8 +221,8 @@ export function CreditAssessmentModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.clerkId} value={user.clerkId!}>
+                        {selectableUsers.map((user) => (
+                          <SelectItem key={user.clerkId} value={user.clerkId}>
                             {user.name}
                           </SelectItem>
                         ))}
