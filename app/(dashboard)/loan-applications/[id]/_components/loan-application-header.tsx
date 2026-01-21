@@ -11,6 +11,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { businessLegalEntityTypeOptions } from "@/lib/constants/business-options";
 
 type LoanApplicationStatus =
@@ -238,6 +244,7 @@ export function LoanApplicationHeader({
   const buttonText = getButtonText(application.status);
   const statusBadge = getStatusBadge(application.status);
   const showResendButton = application.contractStatus === "contract_sent_for_signing";
+  const isAwaitingDisbursement = application.status === "awaiting_disbursement";
 
   const getCompanyInitials = () => {
     return application.companyName
@@ -359,18 +366,41 @@ export function LoanApplicationHeader({
                       </>
                     ) : (
                       canAdvance && (
-                        <Button
-                          size="sm"
-                          onClick={onSendToNextStage}
-                          disabled={isUpdatingStatus}
-                          className="h-9 px-4 text-sm text-white border-0"
-                          style={{
-                            background:
-                              "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-                          }}
-                        >
-                          {isUpdatingStatus ? "Updating..." : buttonText}
-                        </Button>
+                        isAwaitingDisbursement ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="h-9 px-4 text-sm text-white border-0 cursor-not-allowed opacity-80"
+                                  style={{
+                                    background:
+                                      "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                                  }}
+                                >
+                                  {buttonText}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Coming soon
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={onSendToNextStage}
+                            disabled={isUpdatingStatus}
+                            className="h-9 px-4 text-sm text-white border-0"
+                            style={{
+                              background:
+                                "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+                            }}
+                          >
+                            {isUpdatingStatus ? "Updating..." : buttonText}
+                          </Button>
+                        )
                       )
                     )}
                     <DropdownMenu
