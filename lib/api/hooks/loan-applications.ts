@@ -324,6 +324,7 @@ export interface LoanApplicationDetail {
   // Metadata
   loanSource: string;
   status: LoanApplicationStatus;
+  contractStatus?: ContractStatus | null;
   
   // Timeline (optional - only set when status changes)
   submittedAt?: string; // ISO 8601 timestamp
@@ -561,6 +562,15 @@ export interface SetContractSignatoriesBody {
   clientSignatories: ContractSignatoryPayload[];
 }
 
+export type ContractStatus =
+  | "contract_uploaded"
+  | "contract_sent_for_signing"
+  | "contract_in_signing"
+  | "contract_partially_signed"
+  | "contract_fully_signed"
+  | "contract_voided"
+  | "contract_expired";
+
 /**
  * Get loan application timeline events
  * GET /loan-applications/:id/timeline
@@ -631,6 +641,27 @@ export function useSetContractSignatories() {
         queryClient.invalidateQueries({
           queryKey: queryKeys.loanApplications.detail(variables.id),
         });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.contractTimeline(variables.id),
+        });
+      },
+    },
+  );
+}
+
+/**
+ * Remind contract signers (resend signing emails)
+ * POST /loan-applications/:id/contract/remind-signers
+ */
+export function useRemindContractSigners() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<unknown, { id: string }>(
+    async (api, { id }) => {
+      return api.post<unknown>(`/loan-applications/${id}/contract/remind-signers`);
+    },
+    {
+      onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({
           queryKey: queryKeys.loanApplications.contractTimeline(variables.id),
         });

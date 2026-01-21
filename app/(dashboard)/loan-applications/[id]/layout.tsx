@@ -29,6 +29,7 @@ import {
   useCompleteInternalApprovalCEO,
   useCompleteCommitteeDecision,
   useSetContractSignatories,
+  useRemindContractSigners,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -84,6 +85,7 @@ export default function LoanApplicationDetailLayout({
   const completeInternalApprovalCEOMutation = useCompleteInternalApprovalCEO();
   const completeCommitteeDecisionMutation = useCompleteCommitteeDecision();
   const setContractSignatoriesMutation = useSetContractSignatories();
+  const remindContractSignersMutation = useRemindContractSigners();
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const completeDocumentGenerationMutation = useCompleteDocumentGeneration();
 
@@ -271,6 +273,7 @@ export default function LoanApplicationDetailLayout({
     },
     loanProduct: loanApplication.loanProduct?.name || "",
     status: loanApplication.status as LoanApplicationStage,
+    contractStatus: loanApplication.contractStatus,
     createdAt: loanApplication.createdAt || "",
     createdBy:
       loanApplication.creatorName ||
@@ -286,11 +289,22 @@ export default function LoanApplicationDetailLayout({
         application={applicationData}
         onSendToNextStage={handleNextStage}
         onReject={handleReject}
+        onResendSigningEmail={async () => {
+          try {
+            await remindContractSignersMutation.mutateAsync({ id: applicationId });
+            toast.success("Reminder emails sent to signers.");
+          } catch (error: any) {
+            toast.error(
+              error?.response?.data?.error || "Failed to send reminder emails."
+            );
+          }
+        }}
         isUpdatingStatus={
           isLoading ||
           completeKycKybMutation.isPending ||
           updateStatusMutation.isPending
         }
+        isResendingEmail={remindContractSignersMutation.isPending}
       />
       <LoanApplicationStagesCard currentStage={applicationData.status} />
       <div className="rounded-md bg-white shadow-sm border border-primaryGrey-50">
@@ -598,6 +612,8 @@ export default function LoanApplicationDetailLayout({
         onOpenChange={setSigningExecutionModalOpen}
         onSubmit={async ({ smeSignatories, mkSignatories }) => {
           try {
+            const clientCount = smeSignatories.length;
+
             await setContractSignatoriesMutation.mutateAsync({
               id: applicationId,
               data: {
@@ -609,7 +625,7 @@ export default function LoanApplicationDetailLayout({
                 mkSignatories: mkSignatories.map((s, index) => ({
                   fullName: s.name,
                   email: s.email,
-                  signingOrder: index + 1,
+                  signingOrder: clientCount + index + 1,
                 })),
               },
             });

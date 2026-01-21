@@ -29,6 +29,15 @@ type LoanApplicationStatus =
   | "disbursed"
   | "cancelled";
 
+type ContractStatus =
+  | "contract_uploaded"
+  | "contract_sent_for_signing"
+  | "contract_in_signing"
+  | "contract_partially_signed"
+  | "contract_fully_signed"
+  | "contract_voided"
+  | "contract_expired";
+
 interface LoanApplicationData {
   id: string;
   loanId: string;
@@ -46,6 +55,7 @@ interface LoanApplicationData {
   };
   loanProduct: string;
   status: LoanApplicationStatus;
+  contractStatus?: ContractStatus | null;
   createdAt: string;
   createdBy: string;
 }
@@ -55,8 +65,10 @@ interface LoanApplicationHeaderProps {
   onSendToNextStage?: () => void;
   onReject?: () => void;
   onEmailApplicant?: () => void;
+  onResendSigningEmail?: () => void;
   onArchive?: () => void;
   isUpdatingStatus?: boolean;
+  isResendingEmail?: boolean;
 }
 
 // Get the next stage based on current status
@@ -215,14 +227,17 @@ export function LoanApplicationHeader({
   onSendToNextStage,
   onReject,
   onEmailApplicant,
+  onResendSigningEmail,
   onArchive,
   isUpdatingStatus = false,
+  isResendingEmail = false,
 }: LoanApplicationHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const nextStage = getNextStage(application.status);
   const canAdvance = nextStage !== null;
   const buttonText = getButtonText(application.status);
   const statusBadge = getStatusBadge(application.status);
+  const showResendButton = application.contractStatus === "contract_sent_for_signing";
 
   const getCompanyInitials = () => {
     return application.companyName
@@ -306,6 +321,18 @@ export function LoanApplicationHeader({
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                       Email Applicant
                     </Button>
+                    {showResendButton && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onResendSigningEmail}
+                        disabled={isResendingEmail}
+                        className="bg-white hover:bg-primaryGrey-50 text-midnight-blue border-0 h-9"
+                      >
+                        <Mail className="h-3.5 w-3.5 mr-1.5" />
+                        {isResendingEmail ? "Sending..." : "Resend email"}
+                      </Button>
+                    )}
                     {(application.status === "eligibility_check" || application.status === "credit_analysis") ? (
                       <>
                         <Button
