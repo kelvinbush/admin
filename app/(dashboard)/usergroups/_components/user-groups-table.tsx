@@ -22,10 +22,20 @@ interface UserGroupsTableProps {
   onRowClick: (group: UserGroup) => void;
   onAddGroup: () => void;
   onViewGroup: (group: UserGroup) => void;
+  onEditGroup: (group: UserGroup) => void;
   onDeleted?: (id: string) => void;
+  isFiltered?: boolean;
 }
 
-export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onDeleted }: UserGroupsTableProps) {
+export function UserGroupsTable({
+  data,
+  onRowClick,
+  onAddGroup,
+  onViewGroup,
+  onEditGroup,
+  onDeleted,
+  isFiltered = false,
+}: UserGroupsTableProps) {
   const router = useRouter();
   const deleteMutation = useDeleteUserGroupMutation();
   if (data.length === 0) {
@@ -87,7 +97,11 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
                 </filter>
               </defs>
             </svg>
-            <p className="text-primaryGrey-500 mb-6">No user groups have been added yet!</p>
+            <p className="text-primaryGrey-500 mb-6">
+              {isFiltered
+                ? "No user group record found. Try refining your search or adjusting your filters."
+                : "No user groups have been added yet!"}
+            </p>
             <Button
               className="h-10 border-0 text-white"
               style={{
@@ -153,7 +167,10 @@ export function UserGroupsTable({ data, onRowClick, onAddGroup, onViewGroup, onD
                       </button>
                       <button
                         className="flex items-center gap-1.5 text-[#00CC99] hover:text-[#00CC99]/80 transition-colors text-sm font-medium"
-                        onClick={(e) => { e.stopPropagation(); router.push(`/usergroups/${group.id}`); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditGroup(group);
+                        }}
                       >
                         <EditIcon />
                         Edit

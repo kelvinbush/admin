@@ -406,6 +406,7 @@ export interface CreateUserGroupData {
   slug?: string;
   description?: string;
   userIds?: string[];
+  businessIds?: string[];
 }
 
 // ===== LOAN APPLICATION TYPES =====

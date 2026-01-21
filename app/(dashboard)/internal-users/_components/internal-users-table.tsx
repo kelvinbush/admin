@@ -49,6 +49,7 @@ interface InternalUsersTableProps {
   actionBusyId?: string | null;
   canManage?: boolean;
   currentUserId?: string;
+  isFiltered?: boolean;
 }
 
 function getInitials(name?: string, email?: string): string {
@@ -86,6 +87,7 @@ export function InternalUsersTable({
   actionBusyId,
   canManage = false,
   currentUserId,
+  isFiltered = false,
 }: InternalUsersTableProps) {
   const [confirmModal, setConfirmModal] = React.useState<{
     type: "deactivate" | "activate" | "remove" | "revoke";
@@ -405,7 +407,9 @@ export function InternalUsersTable({
               </defs>
             </svg>
             <p className="text-primaryGrey-500 mb-6">
-              No user record found. Try refining your search or adjusting your filters.
+              {isFiltered
+                ? "No user record found. Try refining your search or adjusting your filters."
+                : "No internal users have been added yet!"}
             </p>
             {onAddUser && canManage && (
               <Button

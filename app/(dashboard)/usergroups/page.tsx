@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTitle } from "@/context/title-context";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, X, Download, ChevronDown, Filter } from "lucide-react";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
-import type { UserGroup, UserGroupFilters, PaginationParams } from "@/lib/api/types";
+import type { UserGroup } from "@/lib/api/types";
 import { UserGroupsTable } from "./_components/user-groups-table";
 import CreateUserGroupModal from "./_components/create-user-group-modal";
+import EditUserGroupModal from "./[id]/_components/edit-user-group-modal";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -22,12 +23,22 @@ export default function UserGroupsPage() {
   const router = useRouter();
   const { setTitle } = useTitle();
 
-  // Filters and pagination
-  const [filters, setFilters] = useState<UserGroupFilters>({});
-  const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 10 });
+  // Local filters and pagination
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc">(
+    "created_desc",
+  );
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
-  const { data, isLoading, error } = useUserGroups(filters, pagination);
+  // Fetch a large page once; all filtering/pagination is local
+  const { data, isLoading, error } = useUserGroups(undefined, {
+    page: 1,
+    limit: 1000,
+  });
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
 
   React.useEffect(() => {
     setTitle("User Management");
@@ -44,6 +55,62 @@ export default function UserGroupsPage() {
   const handleViewGroup = (group: UserGroup) => {
     router.push(`/usergroups/${group.id}`);
   };
+
+  const handleEditGroup = (group: UserGroup) => {
+    setEditingGroup(group);
+    setEditOpen(true);
+  };
+
+  const groups: UserGroup[] = data?.data || [];
+
+  const filteredAndSorted = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    const filtered = term
+      ? groups.filter((group) => {
+          const name = ((group as any).name || "").toLowerCase();
+          const slug = ((group as any).slug || "").toLowerCase();
+          return name.includes(term) || slug.includes(term);
+        })
+      : groups;
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (sort === "name_asc" || sort === "name_desc") {
+        const dir = sort === "name_asc" ? 1 : -1;
+        const nameA = ((a as any).name || "").toLowerCase();
+        const nameB = ((b as any).name || "").toLowerCase();
+        if (nameA === nameB) return 0;
+        return nameA > nameB ? dir : -dir;
+      }
+
+      const dateA = (a as any).createdAt
+        ? new Date((a as any).createdAt).getTime()
+        : 0;
+      const dateB = (b as any).createdAt
+        ? new Date((b as any).createdAt).getTime()
+        : 0;
+      const dir = sort === "created_desc" ? -1 : 1;
+      if (dateA === dateB) return 0;
+      return dateA > dateB ? dir : -dir;
+    });
+
+    return sorted;
+  }, [groups, search, sort]);
+
+  const totalFiltered = filteredAndSorted.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = totalFiltered === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(totalFiltered, currentPage * pageSize);
+
+  const paginatedGroups = useMemo(
+    () =>
+      filteredAndSorted.slice(
+        (currentPage - 1) * pageSize,
+        (currentPage - 1) * pageSize + pageSize,
+      ),
+    [filteredAndSorted, currentPage, pageSize],
+  );
 
   if (isLoading) {
     return (
@@ -87,7 +154,7 @@ export default function UserGroupsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-medium text-midnight-blue">
-            {`User groups (${data?.pagination?.total ?? 0})`}
+            {`User groups (${groups.length})`}
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -96,15 +163,19 @@ export default function UserGroupsPage() {
             <Input
               className="h-9 border-0 p-0 focus-visible:ring-0 text-sm placeholder:text-primaryGrey-400"
               placeholder="Search..."
+              value={search}
               onChange={(e) => {
-                const q = e.target.value;
-                setFilters((prev) => ({ ...prev, search: q || undefined } as any));
+                setSearch(e.target.value);
+                setPage(1);
               }}
             />
             <button
               aria-label="Clear search"
               className="ml-auto text-primaryGrey-400 hover:text-midnight-blue"
-              onClick={() => setFilters((prev) => ({ ...(prev as any), search: undefined }))}
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
             >
               <X className="h-4 w-4" />
             </button>
@@ -119,22 +190,78 @@ export default function UserGroupsPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setPagination((p) => ({ ...p, sortBy: "createdAt", sortOrder: "desc" }))}>
+              <DropdownMenuItem onClick={() => { setSort("created_desc"); setPage(1); }}>
                 Newest first
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPagination((p) => ({ ...p, sortBy: "createdAt", sortOrder: "asc" }))}>
+              <DropdownMenuItem onClick={() => { setSort("created_asc"); setPage(1); }}>
                 Oldest first
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPagination((p) => ({ ...p, sortBy: "name", sortOrder: "asc" }))}>
+              <DropdownMenuItem onClick={() => { setSort("name_asc"); setPage(1); }}>
                 Ascending (A-Z)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPagination((p) => ({ ...p, sortBy: "name", sortOrder: "desc" }))}>
+              <DropdownMenuItem onClick={() => { setSort("name_desc"); setPage(1); }}>
                 Descending (Z-A)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" className="h-10 w-10 p-0 justify-center">
+          <Button
+            variant="outline"
+            className="h-10 w-10 p-0 justify-center"
+            onClick={() => {
+              if (!data?.data?.length) return;
+
+              const rows = data.data;
+              const headers = ["Group No", "Name", "Linked SMEs", "Created At", "Updated At"];
+
+              const csvRows = rows.map((group) => {
+                const slugOrId = (group as any).slug || group.id;
+                const name = (group as any).name || "";
+                const businessCount = (group as any).businessCount ?? 0;
+                const createdAt = group.createdAt
+                  ? new Date(group.createdAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
+                  : "-";
+                const updatedAt = group.updatedAt
+                  ? new Date(group.updatedAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                    })
+                  : "-";
+                return [slugOrId, name, businessCount, createdAt, updatedAt];
+              });
+
+              const escapeCell = (cell: string | number) => {
+                const s = String(cell);
+                const needsEscaping = s.includes(",") || s.includes('"') || s.includes("\n");
+                const sanitized = s.replace(/"/g, '""');
+                return needsEscaping ? `"${sanitized}"` : sanitized;
+              };
+
+              const csvContent = [headers, ...csvRows]
+                .map((row) => row.map((cell) => escapeCell(cell)).join(","))
+                .join("\n");
+
+              const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.setAttribute(
+                "download",
+                `user-groups-${new Date().toISOString().slice(0, 10)}.csv`,
+              );
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            }}
+            disabled={!data?.data?.length}
+            aria-label="Download user groups"
+          >
             <Download className="h-4 w-4" />
           </Button>
 
@@ -146,24 +273,93 @@ export default function UserGroupsPage() {
       </div>
 
       <UserGroupsTable
-        data={data?.data || []}
+        data={paginatedGroups}
         onRowClick={handleRowClick}
         onAddGroup={handleAddGroup}
         onViewGroup={handleViewGroup}
-        onDeleted={() => setFilters((prev) => ({ ...prev }))}
+        onEditGroup={handleEditGroup}
+        onDeleted={() => {
+          // Refetch is handled by react-query; reset to first page to keep UX predictable
+          setPage(1);
+        }}
+        isFiltered={search.trim().length > 0}
       />
 
       <CreateUserGroupModal
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={() => {
-          // refresh list after creation
-          // simplest approach: update filters state to trigger refetch
-          setFilters((prev) => ({ ...prev }));
+          // react-query refetches automatically; ensure we show the first page
+          setPage(1);
         }}
       />
 
-      {/* Pagination controls can be added here if needed, matching the loan products page */}
+      {editingGroup && (
+        <EditUserGroupModal
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) {
+              setEditingGroup(null);
+            }
+          }}
+          groupId={editingGroup.id}
+          initialName={(editingGroup as any)?.name || ""}
+          initialSlug={(editingGroup as any)?.slug || ""}
+          initialDescription={(editingGroup as any)?.description || ""}
+          onUpdated={() => {
+            router.refresh?.();
+          }}
+        />
+      )}
+
+      {totalFiltered > 0 && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-primaryGrey-400">
+          <div>
+            Showing{" "}
+            <span className="font-medium text-midnight-blue">
+              {startIndex}–{endIndex}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-midnight-blue">
+              {totalFiltered}
+            </span>{" "}
+            user groups
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => {
+                if (currentPage > 1) setPage(currentPage - 1);
+              }}
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-primaryGrey-400">
+              Page{" "}
+              <span className="font-medium text-midnight-blue">
+                {currentPage}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-midnight-blue">
+                {totalPages}
+              </span>
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages || totalFiltered === 0}
+              onClick={() => {
+                if (currentPage < totalPages) setPage(currentPage + 1);
+              }}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

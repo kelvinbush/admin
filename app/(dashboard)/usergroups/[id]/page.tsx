@@ -29,6 +29,7 @@ export default function UserGroupDetailPage() {
   const [editOpen, setEditOpen] = React.useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
+  const [businessSort, setBusinessSort] = useState<"created_desc" | "created_asc" | "name_asc" | "name_desc">("created_desc");
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const limit = 20;
 
@@ -47,8 +48,46 @@ export default function UserGroupDetailPage() {
   // Filter to only show businesses already in group
   const businessesInGroup = useMemo(() => {
     if (!businessesData?.data) return [];
-    return businessesData.data.filter((b) => b.isAlreadyInGroup);
-  }, [businessesData]);
+    const inGroup = businessesData.data.filter((b) => b.isAlreadyInGroup);
+
+    const withSearch =
+      debouncedSearch && debouncedSearch.trim()
+        ? inGroup.filter((b) => {
+            const term = debouncedSearch.toLowerCase();
+            const name = b.name?.toLowerCase() || "";
+            const ownerName = `${b.owner.firstName || ""} ${b.owner.lastName || ""}`.toLowerCase();
+            const ownerEmail = b.owner.email.toLowerCase();
+            return (
+              name.includes(term) ||
+              ownerName.includes(term) ||
+              ownerEmail.includes(term)
+            );
+          })
+        : inGroup;
+
+    const sorted = [...withSearch].sort((a, b) => {
+      if (businessSort === "name_asc" || businessSort === "name_desc") {
+        const dir = businessSort === "name_asc" ? 1 : -1;
+        const nameA = (a.name || "").toLowerCase();
+        const nameB = (b.name || "").toLowerCase();
+        if (nameA === nameB) return 0;
+        return nameA > nameB ? dir : -dir;
+      }
+
+      // created_* fallback: rely on optional createdAt if present, otherwise stable
+      const dateA = (a as any).createdAt
+        ? new Date((a as any).createdAt).getTime()
+        : 0;
+      const dateB = (b as any).createdAt
+        ? new Date((b as any).createdAt).getTime()
+        : 0;
+      const dir = businessSort === "created_desc" ? -1 : 1;
+      if (dateA === dateB) return 0;
+      return dateA > dateB ? dir : -dir;
+    });
+
+    return sorted;
+  }, [businessesData, debouncedSearch, businessSort]);
 
   const totalBusinesses = businessesData?.pagination?.total || 0;
 
@@ -150,7 +189,7 @@ export default function UserGroupDetailPage() {
                     setPage(1); // Reset to first page on new search
                   }}
                   className="h-9 border-0 p-0 focus-visible:ring-0 text-sm placeholder:text-primaryGrey-400"
-                  placeholder="Search business or owner..."
+                  placeholder="Search business"
                 />
                 {searchValue && (
                   <button
@@ -174,13 +213,74 @@ export default function UserGroupDetailPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>Newest first</DropdownMenuItem>
-                  <DropdownMenuItem>Oldest first</DropdownMenuItem>
-                  <DropdownMenuItem>Ascending (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Descending (Z-A)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBusinessSort("created_desc")}>
+                    Newest first
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBusinessSort("created_asc")}>
+                    Oldest first
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBusinessSort("name_asc")}>
+                    Ascending (A-Z)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBusinessSort("name_desc")}>
+                    Descending (Z-A)
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="outline" className="h-10 w-10 p-0" aria-label="Export">
+              <Button
+                variant="outline"
+                className="h-10 w-10 p-0"
+                aria-label="Export"
+                disabled={!businessesInGroup.length}
+                onClick={() => {
+                  if (!businessesInGroup.length) return;
+
+                  const headers = ["Business Name", "Sector", "Location", "Owner Name", "Owner Email"];
+                  const rows = businessesInGroup.map((b) => {
+                    const ownerName = `${b.owner.firstName || ""} ${b.owner.lastName || ""}`.trim() ||
+                      b.owner.email;
+                    const location = b.city && b.country
+                      ? `${b.city}, ${b.country}`
+                      : b.city || b.country || "—";
+                    return [
+                      b.name,
+                      b.sector || "",
+                      location,
+                      ownerName,
+                      b.owner.email,
+                    ];
+                  });
+
+                  const escapeCell = (cell: string) => {
+                    const s = String(cell);
+                    const needsEscaping =
+                      s.includes(",") || s.includes('"') || s.includes("\n");
+                    const sanitized = s.replace(/"/g, '""');
+                    return needsEscaping ? `"${sanitized}"` : sanitized;
+                  };
+
+                  const csvContent = [headers, ...rows]
+                    .map((row) => row.map((cell) => escapeCell(cell)).join(","))
+                    .join("\n");
+
+                  const blob = new Blob([csvContent], {
+                    type: "text/csv;charset=utf-8;",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.setAttribute(
+                    "download",
+                    `user-group-${id}-businesses-${new Date()
+                      .toISOString()
+                      .slice(0, 10)}.csv`,
+                  );
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                }}
+              >
                 <Download className="h-4 w-4" />
               </Button>
               <Button className="h-10 bg-black hover:bg-black/90 text-white" onClick={() => setAddOpen(true)}>Add SME</Button>

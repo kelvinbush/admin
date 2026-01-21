@@ -151,6 +151,7 @@ export default function InternalUsersPage() {
 
   const hasActiveFilters =
     !!filters.role || !!filters.status || !!filters.createdAt;
+  const hasSearch = !!filters.search && filters.search.trim().length > 0;
 
   const totalFiltered = filteredUsers.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
@@ -405,6 +406,7 @@ export default function InternalUsersPage() {
         actionBusyId={actionBusyId}
         canManage={canManage}
         currentUserId={user?.id}
+        isFiltered={hasActiveFilters || hasSearch}
       />
 
       {totalFiltered > 0 && (
