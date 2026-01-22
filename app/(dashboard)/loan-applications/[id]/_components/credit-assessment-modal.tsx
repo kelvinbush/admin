@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploadInput } from "./file-upload-input";
+import { MultiFileUploadInput } from "./multi-file-upload-input";
 
 interface SimplifiedUser {
   clerkId?: string;
@@ -42,7 +43,7 @@ const fileSchema = z.object({
 });
 
 const formSchema = z.object({
-  supportingDocuments: fileSchema,
+  supportingDocuments: z.array(fileSchema).min(1, "At least one supporting document is required."),
   creditMemo: fileSchema,
   offTakerAgreement: fileSchema.optional(),
   parentGuaranteeAgreement: fileSchema.optional(),
@@ -77,6 +78,7 @@ export function CreditAssessmentModal({
   const form = useForm<CreditAssessmentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      supportingDocuments: [],
       assessmentComment: "",
       nextApproverId: "",
     },
@@ -118,11 +120,11 @@ export function CreditAssessmentModal({
                       orders, etc.) *
                     </FormLabel>
                     <FormControl>
-                      <FileUploadInput
+                      <MultiFileUploadInput
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
-                        docName="Supporting Documents"
+                        docName="Supporting Document"
                       />
                     </FormControl>
                     <FormMessage />

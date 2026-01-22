@@ -46,11 +46,18 @@ export function MultiFileUploadInput({
       const res = await startUpload(files);
       if (res) {
         // Use provided docName if available, otherwise fall back to filename
-        // For multiple files with docName, append index
+        // For multiple files with docName, append index based on current value length
+        // This ensures correct numbering even when files are added incrementally
+        const currentCount = value.length;
+        const totalFilesAfterUpload = currentCount + files.length;
+        const shouldNumber = totalFilesAfterUpload > 1; // Number if there will be multiple files total
+        
         const newFiles = res.map((r, i) => ({
           docUrl: r.url,
           docName: docName 
-            ? (files.length > 1 ? `${docName} ${i + 1}` : docName)
+            ? (shouldNumber 
+                ? `${docName} ${currentCount + i + 1}` 
+                : docName)
             : files[i].name,
         }));
         onChange([...value, ...newFiles]);

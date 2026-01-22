@@ -395,8 +395,9 @@ export default function LoanApplicationDetailLayout({
             const approver = internalUsers.find(
               (u) => u.id === data.nextApproverId,
             );
+            // supportingDocuments is now an array, so we spread it
             const supportingDocuments = [
-              data.supportingDocuments,
+              ...data.supportingDocuments,
               data.creditMemo,
               data.offTakerAgreement,
               data.parentGuaranteeAgreement,
