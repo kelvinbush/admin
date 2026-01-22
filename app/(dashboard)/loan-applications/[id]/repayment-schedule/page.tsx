@@ -3,7 +3,11 @@
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLoanApplication, useSubmitCounterOffer, useRepaymentSchedule } from "@/lib/api/hooks/loan-applications";
+import {
+  useLoanApplication,
+  useSubmitCounterOffer,
+  useRepaymentSchedule,
+} from "@/lib/api/hooks/loan-applications";
 import { queryKeys } from "@/lib/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Download } from "lucide-react";
@@ -19,8 +23,13 @@ export default function RepaymentSchedulePage() {
   const params = useParams();
   const applicationId = params.id as string;
   const queryClient = useQueryClient();
-  const { data: loanApplication, isLoading: isLoadingLoan } = useLoanApplication(applicationId);
-  const { data: repaymentScheduleData, isLoading: isLoadingSchedule, error: scheduleError } = useRepaymentSchedule(applicationId);
+  const { data: loanApplication, isLoading: isLoadingLoan } =
+    useLoanApplication(applicationId);
+  const {
+    data: repaymentScheduleData,
+    isLoading: isLoadingSchedule,
+    error: scheduleError,
+  } = useRepaymentSchedule(applicationId);
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
@@ -30,11 +39,11 @@ export default function RepaymentSchedulePage() {
   const apiSchedule = repaymentScheduleData?.schedule || [];
   const summary = repaymentScheduleData?.summary;
   const loanSummary = repaymentScheduleData?.loanSummary;
-  
+
   // Convert API schedule dates from strings to Date objects for display
   const schedule = useMemo(() => {
     if (!apiSchedule.length) return [];
-    return apiSchedule.map(row => ({
+    return apiSchedule.map((row) => ({
       ...row,
       dueDate: new Date(row.dueDate),
     }));
@@ -46,10 +55,12 @@ export default function RepaymentSchedulePage() {
   const currency = loanSummary?.currency || "";
   const repaymentPeriod = loanSummary?.repaymentPeriod || 0;
   const interestRate = loanSummary?.interestRate || 0;
-  const repaymentStructure = loanSummary?.repaymentStructure || "";
   const repaymentCycle = loanSummary?.repaymentCycle || "";
-  const gracePeriodMonths = loanSummary ? Math.round(loanSummary.gracePeriod / 30) : 0; // Convert days to months
-  const firstPaymentDate = loanSummary?.firstPaymentDate || new Date().toISOString();
+  const gracePeriodMonths = loanSummary
+    ? Math.round(loanSummary.gracePeriod / 30)
+    : 0; // Convert days to months
+  const firstPaymentDate =
+    loanSummary?.firstPaymentDate || new Date().toISOString();
   const returnType = loanSummary?.returnType || "interest_based";
 
   // Use summary from API (with fallbacks)
@@ -61,16 +72,20 @@ export default function RepaymentSchedulePage() {
 
   const generatePDF = () => {
     if (!loanApplication || !repaymentScheduleData) {
-      toast.error('Loan application data not available');
+      toast.error("Loan application data not available");
       return;
     }
 
-    const { schedule: pdfSchedule, summary: pdfSummary, loanSummary: pdfLoanSummary } = repaymentScheduleData;
+    const {
+      schedule: pdfSchedule,
+      summary: pdfSummary,
+      loanSummary: pdfLoanSummary,
+    } = repaymentScheduleData;
 
     // Create a new window for PDF generation
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      toast.error('Please allow popups to download the PDF');
+      toast.error("Please allow popups to download the PDF");
       return;
     }
 
@@ -288,29 +303,34 @@ export default function RepaymentSchedulePage() {
               <th>Payment No.</th>
               <th>Due Date</th>
               <th>Payment Due</th>
-              ${pdfLoanSummary.returnType === "revenue_sharing" ? 
-                '<th>Rev. Share Distribution</th><th>Capital Redemption</th>' : 
-                '<th>Interest</th><th>Principal</th><th>Outstanding Balance</th>'
+              ${
+                pdfLoanSummary.returnType === "revenue_sharing"
+                  ? "<th>Rev. Share Distribution</th><th>Capital Redemption</th>"
+                  : "<th>Interest</th><th>Principal</th><th>Outstanding Balance</th>"
               }
             </tr>
           </thead>
           <tbody>
-            ${pdfSchedule.map(row => `
+            ${pdfSchedule
+              .map(
+                (row) => `
               <tr>
                 <td>${row.paymentNo}</td>
                 <td>${format(new Date(row.dueDate), "do-MMM-yyyy")}</td>
                 <td>${pdfLoanSummary.currency} ${formatCurrency(row.paymentDue)}</td>
                 <td>${pdfLoanSummary.currency} ${formatCurrency(row.interest)}</td>
                 <td>${pdfLoanSummary.currency} ${formatCurrency(row.principal)}</td>
-                ${pdfLoanSummary.returnType !== "revenue_sharing" ? `<td>${pdfLoanSummary.currency} ${formatCurrency(row.outstandingBalance)}</td>` : ''}
+                ${pdfLoanSummary.returnType !== "revenue_sharing" ? `<td>${pdfLoanSummary.currency} ${formatCurrency(row.outstandingBalance)}</td>` : ""}
               </tr>
-            `).join('')}
+            `,
+              )
+              .join("")}
             <tr class="total-row">
               <td colspan="2">TOTAL</td>
               <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalPaymentDue)}</td>
               <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalInterest)}</td>
               <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalPrincipal)}</td>
-              ${pdfLoanSummary.returnType !== "revenue_sharing" ? '<td></td>' : ''}
+              ${pdfLoanSummary.returnType !== "revenue_sharing" ? "<td></td>" : ""}
             </tr>
           </tbody>
         </table>
@@ -347,23 +367,32 @@ export default function RepaymentSchedulePage() {
 
   const handleRegenerateSubmit = async (
     data: GenerateRepaymentScheduleFormValues,
-    fees: LocalLoanFee[]
+    fees: LocalLoanFee[],
   ) => {
     try {
       // Transform form data to API payload
-      const repaymentCycleMap: Record<string, "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly"> = {
+      const repaymentCycleMap: Record<
+        string,
+        "daily" | "weekly" | "bi_weekly" | "monthly" | "quarterly"
+      > = {
         every_30_days: "monthly",
         every_45_days: "monthly",
         every_60_days: "bi_weekly",
         every_90_days: "quarterly",
       };
 
-      const repaymentStructureMap: Record<string, "principal_and_interest" | "bullet_repayment"> = {
+      const repaymentStructureMap: Record<
+        string,
+        "principal_and_interest" | "bullet_repayment"
+      > = {
         principal_interest_amortized: "principal_and_interest",
         bullet_repayment: "bullet_repayment",
       };
 
-      const returnTypeMap: Record<string, "interest_based" | "revenue_sharing"> = {
+      const returnTypeMap: Record<
+        string,
+        "interest_based" | "revenue_sharing"
+      > = {
         interest_based: "interest_based",
         revenue_share: "revenue_sharing",
       };
@@ -393,7 +422,9 @@ export default function RepaymentSchedulePage() {
           repaymentPeriod: parseInt(data.approvedLoanTenure),
           returnType: returnTypeMap[data.returnType] || "interest_based",
           interestRate: parseFloat(data.interestRate),
-          repaymentStructure: repaymentStructureMap[data.repaymentStructure] || "principal_and_interest",
+          repaymentStructure:
+            repaymentStructureMap[data.repaymentStructure] ||
+            "principal_and_interest",
           repaymentCycle: repaymentCycleMap[data.repaymentCycle] || "monthly",
           gracePeriod: gracePeriodInDays,
           firstPaymentDate: data.firstPaymentDate,
@@ -409,14 +440,18 @@ export default function RepaymentSchedulePage() {
       toast.success("Repayment schedule regenerated successfully.");
       setRegenerateModalOpen(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to regenerate schedule.");
+      toast.error(
+        error?.response?.data?.error || "Failed to regenerate schedule.",
+      );
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-primaryGrey-500">Loading repayment schedule...</div>
+        <div className="text-primaryGrey-500">
+          Loading repayment schedule...
+        </div>
       </div>
     );
   }
@@ -445,10 +480,14 @@ export default function RepaymentSchedulePage() {
             Repayment Schedule Not Available
           </div>
           <div className="text-primaryGrey-500 max-w-md">
-            The repayment schedule will be available once the loan reaches the document generation stage.
+            The repayment schedule will be available once the loan reaches the
+            document generation stage.
           </div>
           <div className="text-sm text-primaryGrey-400">
-            Current stage: <span className="font-medium capitalize">{loanApplication.status.replace(/_/g, ' ')}</span>
+            Current stage:{" "}
+            <span className="font-medium capitalize">
+              {loanApplication.status.replace(/_/g, " ")}
+            </span>
           </div>
         </div>
       </div>
@@ -464,7 +503,9 @@ export default function RepaymentSchedulePage() {
             Failed to Load Repayment Schedule
           </div>
           <div className="text-primaryGrey-500 max-w-md">
-            {scheduleError ? "An error occurred while loading the repayment schedule." : "Repayment schedule data is not available."}
+            {scheduleError
+              ? "An error occurred while loading the repayment schedule."
+              : "Repayment schedule data is not available."}
           </div>
         </div>
       </div>
@@ -473,7 +514,7 @@ export default function RepaymentSchedulePage() {
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
@@ -488,20 +529,25 @@ export default function RepaymentSchedulePage() {
     quarterly: "Quarterly",
   };
 
-  const canRegenerateSchedule = loanApplication.status === "document_generation";
+  const canRegenerateSchedule =
+    loanApplication.status === "document_generation";
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-midnight-blue">Loan repayment schedule</h2>
+        <h2 className="text-xl font-semibold text-midnight-blue">
+          Loan repayment schedule
+        </h2>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             className="gap-2"
             disabled={!canRegenerateSchedule}
-            onClick={() => canRegenerateSchedule && setRegenerateModalOpen(true)}
+            onClick={() =>
+              canRegenerateSchedule && setRegenerateModalOpen(true)
+            }
           >
             <RefreshCw className="w-4 h-4" />
             Regenerate Schedule
@@ -526,52 +572,77 @@ export default function RepaymentSchedulePage() {
 
         {/* Business Name */}
         <div className="bg-gray-50 text-center py-2 border-b">
-          <p className="text-sm font-medium text-gray-700">{loanApplication.businessName}</p>
+          <p className="text-sm font-medium text-gray-700">
+            {loanApplication.businessName}
+          </p>
         </div>
 
         {/* Loan Summary */}
         <div className="p-6 border-b">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">LOAN SUMMARY</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            LOAN SUMMARY
+          </h3>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Loan Amount</span>
-              <span className="text-sm font-medium">{currency} {formatCurrency(loanAmount)}</span>
+              <span className="text-sm font-medium">
+                {currency} {formatCurrency(loanAmount)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Loan Term</span>
-              <span className="text-sm font-medium">{repaymentPeriod} months</span>
+              <span className="text-sm font-medium">
+                {repaymentPeriod} months
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">
-                {returnType === "revenue_sharing" ? "Revenue Share Rate" : "Annual Interest Rate"}
+                {returnType === "revenue_sharing"
+                  ? "Revenue Share Rate"
+                  : "Annual Interest Rate"}
               </span>
               <span className="text-sm font-medium">{interestRate}%</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Payment Frequency</span>
-              <span className="text-sm font-medium">{cycleDisplayMap[repaymentCycle] || "Monthly"}</span>
+              <span className="text-sm font-medium">
+                {cycleDisplayMap[repaymentCycle] || "Monthly"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Grace Period</span>
-              <span className="text-sm font-medium">{gracePeriodMonths > 0 ? `${gracePeriodMonths} months` : "-"}</span>
+              <span className="text-sm font-medium">
+                {gracePeriodMonths > 0 ? `${gracePeriodMonths} months` : "-"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">First Payment Date</span>
-              <span className="text-sm font-medium">{format(new Date(firstPaymentDate), "do MMMM yyyy")}</span>
+              <span className="text-sm font-medium">
+                {format(new Date(firstPaymentDate), "do MMMM yyyy")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Monthly Payment</span>
-              <span className="text-sm font-medium">{currency} {formatCurrency(monthlyPayment)}</span>
+              <span className="text-sm font-medium">
+                {currency} {formatCurrency(monthlyPayment)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">
-                {returnType === "revenue_sharing" ? "Total Revenue Share" : "Total Payable Interest"}
+                {returnType === "revenue_sharing"
+                  ? "Total Revenue Share"
+                  : "Total Payable Interest"}
               </span>
-              <span className="text-sm font-medium">{currency} {formatCurrency(totalInterest)}</span>
+              <span className="text-sm font-medium">
+                {currency} {formatCurrency(totalInterest)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Facility Fee</span>
-              <span className="text-sm font-medium">{currency} {formatCurrency(facilityFee)} {facilityFee > 0 ? 'incl. VAT' : ''}</span>
+              <span className="text-sm font-medium">
+                {currency} {formatCurrency(facilityFee)}{" "}
+                {facilityFee > 0 ? "incl. VAT" : ""}
+              </span>
             </div>
           </div>
         </div>
@@ -581,19 +652,35 @@ export default function RepaymentSchedulePage() {
           <table className="w-full">
             <thead className="sticky top-0 z-10">
               <tr className="bg-midnight-blue text-white">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase sticky left-0 bg-midnight-blue">Payment No.</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Due Date</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Payment Due</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase sticky left-0 bg-midnight-blue">
+                  Payment No.
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">
+                  Due Date
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                  Payment Due
+                </th>
                 {returnType === "revenue_sharing" ? (
                   <>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Rev. Share Distribution</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Capital Redemption</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                      Rev. Share Distribution
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                      Capital Redemption
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Interest</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Principal</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">Outstanding Balance</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                      Interest
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                      Principal
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase">
+                      Outstanding Balance
+                    </th>
                   </>
                 )}
               </tr>
@@ -602,32 +689,64 @@ export default function RepaymentSchedulePage() {
               {/* Initial Balance Row - only for interest-based loans */}
               {returnType !== "revenue_sharing" && (
                 <tr className="border-b bg-gray-50">
-                  <td className="px-4 py-3 text-sm sticky left-0 bg-gray-50" colSpan={6}>
-                    <span className="font-medium">Starting Balance:</span> {currency} {formatCurrency(loanAmount)}
+                  <td
+                    className="px-4 py-3 text-sm sticky left-0 bg-gray-50"
+                    colSpan={6}
+                  >
+                    <span className="font-medium">Starting Balance:</span>{" "}
+                    {currency} {formatCurrency(loanAmount)}
                   </td>
                 </tr>
               )}
-              
+
               {/* Payment Rows */}
               {schedule.map((row, index) => (
-                <tr key={row.paymentNo} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className={`px-4 py-3 text-sm sticky left-0 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>{row.paymentNo}</td>
-                  <td className="px-4 py-3 text-sm">{format(row.dueDate, "do-MMM-yyyy")}</td>
-                  <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(row.paymentDue)}</td>
-                  <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(row.interest)}</td>
-                  <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(row.principal)}</td>
+                <tr
+                  key={row.paymentNo}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <td
+                    className={`px-4 py-3 text-sm sticky left-0 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                  >
+                    {row.paymentNo}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {format(row.dueDate, "do-MMM-yyyy")}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {currency} {formatCurrency(row.paymentDue)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {currency} {formatCurrency(row.interest)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {currency} {formatCurrency(row.principal)}
+                  </td>
                   {returnType !== "revenue_sharing" && (
-                    <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(row.outstandingBalance)}</td>
+                    <td className="px-4 py-3 text-sm text-right">
+                      {currency} {formatCurrency(row.outstandingBalance)}
+                    </td>
                   )}
                 </tr>
               ))}
-              
+
               {/* Total Row */}
               <tr className="bg-midnight-blue text-white font-semibold sticky bottom-0">
-                <td className="px-4 py-3 text-sm sticky left-0 bg-midnight-blue" colSpan={2}>TOTAL</td>
-                <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(totalPaymentDue)}</td>
-                <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(totalInterest)}</td>
-                <td className="px-4 py-3 text-sm text-right">{currency} {formatCurrency(totalPrincipal)}</td>
+                <td
+                  className="px-4 py-3 text-sm sticky left-0 bg-midnight-blue"
+                  colSpan={2}
+                >
+                  TOTAL
+                </td>
+                <td className="px-4 py-3 text-sm text-right">
+                  {currency} {formatCurrency(totalPaymentDue)}
+                </td>
+                <td className="px-4 py-3 text-sm text-right">
+                  {currency} {formatCurrency(totalInterest)}
+                </td>
+                <td className="px-4 py-3 text-sm text-right">
+                  {currency} {formatCurrency(totalPrincipal)}
+                </td>
                 {returnType !== "revenue_sharing" && (
                   <td className="px-4 py-3 text-sm text-right"></td>
                 )}
@@ -644,10 +763,16 @@ export default function RepaymentSchedulePage() {
         onSubmit={handleRegenerateSubmit}
         isLoading={submitCounterOfferMutation.isPending}
         loanApplicationData={{
-          fundingAmount: loanApplication.activeVersion?.fundingAmount ?? loanApplication.fundingAmount,
+          fundingAmount:
+            loanApplication.activeVersion?.fundingAmount ??
+            loanApplication.fundingAmount,
           fundingCurrency: loanApplication.fundingCurrency,
-          repaymentPeriod: loanApplication.activeVersion?.repaymentPeriod ?? loanApplication.repaymentPeriod,
-          interestRate: loanApplication.activeVersion?.interestRate ?? loanApplication.interestRate,
+          repaymentPeriod:
+            loanApplication.activeVersion?.repaymentPeriod ??
+            loanApplication.repaymentPeriod,
+          interestRate:
+            loanApplication.activeVersion?.interestRate ??
+            loanApplication.interestRate,
           returnType: loanApplication.activeVersion?.returnType,
           repaymentStructure: loanApplication.activeVersion?.repaymentStructure,
           repaymentCycle: loanApplication.activeVersion?.repaymentCycle,
