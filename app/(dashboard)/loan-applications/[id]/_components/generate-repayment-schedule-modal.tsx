@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -151,6 +151,10 @@ export function GenerateRepaymentScheduleModal({
   const [loanFees, setLoanFees] = useState<LocalLoanFee[]>([]);
   const [addFeeModalOpen, setAddFeeModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<LocalLoanFee | null>(null);
+  
+  // Track if form has been initialized for this modal session
+  const formInitializedRef = useRef(false);
+  const previousOpenRef = useRef(false);
 
   // Fetch loan product details including fees
   const { data: loanProduct } = useLoanProduct(loanProductId || "");
@@ -172,8 +176,26 @@ export function GenerateRepaymentScheduleModal({
     },
   });
 
+  // Effect 1: Handle modal lifecycle (cleanup on close)
   useEffect(() => {
-    if (open && loanApplicationData) {
+    if (!open && previousOpenRef.current) {
+      // Modal just closed - reset initialization flag and cleanup
+      formInitializedRef.current = false;
+      setLoanFees([]);
+      setEditingFee(null);
+    }
+    previousOpenRef.current = open;
+  }, [open]);
+
+  // Effect 2: Initialize form only when modal opens (transition from closed to open)
+  useEffect(() => {
+    // Only initialize if:
+    // 1. Modal is open
+    // 2. We have loan application data
+    // 3. Form hasn't been initialized for this session yet
+    if (open && loanApplicationData && !formInitializedRef.current) {
+      formInitializedRef.current = true;
+
       // Check if we have activeVersion data (counter-offer exists)
       const hasActiveVersion = !!(
         loanApplicationData.returnType ||
@@ -281,7 +303,7 @@ export function GenerateRepaymentScheduleModal({
         }
       }
 
-      // Repopulate form when modal opens with latest data
+      // Initialize form only once when modal opens
       form.reset({
         approvedLoanAmount: loanApplicationData.fundingAmount?.toString() || "",
         currency: loanApplicationData.fundingCurrency || "KES",
@@ -295,11 +317,11 @@ export function GenerateRepaymentScheduleModal({
         gracePeriodUnit,
         firstPaymentDate,
       });
-    } else if (!open) {
-      setLoanFees([]);
-      setEditingFee(null);
     }
-  }, [open, loanApplicationData, loanProduct, form]);
+    // Only depend on open state and data availability
+    // form is stable from react-hook-form, so we don't need it in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loanApplicationData, loanProduct]);
 
   const handleSubmit = (values: GenerateRepaymentScheduleFormValues) => {
     onSubmit(values, loanFees);
