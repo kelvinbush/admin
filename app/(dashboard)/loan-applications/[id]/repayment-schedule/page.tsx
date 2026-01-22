@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { useLoanApplication, useSubmitCounterOffer } from "@/lib/api/hooks/loan-applications";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLoanApplication, useSubmitCounterOffer, useRepaymentSchedule } from "@/lib/api/hooks/loan-applications";
+import { queryKeys } from "@/lib/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Download } from "lucide-react";
 import { format } from "date-fns";
@@ -13,151 +15,24 @@ import {
   type LocalLoanFee,
 } from "../_components/generate-repayment-schedule-modal";
 
-interface PaymentScheduleRow {
-  paymentNo: number;
-  dueDate: Date;
-  paymentDue: number;
-  interest: number;
-  principal: number;
-  outstandingBalance: number;
-}
-
-function calculateRepaymentSchedule(
-  loanAmount: number,
-  interestRate: number,
-  repaymentPeriod: number,
-  repaymentStructure: string,
-  repaymentCycle: string,
-  firstPaymentDate: string,
-  gracePeriod: number = 0,
-  returnType: string = "interest_based"
-): PaymentScheduleRow[] {
-  const schedule: PaymentScheduleRow[] = [];
-  
-  // Calculate months between payments based on cycle
-  const monthsPerCycle: Record<string, number> = {
-    daily: 1/30,
-    weekly: 7/30,
-    bi_weekly: 14/30,
-    monthly: 1,
-    quarterly: 3,
-  };
-  const cycleMonths = monthsPerCycle[repaymentCycle] || 1;
-  
-  let outstandingBalance = loanAmount;
-  const startDate = new Date(firstPaymentDate);
-  
-  if (returnType === "revenue_sharing") {
-    // Revenue Sharing Model:
-    // - Revenue Share Rate is a FLAT total percentage (not annual)
-    // - Capital is repaid in FULL at the END (bullet style)
-    // - Monthly revenue share = Total share / Term
-    
-    const totalRevenueShare = loanAmount * (interestRate / 100);
-    const monthlyRevenueShare = Math.round(totalRevenueShare / repaymentPeriod);
-    
-    for (let i = 1; i <= repaymentPeriod; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + (i - 1) * cycleMonths);
-      
-      const isLastPayment = i === repaymentPeriod;
-      
-      // Capital redemption only on last payment (bullet style)
-      const capitalRedemption = isLastPayment ? loanAmount : 0;
-      
-      // Total payment = revenue share + capital (if last payment)
-      const paymentDue = monthlyRevenueShare + capitalRedemption;
-      
-      schedule.push({
-        paymentNo: i,
-        dueDate,
-        paymentDue,
-        interest: monthlyRevenueShare, // Revenue share distribution
-        principal: capitalRedemption,  // Capital redemption
-        outstandingBalance: isLastPayment ? 0 : loanAmount, // Balance only changes at end
-      });
-    }
-  } else {
-    // Interest-Based Model with Grace Period Support
-    const monthlyInterestRate = interestRate / 100 / 12;
-    
-    // Determine number of grace period payments and amortization payments
-    const gracePeriodPayments = gracePeriod;
-    const amortizationPayments = repaymentPeriod - gracePeriodPayments;
-    
-    // Calculate amortized monthly payment (for after grace period)
-    let amortizedPayment = 0;
-    if (amortizationPayments > 0 && repaymentStructure === "principal_and_interest") {
-      amortizedPayment = loanAmount * 
-        (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, amortizationPayments)) / 
-        (Math.pow(1 + monthlyInterestRate, amortizationPayments) - 1);
-    }
-    
-    for (let i = 1; i <= repaymentPeriod; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + (i - 1) * cycleMonths);
-      
-      const isGracePeriodPayment = i <= gracePeriodPayments;
-      const isLastPayment = i === repaymentPeriod;
-      
-      let interestPayment: number;
-      let principalPayment: number;
-      let paymentDue: number;
-      
-      if (isGracePeriodPayment) {
-        // Grace period: Interest-only payments, no principal reduction
-        interestPayment = outstandingBalance * monthlyInterestRate;
-        principalPayment = 0;
-        paymentDue = interestPayment;
-        // Balance stays the same during grace period
-      } else if (repaymentStructure === "principal_and_interest") {
-        // Amortized repayment after grace period
-        interestPayment = outstandingBalance * monthlyInterestRate;
-        principalPayment = amortizedPayment - interestPayment;
-        paymentDue = amortizedPayment;
-        outstandingBalance -= principalPayment;
-        
-        // Handle rounding on last payment
-        if (isLastPayment) {
-          outstandingBalance = 0;
-        }
-      } else {
-        // Bullet repayment: Interest only until last payment
-        interestPayment = outstandingBalance * monthlyInterestRate;
-        principalPayment = isLastPayment ? loanAmount : 0;
-        paymentDue = isLastPayment ? loanAmount + interestPayment : interestPayment;
-        
-        if (isLastPayment) {
-          outstandingBalance = 0;
-        }
-      }
-      
-      schedule.push({
-        paymentNo: i,
-        dueDate,
-        paymentDue,
-        interest: interestPayment,
-        principal: principalPayment,
-        outstandingBalance: Math.max(0, outstandingBalance),
-      });
-    }
-  }
-  
-  return schedule;
-}
-
 export default function RepaymentSchedulePage() {
   const params = useParams();
   const applicationId = params.id as string;
-  const { data: loanApplication, isLoading } = useLoanApplication(applicationId);
+  const queryClient = useQueryClient();
+  const { data: loanApplication, isLoading: isLoadingLoan } = useLoanApplication(applicationId);
+  const { data: repaymentScheduleData, isLoading: isLoadingSchedule, error: scheduleError } = useRepaymentSchedule(applicationId);
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
+  const isLoading = isLoadingLoan || isLoadingSchedule;
+
   const generatePDF = () => {
-    if (!loanApplication) {
+    if (!loanApplication || !repaymentScheduleData) {
       toast.error('Loan application data not available');
       return;
     }
+
+    const { schedule: pdfSchedule, summary: pdfSummary, loanSummary: pdfLoanSummary } = repaymentScheduleData;
 
     // Create a new window for PDF generation
     const printWindow = window.open('', '_blank');
@@ -337,39 +212,39 @@ export default function RepaymentSchedulePage() {
           <div class="summary-grid">
             <div class="summary-item">
               <span class="summary-label">Loan Amount</span>
-              <span class="summary-value">${currency} ${formatCurrency(loanAmount)}</span>
+              <span class="summary-value">${pdfLoanSummary.currency} ${formatCurrency(pdfLoanSummary.loanAmount)}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Loan Term</span>
-              <span class="summary-value">${repaymentPeriod} months</span>
+              <span class="summary-value">${pdfLoanSummary.repaymentPeriod} months</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label">${returnType === "revenue_sharing" ? "Revenue Share Rate" : "Annual Interest Rate"}</span>
-              <span class="summary-value">${interestRate}%</span>
+              <span class="summary-label">${pdfLoanSummary.returnType === "revenue_sharing" ? "Revenue Share Rate" : "Annual Interest Rate"}</span>
+              <span class="summary-value">${pdfLoanSummary.interestRate}%</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Payment Frequency</span>
-              <span class="summary-value">${cycleDisplayMap[repaymentCycle] || "Monthly"}</span>
+              <span class="summary-value">${cycleDisplayMap[pdfLoanSummary.repaymentCycle] || "Monthly"}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Grace Period</span>
-              <span class="summary-value">${gracePeriodMonths > 0 ? `${gracePeriodMonths} months` : "-"}</span>
+              <span class="summary-value">${pdfLoanSummary.gracePeriod > 0 ? `${Math.round(pdfLoanSummary.gracePeriod / 30)} months` : "-"}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">First Payment Date</span>
-              <span class="summary-value">${format(new Date(firstPaymentDate), "do MMMM yyyy")}</span>
+              <span class="summary-value">${pdfLoanSummary.firstPaymentDate ? format(new Date(pdfLoanSummary.firstPaymentDate), "do MMMM yyyy") : "-"}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Monthly Payment</span>
-              <span class="summary-value">${currency} ${formatCurrency(monthlyPayment)}</span>
+              <span class="summary-value">${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.monthlyPayment)}</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label">${returnType === "revenue_sharing" ? "Total Revenue Share" : "Total Payable Interest"}</span>
-              <span class="summary-value">${currency} ${formatCurrency(totalInterest)}</span>
+              <span class="summary-label">${pdfLoanSummary.returnType === "revenue_sharing" ? "Total Revenue Share" : "Total Payable Interest"}</span>
+              <span class="summary-value">${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalInterest)}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Facility Fee</span>
-              <span class="summary-value">${currency} ${formatCurrency(facilityFee)} ${customFees.length > 0 ? 'incl. VAT' : ''}</span>
+              <span class="summary-value">${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.facilityFee)}</span>
             </div>
           </div>
         </div>
@@ -380,29 +255,29 @@ export default function RepaymentSchedulePage() {
               <th>Payment No.</th>
               <th>Due Date</th>
               <th>Payment Due</th>
-              ${returnType === "revenue_sharing" ? 
+              ${pdfLoanSummary.returnType === "revenue_sharing" ? 
                 '<th>Rev. Share Distribution</th><th>Capital Redemption</th>' : 
                 '<th>Interest</th><th>Principal</th><th>Outstanding Balance</th>'
               }
             </tr>
           </thead>
           <tbody>
-            ${schedule.map(row => `
+            ${pdfSchedule.map(row => `
               <tr>
                 <td>${row.paymentNo}</td>
-                <td>${format(row.dueDate, "do-MMM-yyyy")}</td>
-                <td>${currency} ${formatCurrency(row.paymentDue)}</td>
-                <td>${currency} ${formatCurrency(row.interest)}</td>
-                <td>${currency} ${formatCurrency(row.principal)}</td>
-                ${returnType !== "revenue_sharing" ? `<td>${currency} ${formatCurrency(row.outstandingBalance)}</td>` : ''}
+                <td>${format(new Date(row.dueDate), "do-MMM-yyyy")}</td>
+                <td>${pdfLoanSummary.currency} ${formatCurrency(row.paymentDue)}</td>
+                <td>${pdfLoanSummary.currency} ${formatCurrency(row.interest)}</td>
+                <td>${pdfLoanSummary.currency} ${formatCurrency(row.principal)}</td>
+                ${pdfLoanSummary.returnType !== "revenue_sharing" ? `<td>${pdfLoanSummary.currency} ${formatCurrency(row.outstandingBalance)}</td>` : ''}
               </tr>
             `).join('')}
             <tr class="total-row">
               <td colspan="2">TOTAL</td>
-              <td>${currency} ${formatCurrency(totalPaymentDue)}</td>
-              <td>${currency} ${formatCurrency(totalInterest)}</td>
-              <td>${currency} ${formatCurrency(totalPrincipal)}</td>
-              ${returnType !== "revenue_sharing" ? '<td></td>' : ''}
+              <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalPaymentDue)}</td>
+              <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalInterest)}</td>
+              <td>${pdfLoanSummary.currency} ${formatCurrency(pdfSummary.totalPrincipal)}</td>
+              ${pdfLoanSummary.returnType !== "revenue_sharing" ? '<td></td>' : ''}
             </tr>
           </tbody>
         </table>
@@ -493,6 +368,11 @@ export default function RepaymentSchedulePage() {
         },
       });
 
+      // Invalidate repayment schedule query to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.loanApplications.repaymentSchedule(applicationId),
+      });
+
       toast.success("Repayment schedule regenerated successfully.");
       setRegenerateModalOpen(false);
     } catch (error: any) {
@@ -542,46 +422,50 @@ export default function RepaymentSchedulePage() {
     );
   }
 
-  // Use activeVersion if available, otherwise fall back to base loan data
-  const activeVersion = loanApplication.activeVersion;
-  const loanAmount = activeVersion?.fundingAmount ?? loanApplication.fundingAmount;
-  const currency = loanApplication.fundingCurrency;
-  const repaymentPeriod = activeVersion?.repaymentPeriod ?? loanApplication.repaymentPeriod;
-  const interestRate = activeVersion?.interestRate ?? loanApplication.interestRate;
-  const repaymentStructure = activeVersion?.repaymentStructure ?? "principal_and_interest";
-  const repaymentCycle = activeVersion?.repaymentCycle ?? "monthly";
-  const gracePeriodDays = activeVersion?.gracePeriod ?? 0;
-  // Convert grace period from days to months (approximate: 30 days = 1 month)
-  const gracePeriodMonths = Math.round(gracePeriodDays / 30);
-  const firstPaymentDate = activeVersion?.firstPaymentDate ?? new Date().toISOString();
-  const customFees = activeVersion?.customFees ?? [];
-  const returnType = activeVersion?.returnType ?? "interest_based";
+  // Use API data if available, otherwise show error
+  if (scheduleError || !repaymentScheduleData) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-4">
+          <div className="text-lg font-medium text-red-600">
+            Failed to Load Repayment Schedule
+          </div>
+          <div className="text-primaryGrey-500 max-w-md">
+            {scheduleError ? "An error occurred while loading the repayment schedule." : "Repayment schedule data is not available."}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate total facility fee
-  const facilityFee = customFees.reduce((total, fee) => {
-    if (fee.type === "flat") {
-      return total + fee.amount;
-    } else {
-      return total + (loanAmount * fee.amount / 100);
-    }
-  }, 0);
+  // Extract data from API response
+  const { schedule: apiSchedule, summary, loanSummary } = repaymentScheduleData;
+  
+  // Convert API schedule dates from strings to Date objects for display
+  const schedule = useMemo(() => {
+    return apiSchedule.map(row => ({
+      ...row,
+      dueDate: new Date(row.dueDate),
+    }));
+  }, [apiSchedule]);
 
-  // Generate repayment schedule
-  const schedule = calculateRepaymentSchedule(
-    loanAmount,
-    interestRate,
-    repaymentPeriod,
-    repaymentStructure,
-    repaymentCycle,
-    firstPaymentDate,
-    gracePeriodMonths,
-    returnType
-  );
+  // Use loan summary from API
+  const loanAmount = loanSummary.loanAmount;
+  const currency = loanSummary.currency;
+  const repaymentPeriod = loanSummary.repaymentPeriod;
+  const interestRate = loanSummary.interestRate;
+  const repaymentStructure = loanSummary.repaymentStructure;
+  const repaymentCycle = loanSummary.repaymentCycle;
+  const gracePeriodMonths = Math.round(loanSummary.gracePeriod / 30); // Convert days to months
+  const firstPaymentDate = loanSummary.firstPaymentDate || new Date().toISOString();
+  const returnType = loanSummary.returnType;
 
-  // Calculate totals
-  const totalPaymentDue = schedule.reduce((sum, row) => sum + row.paymentDue, 0);
-  const totalInterest = schedule.reduce((sum, row) => sum + row.interest, 0);
-  const totalPrincipal = schedule.reduce((sum, row) => sum + row.principal, 0);
+  // Use summary from API
+  const totalPaymentDue = summary.totalPaymentDue;
+  const totalInterest = summary.totalInterest;
+  const totalPrincipal = summary.totalPrincipal;
+  const monthlyPayment = summary.monthlyPayment;
+  const facilityFee = summary.facilityFee;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -600,21 +484,6 @@ export default function RepaymentSchedulePage() {
     quarterly: "Quarterly",
   };
 
-  // For interest-based with grace period, show the amortized payment (not grace period interest-only)
-  // For revenue sharing, show the regular monthly share (excluding final capital redemption)
-  const getMonthlyPayment = () => {
-    if (schedule.length === 0) return 0;
-    
-    if (returnType === "revenue_sharing") {
-      // Revenue sharing: monthly payment is the revenue share (same each month)
-      return schedule[0].interest; // Revenue share distribution
-    } else {
-      // Interest-based: find the first non-grace period payment
-      const firstAmortizedPayment = schedule.find((row, index) => index >= gracePeriodMonths);
-      return firstAmortizedPayment ? firstAmortizedPayment.paymentDue : schedule[0].paymentDue;
-    }
-  };
-  const monthlyPayment = getMonthlyPayment();
   const canRegenerateSchedule = loanApplication.status === "document_generation";
 
   return (
@@ -698,7 +567,7 @@ export default function RepaymentSchedulePage() {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Facility Fee</span>
-              <span className="text-sm font-medium">{currency} {formatCurrency(facilityFee)} {customFees.length > 0 ? 'incl. VAT' : ''}</span>
+              <span className="text-sm font-medium">{currency} {formatCurrency(facilityFee)} {facilityFee > 0 ? 'incl. VAT' : ''}</span>
             </div>
           </div>
         </div>

@@ -32,6 +32,7 @@ export const queryKeys = {
     latestSnapshot: (id: string) => [...queryKeys.loanApplications.detail(id), 'latestSnapshot'] as const,
     timeline: (id: string) => [...queryKeys.loanApplications.detail(id), 'timeline'] as const,
     contractTimeline: (id: string) => [...queryKeys.loanApplications.detail(id), 'contractTimeline'] as const,
+    repaymentSchedule: (id: string) => [...queryKeys.loanApplications.detail(id), 'repayment-schedule'] as const,
   },
   
   // Loan products

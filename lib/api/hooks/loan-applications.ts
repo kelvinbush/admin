@@ -213,6 +213,43 @@ export interface BusinessSearchResponse {
   };
 }
 
+// ===== REPAYMENT SCHEDULE TYPES =====
+
+export interface PaymentScheduleRow {
+  paymentNo: number; // Sequential payment number (1, 2, 3, ...)
+  dueDate: string; // ISO 8601 date string
+  paymentDue: number; // Total payment amount due
+  interest: number; // Interest portion (or revenue share)
+  principal: number; // Principal portion (or capital redemption)
+  outstandingBalance: number; // Remaining loan balance after payment
+}
+
+export interface RepaymentScheduleSummary {
+  totalPaymentDue: number; // Sum of all paymentDue amounts
+  totalInterest: number; // Sum of all interest amounts
+  totalPrincipal: number; // Sum of all principal amounts
+  monthlyPayment: number; // Regular monthly payment (excluding grace period)
+  facilityFee: number; // Total facility fee from customFees
+}
+
+export interface LoanSummary {
+  loanAmount: number;
+  currency: string;
+  repaymentPeriod: number;
+  interestRate: number;
+  repaymentStructure: string;
+  repaymentCycle: string;
+  gracePeriod: number;
+  firstPaymentDate: string | null;
+  returnType: string;
+}
+
+export interface RepaymentScheduleResponse {
+  schedule: PaymentScheduleRow[];
+  summary: RepaymentScheduleSummary;
+  loanSummary: LoanSummary;
+}
+
 // ===== HOOKS =====
 
 /**
@@ -619,6 +656,21 @@ export function useLoanDocuments(applicationId: string) {
   return useClientApiQuery<GetLoanDocumentsResponse>(
     queryKeys.loanApplications.documents(applicationId),
     `/loan-applications/${applicationId}/documents`,
+    undefined,
+    {
+      enabled: !!applicationId,
+    }
+  );
+}
+
+/**
+ * Get loan application repayment schedule
+ * GET /loan-applications/:id/repayment-schedule
+ */
+export function useRepaymentSchedule(applicationId: string) {
+  return useClientApiQuery<RepaymentScheduleResponse>(
+    queryKeys.loanApplications.repaymentSchedule(applicationId),
+    `/loan-applications/${applicationId}/repayment-schedule`,
     undefined,
     {
       enabled: !!applicationId,
