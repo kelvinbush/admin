@@ -1088,3 +1088,47 @@ export function useUpdateLoanApplicationStatus() {
     }
   );
 }
+
+// ===== DISBURSE LOAN APPLICATION TYPES =====
+
+export interface DisburseLoanApplicationBody {
+  amountDisbursed: number;
+  disbursementReceiptUrl: string;
+  currency?: string;
+}
+
+/**
+ * Disburse Loan Application
+ * POST /loan-applications/:id/disburse
+ */
+export function useDisburseLoanApplication() {
+  const queryClient = useQueryClient();
+
+  return useClientApiMutation<
+    LoanApplicationDetail,
+    { id: string; data: DisburseLoanApplicationBody }
+  >(
+    async (api, { id, data }) => {
+      return api.post<LoanApplicationDetail>(
+        `/loan-applications/${id}/disburse`,
+        data
+      );
+    },
+    {
+      onSuccess: (_data, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.timeline(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.loanApplications.stats(),
+        });
+      },
+    }
+  );
+}

@@ -39,6 +39,10 @@ import {
 } from "./_components/generate-repayment-schedule-modal";
 import { ContractualAgreementModal } from "./_components/contractual-agreement-modal";
 import { SigningExecutionModal } from "./_components/signing-execution-modal";
+import {
+  DisburseLoanModal,
+  type DisburseLoanFormValues,
+} from "./_components/disburse-loan-modal";
 import { useCompleteDocumentGeneration } from "@/lib/api/hooks";
 import {
   useLoanApplication,
@@ -51,6 +55,7 @@ import {
   useCompleteCommitteeDecision,
   useSetContractSignatories,
   useRemindContractSigners,
+  useDisburseLoanApplication,
   getNextStage,
   type LoanApplicationStatus,
 } from "@/lib/api/hooks/loan-applications";
@@ -110,6 +115,7 @@ export default function LoanApplicationDetailLayout({
   const remindContractSignersMutation = useRemindContractSigners();
   const submitCounterOfferMutation = useSubmitCounterOffer();
   const completeDocumentGenerationMutation = useCompleteDocumentGeneration();
+  const disburseLoanMutation = useDisburseLoanApplication();
 
   const [incompleteModalOpen, setIncompleteModalOpen] = useState(false);
   const [nextApproverModalOpen, setNextApproverModalOpen] = useState(false);
@@ -131,6 +137,7 @@ export default function LoanApplicationDetailLayout({
     useState(false);
   const [signingExecutionModalOpen, setSigningExecutionModalOpen] =
     useState(false);
+  const [disburseLoanModalOpen, setDisburseLoanModalOpen] = useState(false);
 
   const handleNextStage = () => {
     if (loanApplication?.status === "eligibility_check") {
@@ -149,6 +156,8 @@ export default function LoanApplicationDetailLayout({
       setContractualAgreementModalOpen(true);
     } else if (loanApplication?.status === "signing_execution") {
       setSigningExecutionModalOpen(true);
+    } else if (loanApplication?.status === "awaiting_disbursement") {
+      setDisburseLoanModalOpen(true);
     } else {
       setNextApproverModalOpen(true);
     }
@@ -711,6 +720,31 @@ export default function LoanApplicationDetailLayout({
         isLoading={
           completeKycKybMutation.isPending || updateStatusMutation.isPending
         }
+      />
+
+      <DisburseLoanModal
+        open={disburseLoanModalOpen}
+        onOpenChange={setDisburseLoanModalOpen}
+        onSubmit={async (data: DisburseLoanFormValues) => {
+          try {
+            await disburseLoanMutation.mutateAsync({
+              id: applicationId,
+              data: {
+                amountDisbursed: parseFloat(data.amountDisbursed),
+                disbursementReceiptUrl: data.disbursementReceipt.docUrl,
+                currency: data.currency,
+              },
+            });
+            toast.success("Loan disbursed successfully.");
+            setDisburseLoanModalOpen(false);
+          } catch (error: any) {
+            toast.error(
+              error?.response?.data?.error || "Failed to disburse loan."
+            );
+          }
+        }}
+        isLoading={disburseLoanMutation.isPending}
+        defaultCurrency={loanApplication?.fundingCurrency || "EUR"}
       />
     </div>
   );
