@@ -62,11 +62,7 @@ export function SmeOfferApprovalModal({
   }, [open, form]);
 
   const handleFileChange = (file?: { docUrl: string; docName: string }) => {
-    if (file) {
-      form.setValue("termSheet", { ...file, docName: "Term Sheet" });
-    } else {
-      form.setValue("termSheet", undefined as any);
-    }
+    form.setValue("termSheet", file || undefined as any);
   };
 
   return (
@@ -94,6 +90,7 @@ export function SmeOfferApprovalModal({
                         value={field.value}
                         onChange={handleFileChange}
                         disabled={isLoading}
+                        docName="Term Sheet"
                       />
                     </FormControl>
                     <FormMessage />

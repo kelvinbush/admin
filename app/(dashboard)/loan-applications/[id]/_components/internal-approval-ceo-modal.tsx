@@ -114,6 +114,7 @@ export function InternalApprovalCEOModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Final Credit Memo"
                       />
                     </FormControl>
                     <FormMessage />

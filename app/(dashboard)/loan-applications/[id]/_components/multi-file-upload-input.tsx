@@ -15,12 +15,14 @@ interface MultiFileUploadInputProps {
   value?: DocumentFile[];
   onChange: (value: DocumentFile[]) => void;
   disabled?: boolean;
+  docName?: string; // Base document name to use instead of filename (will append index for multiple files)
 }
 
 export function MultiFileUploadInput({
   value = [],
   onChange,
   disabled = false,
+  docName,
 }: MultiFileUploadInputProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -43,9 +45,13 @@ export function MultiFileUploadInput({
     try {
       const res = await startUpload(files);
       if (res) {
+        // Use provided docName if available, otherwise fall back to filename
+        // For multiple files with docName, append index
         const newFiles = res.map((r, i) => ({
           docUrl: r.url,
-          docName: files[i].name,
+          docName: docName 
+            ? (files.length > 1 ? `${docName} ${i + 1}` : docName)
+            : files[i].name,
         }));
         onChange([...value, ...newFiles]);
       } else {

@@ -122,6 +122,7 @@ export function CreditAssessmentModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Supporting Documents"
                       />
                     </FormControl>
                     <FormMessage />
@@ -139,6 +140,7 @@ export function CreditAssessmentModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Credit Memo"
                       />
                     </FormControl>
                     <FormMessage />
@@ -158,6 +160,7 @@ export function CreditAssessmentModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Off-taker Agreement"
                       />
                     </FormControl>
                     <FormMessage />
@@ -177,6 +180,7 @@ export function CreditAssessmentModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Parent Guarantee Agreement"
                       />
                     </FormControl>
                     <FormMessage />

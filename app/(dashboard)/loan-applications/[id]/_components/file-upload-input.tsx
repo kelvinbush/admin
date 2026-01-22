@@ -10,11 +10,13 @@ interface FileUploadInputProps {
   value?: { docUrl: string; docName: string };
   onChange: (value?: { docUrl: string; docName: string }) => void;
   disabled?: boolean;
+  docName?: string; // Document name to use instead of filename
 }
 
 export function FileUploadInput({
   onChange,
   disabled = false,
+  docName,
 }: FileUploadInputProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -41,7 +43,9 @@ export function FileUploadInput({
     try {
       const res = await startUpload([file]);
       if (res && res[0]) {
-        const newFile = { docUrl: res[0].url, docName: file.name };
+        // Use provided docName if available, otherwise fall back to filename
+        const finalDocName = docName || file.name;
+        const newFile = { docUrl: res[0].url, docName: finalDocName };
         setUploadedFile(newFile);
         onChange(newFile);
       } else {

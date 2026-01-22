@@ -114,6 +114,7 @@ export function HeadOfCreditReviewModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Approved Credit Memo"
                       />
                     </FormControl>
                     <FormMessage />

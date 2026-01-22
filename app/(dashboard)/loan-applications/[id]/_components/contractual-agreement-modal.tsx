@@ -89,6 +89,7 @@ export function ContractualAgreementModal({
                 value={uploadedFile || undefined}
                 onChange={(file) => setUploadedFile(file || null)}
                 disabled={isLoading}
+                docName="Contractual Agreement"
               />
               <p className="text-xs text-gray-500">
                 Supported formats: PDF, PNG, JPG, JPEG (Max 2MB)

@@ -129,6 +129,7 @@ export function EligibilityCheckModal({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={isLoading}
+                        docName="Eligibility Check Doc"
                       />
                     </FormControl>
                     <FormMessage />
