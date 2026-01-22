@@ -26,6 +26,39 @@ export default function RepaymentSchedulePage() {
 
   const isLoading = isLoadingLoan || isLoadingSchedule;
 
+  // Extract data from API response (must be before early returns to follow Rules of Hooks)
+  const apiSchedule = repaymentScheduleData?.schedule || [];
+  const summary = repaymentScheduleData?.summary;
+  const loanSummary = repaymentScheduleData?.loanSummary;
+  
+  // Convert API schedule dates from strings to Date objects for display
+  const schedule = useMemo(() => {
+    if (!apiSchedule.length) return [];
+    return apiSchedule.map(row => ({
+      ...row,
+      dueDate: new Date(row.dueDate),
+    }));
+  }, [apiSchedule]);
+
+  // Use loan summary from API (with fallbacks for when data is not available)
+  // Must be defined before early returns to follow Rules of Hooks
+  const loanAmount = loanSummary?.loanAmount || 0;
+  const currency = loanSummary?.currency || "";
+  const repaymentPeriod = loanSummary?.repaymentPeriod || 0;
+  const interestRate = loanSummary?.interestRate || 0;
+  const repaymentStructure = loanSummary?.repaymentStructure || "";
+  const repaymentCycle = loanSummary?.repaymentCycle || "";
+  const gracePeriodMonths = loanSummary ? Math.round(loanSummary.gracePeriod / 30) : 0; // Convert days to months
+  const firstPaymentDate = loanSummary?.firstPaymentDate || new Date().toISOString();
+  const returnType = loanSummary?.returnType || "interest_based";
+
+  // Use summary from API (with fallbacks)
+  const totalPaymentDue = summary?.totalPaymentDue || 0;
+  const totalInterest = summary?.totalInterest || 0;
+  const totalPrincipal = summary?.totalPrincipal || 0;
+  const monthlyPayment = summary?.monthlyPayment || 0;
+  const facilityFee = summary?.facilityFee || 0;
+
   const generatePDF = () => {
     if (!loanApplication || !repaymentScheduleData) {
       toast.error('Loan application data not available');
@@ -437,35 +470,6 @@ export default function RepaymentSchedulePage() {
       </div>
     );
   }
-
-  // Extract data from API response
-  const { schedule: apiSchedule, summary, loanSummary } = repaymentScheduleData;
-  
-  // Convert API schedule dates from strings to Date objects for display
-  const schedule = useMemo(() => {
-    return apiSchedule.map(row => ({
-      ...row,
-      dueDate: new Date(row.dueDate),
-    }));
-  }, [apiSchedule]);
-
-  // Use loan summary from API
-  const loanAmount = loanSummary.loanAmount;
-  const currency = loanSummary.currency;
-  const repaymentPeriod = loanSummary.repaymentPeriod;
-  const interestRate = loanSummary.interestRate;
-  const repaymentStructure = loanSummary.repaymentStructure;
-  const repaymentCycle = loanSummary.repaymentCycle;
-  const gracePeriodMonths = Math.round(loanSummary.gracePeriod / 30); // Convert days to months
-  const firstPaymentDate = loanSummary.firstPaymentDate || new Date().toISOString();
-  const returnType = loanSummary.returnType;
-
-  // Use summary from API
-  const totalPaymentDue = summary.totalPaymentDue;
-  const totalInterest = summary.totalInterest;
-  const totalPrincipal = summary.totalPrincipal;
-  const monthlyPayment = summary.monthlyPayment;
-  const facilityFee = summary.facilityFee;
 
   // Format currency
   const formatCurrency = (amount: number) => {
