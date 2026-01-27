@@ -12,8 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Building2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Trash2, Building2, Eye } from "lucide-react";
 import type { BusinessSearchItem } from "@/lib/api/hooks/user-groups-businesses";
+import { cn } from "@/lib/utils";
 
 interface BusinessesTableProps {
   data: BusinessSearchItem[];
@@ -21,6 +23,9 @@ interface BusinessesTableProps {
   onAdd?: () => void;
   onRemove?: (businessId: string) => void;
   actionBusyId?: string | null;
+  onViewDetails?: (business: BusinessSearchItem) => void;
+  isFiltered?: boolean;
+  hasAnyBusinesses?: boolean;
 }
 
 export default function BusinessesTable({
@@ -28,12 +33,43 @@ export default function BusinessesTable({
   onAdd,
   onRemove,
   actionBusyId,
+  onViewDetails,
+  isFiltered = false,
+  hasAnyBusinesses = false,
 }: BusinessesTableProps) {
   const getOwnerName = (business: BusinessSearchItem) => {
     if (business.owner.firstName && business.owner.lastName) {
       return `${business.owner.firstName} ${business.owner.lastName}`;
     }
     return business.owner.email;
+  };
+
+  const getProfileProgress = (business: BusinessSearchItem) => {
+    return Math.round(business.businessProfileProgress ?? 0);
+  };
+
+  const getStatusBadge = (
+    onboardingStatus: BusinessSearchItem["onboardingStatus"],
+  ) => {
+    switch (onboardingStatus) {
+      case "active":
+        return {
+          label: "Active",
+          className: "bg-emerald-100 text-emerald-700",
+        };
+      case "pending_invitation":
+      case "pending_activation":
+        return {
+          label: "Pending activation",
+          className: "bg-amber-100 text-amber-700",
+        };
+      case "draft":
+      default:
+        return {
+          label: "Draft",
+          className: "bg-primaryGrey-100 text-primaryGrey-700",
+        };
+    }
   };
 
   if (!data || data.length === 0) {
@@ -224,8 +260,10 @@ export default function BusinessesTable({
                 </filter>
               </defs>
             </svg>
-            <p className="text-primaryGrey-500 mb-6">
-              No businesses linked to this group yet!
+            <p className="text-primaryGrey-500 mb-6 text-center max-w-md">
+              {isFiltered && hasAnyBusinesses
+                ? "No linked businesses match your search or selected filters. Try adjusting them or clearing all filters."
+                : "No businesses have been linked to this group yet."}
             </p>
             <Button
               size="lg"
@@ -255,15 +293,18 @@ export default function BusinessesTable({
                   BUSINESS NAME
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
-                  SECTOR
+                  REGISTERED USER
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
-                  LOCATION
+                  B/S SECTOR
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
-                  OWNER
+                  B/S PROFILE PROGRESS
                 </TableHead>
                 <TableHead className="font-medium text-midnight-blue py-4">
+                  STATUS
+                </TableHead>
+                <TableHead className="font-medium text-midnight-blue py-4 text-right">
                   ACTIONS
                 </TableHead>
               </TableRow>
@@ -271,6 +312,8 @@ export default function BusinessesTable({
             <TableBody>
               {data.map((business) => {
                 const isBusy = actionBusyId === business.id;
+                const progress = getProfileProgress(business);
+                const status = getStatusBadge(business.onboardingStatus);
                 return (
                   <TableRow key={business.id}>
                     <TableCell className="py-4">
@@ -289,22 +332,6 @@ export default function BusinessesTable({
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      {business.sector ? (
-                        <Badge variant="outline" className="text-xs">
-                          {business.sector}
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-primaryGrey-500">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-sm text-primaryGrey-500">
-                        {business.city && business.country
-                          ? `${business.city}, ${business.country}`
-                          : business.city || business.country || "—"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
                       <div>
                         <div className="text-sm text-midnight-blue">
                           {getOwnerName(business)}
@@ -315,20 +342,63 @@ export default function BusinessesTable({
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-red-600 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          if (onRemove) {
-                            onRemove(business.id);
-                          }
-                        }}
-                        disabled={isBusy}
+                      {business.sector ? (
+                        <Badge variant="outline" className="text-xs">
+                          {business.sector}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-primaryGrey-500">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="min-w-[160px]">
+                        <p className="text-xs text-primaryGrey-500 text-right mb-1">
+                          {progress}%
+                        </p>
+                        <Progress
+                          value={progress}
+                          className="h-1.5 w-full bg-primaryGrey-100"
+                          indicatorClassName="bg-primary-green"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
+                          status.className,
+                        )}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Remove
-                      </Button>
+                        {status.label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center justify-end gap-4">
+                        {onViewDetails && (
+                          <button
+                            type="button"
+                            onClick={() => onViewDetails(business)}
+                            className="inline-flex items-center gap-1 text-xs text-primaryGrey-600 hover:text-midnight-blue"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span>View Details</span>
+                          </button>
+                        )}
+                        {onRemove && (
+                          <button
+                            type="button"
+                            onClick={() => onRemove(business.id)}
+                            disabled={isBusy}
+                            className={cn(
+                              "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-600 hover:bg-red-50 rounded-full px-2 py-1",
+                              isBusy && "opacity-60 cursor-not-allowed",
+                            )}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Remove</span>
+                          </button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

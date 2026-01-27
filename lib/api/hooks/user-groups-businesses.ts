@@ -15,6 +15,7 @@ export interface BusinessSearchItem {
   sector?: string | null;
   country?: string | null;
   city?: string | null;
+  // Registered user / entrepreneur who owns the business
   owner: {
     id: string;
     firstName?: string | null;
@@ -22,6 +23,9 @@ export interface BusinessSearchItem {
     email: string;
   };
   isAlreadyInGroup: boolean; // Key field - indicates if business is already assigned
+  // Optional fields used for UI filters & display, if provided by the API
+  businessProfileProgress?: number | null;
+  onboardingStatus?: "active" | "pending_invitation" | "pending_activation" | "draft" | (string & {});
 }
 
 export interface BusinessSearchResponse {
