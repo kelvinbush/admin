@@ -131,6 +131,9 @@ export function FileUpload({
       [/certificate\s+of\s+registration/i, "Certificate of Registration"],
       [/business\s+permit/i, "Business Permit"],
       [/pitch\s+deck/i, "Pitch Deck"],
+      [/bank\s+statement.*last\s+12\s+months/i, "Bank statement for the last 12 months"],
+      [/company\s+business\s+plan.*financial\s+projections/i, "Company business plan with financial projections"],
+      [/recent\s+management\s+accounts/i, "Recent management accounts (e.g., income statement, balance sheet, cash flow etc.)"],
     ];
     
     // Try to match known patterns first
@@ -138,6 +141,25 @@ export function FileUpload({
       if (pattern.test(cleaned)) {
         return replacement;
       }
+    }
+
+    // Special case: financial statements with a specific year
+    // e.g. "Financial statement for the year 2024"
+    if (/financial\s+statement.*year/i.test(cleaned)) {
+      return cleaned
+        .split(/\s+/)
+        .map(word => {
+          const upper = word.toUpperCase();
+          if (/^\d{4}$/.test(word)) {
+            // Keep years as-is
+            return word;
+          }
+          if (upper === "ID" || upper === "CR" || upper === "PDF") {
+            return upper;
+          }
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(" ");
     }
     
     // If no pattern matches, capitalize properly and limit to 3-4 words max

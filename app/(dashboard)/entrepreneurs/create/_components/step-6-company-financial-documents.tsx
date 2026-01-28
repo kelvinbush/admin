@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSaveFinancialDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
+import { MultiDocumentUpload } from "@/components/ui/multi-document-upload";
 
 const bankStatementSchema = z.object({
   bankName: z.string().min(1, "Bank name is required"),
@@ -43,7 +44,7 @@ const companyFinancialDocumentsSchema = z.object({
   bankStatements: z.array(bankStatementSchema).optional(),
   financialStatements: z.array(financialStatementSchema).min(1, "At least one financial statement is required"),
   businessPlan: z.string().min(1, "Company business plan is required"),
-  managementAccounts: z.string().optional(),
+  managementAccounts: z.array(z.string()).optional(),
 }).refine((data) => {
   if (data.hasBankStatements === "yes" && (!data.bankStatements || data.bankStatements.length === 0)) {
     return false;
@@ -102,7 +103,7 @@ export function Step6CompanyFinancialDocuments() {
       bankStatements: [],
       financialStatements: [{ year: "", statementFile: "" }],
       businessPlan: "",
-      managementAccounts: "",
+      managementAccounts: [],
     },
   });
 
@@ -134,7 +135,7 @@ export function Step6CompanyFinancialDocuments() {
       const bankStatements = existingDocuments.filter(d => d.docType === "annual_bank_statement");
       const financialStatements = existingDocuments.filter(d => d.docType === "audited_financial_statements");
       const businessPlan = existingDocuments.find(d => d.docType === "business_plan");
-      const managementAccounts = existingDocuments.find(d => d.docType === "income_statements");
+      const managementAccounts = existingDocuments.filter(d => d.docType === "income_statements");
       
       // Set has bank statements
       if (bankStatements.length > 0) {
@@ -170,7 +171,12 @@ export function Step6CompanyFinancialDocuments() {
       }
       
       if (businessPlan) form.setValue("businessPlan", businessPlan.docUrl);
-      if (managementAccounts) form.setValue("managementAccounts", managementAccounts.docUrl);
+      if (managementAccounts && managementAccounts.length > 0) {
+        form.setValue(
+          "managementAccounts",
+          managementAccounts.map((d) => d.docUrl),
+        );
+      }
     }
   }, [userId, existingDocuments, form]);
 
@@ -242,11 +248,14 @@ export function Step6CompanyFinancialDocuments() {
       }
 
       // Add management accounts (income statements)
-      if (data.managementAccounts) {
-        documents.push({
-          docType: "income_statements",
-          docUrl: data.managementAccounts,
-          isPasswordProtected: false,
+      if (data.managementAccounts && data.managementAccounts.length > 0) {
+        data.managementAccounts.forEach((url) => {
+          if (!url) return;
+          documents.push({
+            docType: "income_statements",
+            docUrl: url,
+            isPasswordProtected: false,
+          });
         });
       }
 
@@ -480,13 +489,15 @@ export function Step6CompanyFinancialDocuments() {
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
                     <FormControl>
-                      <FileUpload
-                        value={field.value}
+                      <MultiDocumentUpload
+                        value={field.value || []}
                         onChange={field.onChange}
                         label="Upload recent management accounts (e.g., income statement, balance sheet, cash flow etc.) (optional)"
                         acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
                         maxSizeMB={8}
-                        showUploadedState={!!field.value}
+                        maxFiles={5}
+                        error={!!form.formState.errors.managementAccounts}
+                        errorMessage={form.formState.errors.managementAccounts?.message}
                       />
                     </FormControl>
                     <FormMessage />
