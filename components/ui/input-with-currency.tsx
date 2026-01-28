@@ -111,6 +111,7 @@ const InputWithCurrency = React.forwardRef<
     ref
   ) => {
     const [isOpen, setIsOpen] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState("");
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const triggerRef = React.useRef<HTMLButtonElement>(null);
     const [position, setPosition] = React.useState({ top: 0, left: 0, width: 0, openAbove: false });
@@ -181,7 +182,13 @@ const InputWithCurrency = React.forwardRef<
     }, [isOpen]);
 
     // Find the selected currency
-    const selectedCurrency = currencies.find(currency => currency.value === currencyValue);
+    const selectedCurrency = currencies.find(
+      (currency) => currency.value === currencyValue,
+    );
+
+    const filteredCurrencies = currencies.filter((currency) =>
+      currency.code.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
     
     return (
       <div className={cn("flex w-full", className)}>
@@ -239,7 +246,16 @@ const InputWithCurrency = React.forwardRef<
                 }}
               >
                 <div className="max-h-60 overflow-y-auto p-0">
-                  {currencies.map((currency) => (
+                  <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-3 py-2">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search currency..."
+                      className="w-full h-8 px-2 text-sm border rounded-md border-primaryGrey-200 focus:outline-none focus:ring-1 focus:ring-primary-green"
+                    />
+                  </div>
+                  {filteredCurrencies.map((currency) => (
                     <div
                       key={currency.code}
                       className="px-3 py-2 cursor-pointer hover:bg-primaryGrey-50 text-sm border-b last:border-b-0 border-gray-100"

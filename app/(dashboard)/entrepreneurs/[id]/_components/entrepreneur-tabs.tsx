@@ -43,7 +43,7 @@ export function EntrepreneurTabs({ entrepreneurId }: EntrepreneurTabsProps) {
       return pathname.startsWith(`/entrepreneurs/${entrepreneurId}/company-details`);
     }
     if (tabId === "attachments") {
-      return pathname === `/entrepreneurs/${entrepreneurId}/attachments`;
+      return pathname.startsWith(`/entrepreneurs/${entrepreneurId}/attachments`);
     }
     if (tabId === "audit-logs") {
       return pathname === `/entrepreneurs/${entrepreneurId}/audit-logs`;

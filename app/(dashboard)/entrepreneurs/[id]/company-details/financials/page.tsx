@@ -35,13 +35,16 @@ export default function CompanyFinancialsPage() {
       ? "yes"
       : "no";
 
+  const formatNumber = (value: number | null): string =>
+    typeof value === "number" ? value.toLocaleString() : "";
+
   const initialData = {
-    averageMonthlyTurnover: business.averageMonthlyTurnover?.toString() || "",
+    averageMonthlyTurnover: formatNumber(business.averageMonthlyTurnover),
     averageMonthlyTurnoverCurrency: business.defaultCurrency || "KES",
-    averageYearlyTurnover: business.averageYearlyTurnover?.toString() || "",
+    averageYearlyTurnover: formatNumber(business.averageYearlyTurnover),
     averageYearlyTurnoverCurrency: business.defaultCurrency || "KES",
     hasBorrowingHistory,
-    amountBorrowed: business.loanAmount?.toString() || "",
+    amountBorrowed: formatNumber(business.loanAmount),
     amountBorrowedCurrency: business.defaultCurrency || "KES",
     loanStatus: (business.recentLoanStatus as any) || undefined,
     defaultReason: business.defaultReason || "",
