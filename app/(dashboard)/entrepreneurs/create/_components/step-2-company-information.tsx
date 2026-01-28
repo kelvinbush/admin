@@ -74,12 +74,16 @@ export function Step2CompanyInformation() {
   const saveBusinessMutation = useSaveBusinessBasicInfo();
   
   // Fetch user groups from API
-  const { data: userGroupsData } = useUserGroups(undefined, { page: 1, limit: 100 });
+  const { data: userGroupsData } = useUserGroups(undefined, {
+    page: 1,
+    limit: 100,
+  });
   // Handle both PaginatedResponse and direct array responses
   const userGroups = (userGroupsData as any)?.data || (userGroupsData as any) || [];
-  const userGroupOptions: MultiSelectOption[] = Array.isArray(userGroups) 
+  const userGroupOptions: MultiSelectOption[] = Array.isArray(userGroups)
     ? userGroups.map((group: any) => ({
-        value: group.id,
+        // Use group name as value so it matches business.userGroupNames coming from the API
+        value: group.name,
         label: group.name,
       }))
     : [];
@@ -138,7 +142,8 @@ export function Step2CompanyInformation() {
         yearOfRegistration: businessData.yearOfIncorporation?.toString() || "",
         sector: businessData.sectors || [],
         businessDescription: businessData.description || "",
-        programUserGroup: businessData.userGroupIds || [],
+        // API now returns an array of user group names instead of IDs
+        programUserGroup: (businessData as any).userGroupNames || [],
         twoXCriteria: businessData.selectionCriteria || [],
         numberOfEmployees: mapNoOfEmployees(businessData.noOfEmployees),
         companyWebsite: businessData.website || "",
@@ -190,6 +195,13 @@ export function Step2CompanyInformation() {
         return { url, source };
       });
 
+      // Resolve selected program/user group name back to its ID for the API
+      const selectedProgramName = data.programUserGroup[0];
+      const selectedProgram =
+        Array.isArray(userGroups) && selectedProgramName
+          ? (userGroups as any[]).find((g) => g.name === selectedProgramName)
+          : undefined;
+
       await saveBusinessMutation.mutateAsync({
         userId,
         data: {
@@ -199,7 +211,7 @@ export function Step2CompanyInformation() {
           year,
           sectors: data.sector,
           description: data.businessDescription || undefined,
-          userGroupId: data.programUserGroup[0] || undefined, // Take first if multiple
+          userGroupId: selectedProgram?.id || undefined, // Take first if multiple
           criteria: data.twoXCriteria || undefined,
           noOfEmployees,
           website: data.companyWebsite || undefined,
