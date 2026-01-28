@@ -52,6 +52,7 @@ export default function EntrepreneurDetailLayout({
 
   const entrepreneurData = {
     id: data.userId,
+    email: data.user.email,
     companyName: business?.name || "-",
     legalEntityType: business?.entityType || "-",
     city: business?.city || "-",

@@ -20,14 +20,27 @@ import { businessLegalEntityTypeOptions, sectorOptions } from "@/lib/constants/b
 
 const companyInformationSchema = z.object({
   businessName: z.string().min(1, "Business name is required"),
-  businessLegalEntityType: z.string().min(1, "Business legal entity type is required"),
-  yearOfRegistration: z.string().min(1, "Year of business registration is required"),
+  businessLegalEntityType: z
+    .string()
+    .min(1, "Business legal entity type is required"),
+  yearOfRegistration: z
+    .string()
+    .min(1, "Year of business registration is required"),
   sector: z.array(z.string()).min(1, "At least one sector is required"),
-  businessDescription: z.string().min(1, "Business description is required").max(100, "Business description must be 100 characters or less"),
-  programUserGroup: z.array(z.string()).min(1, "At least one program/user group is required"),
+  businessDescription: z
+    .string()
+    .min(1, "Business description is required")
+    .max(500, "Business description must be 500 characters or less"),
+  programUserGroup: z
+    .array(z.string())
+    .min(1, "At least one program/user group is required"),
   twoXCriteria: z.array(z.string()).optional(),
   numberOfEmployees: z.string().optional(),
-  companyWebsite: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  companyWebsite: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
   businessPhotos: z.array(z.string()).optional(),
   videoLinks: z.array(z.string()).optional(),
 });
@@ -36,7 +49,7 @@ type CompanyInformationFormData = z.infer<typeof companyInformationSchema>;
 
 const yearOptions: SelectOption[] = [
   { value: "not-registered", label: "Not yet registered" },
-  ...Array.from({ length: 10 }, (_, i) => {
+  ...Array.from({ length: 60 }, (_, i) => {
     const year = new Date().getFullYear() - i;
     return { value: year.toString(), label: year.toString() };
   }),
@@ -73,13 +86,14 @@ export function CompanyInformationForm({ userId, initialData, logo }: CompanyInf
   const userGroups = (userGroupsData as any)?.data || (userGroupsData as any) || [];
   const programUserGroupOptions: MultiSelectOption[] = Array.isArray(userGroups)
     ? userGroups.map((group: any) => ({
-        value: group.id,
+        // Use group name as the value so it matches the API's userGroupNames array
+        value: group.name,
         label: group.name,
       }))
     : [];
 
   const [descriptionLength, setDescriptionLength] = useState(
-    initialData?.businessDescription?.length || 0
+    initialData?.businessDescription?.length || 0,
   );
 
   const form = useForm<CompanyInformationFormData>({
@@ -123,6 +137,15 @@ export function CompanyInformationForm({ userId, initialData, logo }: CompanyInf
         return { url, source };
       });
 
+      // Resolve selected program/user group name back to its ID for the API
+      const selectedProgramName = data.programUserGroup[0];
+      const selectedProgram =
+        Array.isArray(userGroups) && selectedProgramName
+          ? (userGroups as any[]).find(
+              (g) => g.name === selectedProgramName,
+            )
+          : undefined;
+
       await saveBusinessMutation.mutateAsync({
         userId,
         data: {
@@ -132,7 +155,7 @@ export function CompanyInformationForm({ userId, initialData, logo }: CompanyInf
           year,
           sectors: data.sector,
           description: data.businessDescription || undefined,
-          userGroupId: data.programUserGroup[0] || undefined,
+          userGroupId: selectedProgram?.id || undefined,
           criteria: data.twoXCriteria || undefined,
           noOfEmployees,
           website: data.companyWebsite || undefined,
@@ -281,14 +304,14 @@ export function CompanyInformationForm({ userId, initialData, logo }: CompanyInf
                           field.onChange(e);
                           setDescriptionLength(e.target.value.length);
                         }}
-                        maxLength={100}
+                        maxLength={500}
                         className={cn(
                           "h-24 pr-16",
                           form.formState.errors.businessDescription && "border-red-500"
                         )}
                       />
                       <div className="absolute bottom-2 right-2 text-xs text-primaryGrey-400">
-                        {descriptionLength}/100
+                        {descriptionLength}/500
                       </div>
                     </div>
                   </FormControl>

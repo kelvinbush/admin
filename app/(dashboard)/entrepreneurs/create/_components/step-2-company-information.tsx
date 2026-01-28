@@ -26,7 +26,10 @@ const companyInformationSchema = z.object({
   businessLegalEntityType: z.string().min(1, "Business legal entity type is required"),
   yearOfRegistration: z.string().min(1, "Year of business registration is required"),
   sector: z.array(z.string()).min(1, "At least one sector is required"),
-  businessDescription: z.string().min(1, "Business description is required").max(100, "Business description must be 100 characters or less"),
+  businessDescription: z
+    .string()
+    .min(1, "Business description is required")
+    .max(500, "Business description must be 500 characters or less"),
   programUserGroup: z.array(z.string()).min(1, "At least one program/user group is required"),
   twoXCriteria: z.array(z.string()).optional(),
   numberOfEmployees: z.string().optional(),
@@ -388,14 +391,14 @@ export function Step2CompanyInformation() {
                         field.onChange(e);
                         setDescriptionLength(e.target.value.length);
                       }}
-                      maxLength={100}
+                      maxLength={500}
                       className={cn(
                         "h-24 pr-16",
                         form.formState.errors.businessDescription && "border-red-500"
                       )}
                     />
                     <div className="absolute bottom-2 right-2 text-xs text-primaryGrey-400">
-                      {descriptionLength}/100
+                      {descriptionLength}/500
                     </div>
                   </div>
                 </FormControl>

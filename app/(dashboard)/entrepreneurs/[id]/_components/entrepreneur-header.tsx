@@ -13,6 +13,7 @@ import { businessLegalEntityTypeOptions, sectorOptions } from "@/lib/constants/b
 
 interface EntrepreneurData {
   id: string;
+  email: string;
   companyName: string;
   legalEntityType: string;
   city: string;
@@ -263,6 +264,11 @@ export function EntrepreneurHeader({
                       variant="outline"
                       size="lg"
                       className="bg-transparent hover:bg-primaryGrey-50 text-white border-white"
+                      type="button"
+                      onClick={() => {
+                        if (!entrepreneur.email) return;
+                        window.location.href = `mailto:${entrepreneur.email}`;
+                      }}
                     >
                       Email User
                     </Button>

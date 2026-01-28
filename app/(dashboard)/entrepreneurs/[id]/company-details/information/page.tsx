@@ -44,12 +44,15 @@ export default function CompanyInformationPage() {
     yearOfRegistration: business.yearOfIncorporation?.toString() || "",
     sector: business.sectors || [],
     businessDescription: business.description || "",
-    programUserGroup: business.userGroupIds || [],
+    // API now returns an array of user group names instead of IDs
+    programUserGroup: (business as any).userGroupNames || [],
     twoXCriteria: business.selectionCriteria || [],
     numberOfEmployees: mapNoOfEmployees(business.noOfEmployees),
     companyWebsite: business.website || "",
     businessPhotos: business.businessPhotos || [],
-    videoLinks: (business.videoLinks || []).map((v: { url: string; source: string | null }) => v.url),
+    videoLinks: (business.videoLinks || []).map(
+      (v: { url: string; source: string | null }) => v.url,
+    ),
   };
 
   return (

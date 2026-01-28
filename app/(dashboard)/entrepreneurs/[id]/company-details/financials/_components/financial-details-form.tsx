@@ -22,8 +22,13 @@ const financialDetailsSchema = z.object({
   hasBorrowingHistory: z.enum(["yes", "no"]).optional(),
   amountBorrowed: z.string().optional(),
   amountBorrowedCurrency: z.string().optional(),
-  loanStatus: z.enum(["fullyRepaid", "currently_repaying", "defaulted"]).optional(),
-  defaultReason: z.string().max(100, "Reason must be 100 characters or less").optional(),
+  loanStatus: z
+    .enum(["fullyRepaid", "currently_repaying", "defaulted"])
+    .optional(),
+  defaultReason: z
+    .string()
+    .max(500, "Reason must be 500 characters or less")
+    .optional(),
 }).refine((data) => {
   // If hasBorrowingHistory is "yes", amountBorrowed is required
   if (data.hasBorrowingHistory === "yes" && !data.amountBorrowed) {
@@ -311,14 +316,14 @@ export function FinancialDetailsForm({ userId, initialData }: FinancialDetailsFo
                           field.onChange(e);
                           setDefaultReasonLength(e.target.value.length);
                         }}
-                        maxLength={100}
+                        maxLength={500}
                         className={cn(
                           "h-24 pr-16",
                           form.formState.errors.defaultReason && "border-red-500"
                         )}
                       />
                       <div className="absolute bottom-2 right-2 text-xs text-primaryGrey-400">
-                        {defaultReasonLength}/100
+                        {defaultReasonLength}/500
                       </div>
                     </div>
                   </FormControl>

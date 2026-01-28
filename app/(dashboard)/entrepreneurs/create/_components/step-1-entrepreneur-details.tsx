@@ -346,7 +346,9 @@ export function Step1EntrepreneurDetails() {
                       <div className="p-2">
                         <ReactDatePicker
                           selected={field.value ?? null}
-                          onChange={(date) => field.onChange(date ?? undefined)}
+                          onChange={(date: Date | null) =>
+                            field.onChange(date ?? undefined)
+                          }
                           maxDate={new Date()}
                           showMonthDropdown
                           showYearDropdown
