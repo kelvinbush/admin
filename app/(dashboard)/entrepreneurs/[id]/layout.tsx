@@ -44,6 +44,12 @@ export default function EntrepreneurDetailLayout({
     ? format(new Date(business.createdAt), "dd/MMMM/yyyy")
     : "-";
 
+  // Prefer user group names from API if available
+  const userGroupNames =
+    (business as any)?.userGroupNames && Array.isArray((business as any).userGroupNames)
+      ? ((business as any).userGroupNames as string[])
+      : [];
+
   const entrepreneurData = {
     id: data.userId,
     companyName: business?.name || "-",
@@ -53,7 +59,7 @@ export default function EntrepreneurDetailLayout({
     profileCompletion,
     memberSince,
     lastLogin: "-",
-    userGroup: "-", // could be resolved from userGroupIds + useUserGroups if needed
+    userGroup: userGroupNames.length ? userGroupNames.join(", ") : "-",
     sectors: business?.sectors || [],
     status: data.user.onboardingStatus,
     logo: business?.logo || null,
