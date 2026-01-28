@@ -62,7 +62,7 @@ export function AttachmentsPagination({
   };
 
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-primaryGrey-100">
+    <div className="flex items-center justify-between pt-4">
       <div className="text-sm text-primaryGrey-400">
         Showing {startItem} to {endItem} of {totalItems} results
       </div>

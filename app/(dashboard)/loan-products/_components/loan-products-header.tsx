@@ -43,11 +43,22 @@ export function LoanProductsHeader({
   sort,
   onSearchChange,
   onClearSearch,
+  onSortChange,
   onToggleFilters,
   onDownload,
   onAddLoanProduct,
 }: LoanProductsHeaderProps) {
   const sortKey = `${sort.sortBy}-${sort.sortOrder}`;
+
+  const handleSortClick = () => {
+    if (sort.sortBy === "createdAt") {
+      const nextOrder = sort.sortOrder === "desc" ? "asc" : "desc";
+      onSortChange({ sortBy: "createdAt", sortOrder: nextOrder });
+    } else {
+      // Fallback: reset to createdAt desc
+      onSortChange({ sortBy: "createdAt", sortOrder: "desc" });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -55,12 +66,9 @@ export function LoanProductsHeader({
         <h2 className="text-2xl font-medium text-midnight-blue">
           {`Loan Products (${total})`}
         </h2>
-        <p className="mt-1 text-sm text-primaryGrey-500">
-          Configure and manage the loan products available to entrepreneurs.
-        </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 justify-end">
         <div className="flex items-center gap-2 border rounded-md px-3 h-11 w-full lg:w-[320px]">
           <Search className="h-4 w-4 text-primaryGrey-400" />
           <Input
@@ -80,7 +88,12 @@ export function LoanProductsHeader({
           ) : null}
         </div>
 
-        <Button variant="outline" className="h-11 gap-2" type="button">
+        <Button
+          variant="outline"
+          className="h-11 gap-2"
+          type="button"
+          onClick={handleSortClick}
+        >
           <ArrowDownWideNarrow className="h-4 w-4" />
           <span>{sortLabels[sortKey]}</span>
         </Button>
@@ -110,10 +123,6 @@ export function LoanProductsHeader({
 
         <Button
           className="h-11 px-5 text-white border-0"
-          style={{
-            background:
-              "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-          }}
           type="button"
           onClick={onAddLoanProduct}
         >

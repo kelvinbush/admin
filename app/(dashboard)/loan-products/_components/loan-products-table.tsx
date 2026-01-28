@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Pencil, Power, Eye } from "lucide-react";
+import Image from "next/image";
+import { Power } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { LoanProduct } from "@/lib/api/hooks/loan-products";
+import { DuplicateLoanProductModal, type DuplicateLoanProductFormValues } from "./duplicate-loan-product-modal";
+import { ConfirmActionModal } from "@/app/(dashboard)/internal-users/_components/confirm-action-modal";
+import { useCreateLoanProduct, type CreateLoanProductRequest } from "@/lib/api/hooks/loan-products";
+import { toast } from "sonner";
 
 // Placeholder type for loan product
 export type LoanProductTableItem = {
@@ -47,6 +52,108 @@ export function LoanProductsTable({
   actionBusyId,
 }: LoanProductsTableProps) {
   const router = useRouter();
+  const createLoanProduct = useCreateLoanProduct();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicateSource, setDuplicateSource] = useState<LoanProductTableItem | null>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    id: string;
+    newStatus: "active" | "inactive";
+    isCurrentlyActive: boolean;
+  } | null>(null);
+
+  const handleOpenDuplicate = (product: LoanProductTableItem) => {
+    setDuplicateSource(product);
+    setDuplicateOpen(true);
+  };
+
+  const handleDuplicateSubmit = async (values: DuplicateLoanProductFormValues) => {
+    if (!duplicateSource?.product) {
+      setDuplicateOpen(false);
+      return;
+    }
+
+    const source = duplicateSource.product;
+
+    const payload: CreateLoanProductRequest = {
+      name: values.name,
+      slug: undefined,
+      summary: source.summary ?? undefined,
+      description: source.description ?? undefined,
+      currency: source.currency,
+      minAmount: source.minAmount,
+      maxAmount: source.maxAmount,
+      minTerm: source.minTerm,
+      maxTerm: source.maxTerm,
+      termUnit: source.termUnit,
+      availabilityStartDate: source.availabilityStartDate ?? undefined,
+      availabilityEndDate: source.availabilityEndDate ?? undefined,
+      organizationId: source.organizationId,
+      userGroupIds: source.userGroupIds ?? [],
+      repaymentFrequency: source.repaymentFrequency,
+      maxGracePeriod: source.maxGracePeriod ?? undefined,
+      maxGraceUnit: source.maxGraceUnit ?? undefined,
+      interestRate: source.interestRate,
+      ratePeriod: source.ratePeriod,
+      amortizationMethod: source.amortizationMethod,
+      interestCollectionMethod: source.interestCollectionMethod,
+      interestRecognitionCriteria: source.interestRecognitionCriteria,
+      fees:
+        values.copyFees && source.fees
+          ? source.fees.map(
+              ({
+                loanFeeId,
+                feeName,
+                calculationMethod,
+                rate,
+                collectionRule,
+                allocationMethod,
+                calculationBasis,
+              }) => ({
+                loanFeeId,
+                feeName,
+                calculationMethod,
+                rate,
+                collectionRule,
+                allocationMethod,
+                calculationBasis,
+              }),
+            )
+          : undefined,
+    };
+
+    try {
+      await createLoanProduct.mutateAsync(payload);
+      toast.success("Loan product duplicated successfully");
+      setDuplicateOpen(false);
+      setDuplicateSource(null);
+    } catch (error: any) {
+      console.error("Failed to duplicate loan product:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to duplicate loan product",
+      );
+    }
+  };
+
+  const handlePowerClick = (
+    e: React.MouseEvent,
+    product: LoanProductTableItem,
+    isActive?: boolean,
+  ) => {
+    e.stopPropagation();
+    if (!onToggleStatus) return;
+
+    const newStatus: "active" | "inactive" = isActive ? "inactive" : "active";
+
+    setPendingStatusChange({
+      id: product.id,
+      newStatus,
+      isCurrentlyActive: !!isActive,
+    });
+    setConfirmOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -192,19 +299,19 @@ export function LoanProductsTable({
                         variant="outline"
                         className={`font-normal border text-xs ${
                           isActive
-                            ? "border-green-500 text-green-500 bg-green-50"
-                            : "border-red-500 text-red-500 bg-red-50"
+                            ? "border-[#B0EFDF] text-[#007054] bg-[#B0EFDF]"
+                            : "border-[#E9B7BD] text-[#650D17] bg-[#E9B7BD]"
                         }`}
                       >
                         {isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-6">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-primary-green hover:text-primary-green hover:bg-green-50"
+                          className="h-auto px-0 py-0 text-[#00CC99] hover:bg-transparent hover:text-[#00CC99] flex items-center gap-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (onEdit) {
@@ -216,42 +323,47 @@ export function LoanProductsTable({
                           disabled={isBusy}
                           title="Edit"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Image
+                            src="/edit.svg"
+                            alt="Edit"
+                            width={16}
+                            height={16}
+                          />
+                          <span className="text-sm font-normal">Edit</span>
                         </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                          className="h-auto px-0 py-0 text-[#01337F] hover:bg-transparent hover:text-[#01337F] flex items-center gap-2"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onViewDetails?.(product.id);
+                            handleOpenDuplicate(product);
                           }}
                           disabled={isBusy}
-                          title="View Details"
+                          title="Duplicate"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Image
+                            src="/copy.svg"
+                            alt="Duplicate"
+                            width={16}
+                            height={16}
+                          />
+                          <span className="text-sm font-normal">Duplicate</span>
                         </Button>
+
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`h-8 w-8 p-0 ${
-                            isActive
-                              ? "text-yellow-600 hover:text-yellow-600 hover:bg-yellow-50"
-                              : "text-yellow-600 hover:text-yellow-600 hover:bg-yellow-50"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onToggleStatus) {
-                              onToggleStatus(
-                                product.id,
-                                isActive ? "inactive" : "active"
-                              );
-                            }
-                          }}
+                          className="h-auto px-0 py-0 text-[#F59E0B] hover:bg-transparent hover:text-[#F59E0B] flex items-center gap-2"
+                          onClick={(e) => handlePowerClick(e, product, isActive)}
                           disabled={isBusy}
                           title={isActive ? "Disable" : "Enable"}
                         >
                           <Power className="h-4 w-4" />
+                          <span className="text-sm font-normal">
+                            {isActive ? "Disable" : "Enable"}
+                          </span>
                         </Button>
                       </div>
                     </TableCell>
@@ -262,6 +374,54 @@ export function LoanProductsTable({
           </Table>
         </div>
       </CardContent>
+      {/* Duplicate loan product modal */}
+      <DuplicateLoanProductModal
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        defaultName={
+          duplicateSource?.name
+            ? `${duplicateSource.name} Copy`
+            : undefined
+        }
+        onSubmit={handleDuplicateSubmit}
+        isLoading={createLoanProduct.isPending}
+      />
+
+      {/* Enable / Disable confirmation modal */}
+      <ConfirmActionModal
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmOpen(false);
+            setPendingStatusChange(null);
+          } else {
+            setConfirmOpen(true);
+          }
+        }}
+        onConfirm={() => {
+          if (pendingStatusChange && onToggleStatus) {
+            onToggleStatus(
+              pendingStatusChange.id,
+              pendingStatusChange.newStatus,
+            );
+          }
+          setConfirmOpen(false);
+          setPendingStatusChange(null);
+        }}
+        title={
+          pendingStatusChange?.isCurrentlyActive
+            ? "Are you sure you want to disable this loan product?"
+            : "Are you sure you want to enable this loan product?"
+        }
+        description={
+          pendingStatusChange?.isCurrentlyActive
+            ? "Users will no longer be able to see or apply for this loan, but it will remain stored in the system. You can enable it again later if needed."
+            : "Users will be able to see and apply for this loan product once it is enabled."
+        }
+        confirmButtonText={
+          pendingStatusChange?.isCurrentlyActive ? "Yes, Disable" : "Yes, Enable"
+        }
+      />
     </Card>
   );
 }
