@@ -615,7 +615,7 @@ export default function LoanApplicationDetailLayout({
                 customFees: customFees.length > 0 ? customFees : undefined,
               },
             });
-
+            
             toast.success("Counter offer submitted successfully.");
             setGenerateRepaymentScheduleModalOpen(false);
           } catch (error: any) {
@@ -700,8 +700,8 @@ export default function LoanApplicationDetailLayout({
                 })),
               },
             });
-            toast.success("Signing execution details saved.");
-            setSigningExecutionModalOpen(false);
+          toast.success("Signing execution details saved.");
+          setSigningExecutionModalOpen(false);
           } catch (error: any) {
             toast.error(
               error?.response?.data?.error ||

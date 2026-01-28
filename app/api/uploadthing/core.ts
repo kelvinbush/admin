@@ -4,7 +4,7 @@ const f = createUploadthing();
 
 // Define file routes for your app
 export const ourFileRouter = {
-  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 5 } })
     .middleware(async () => {
       // Add auth/metadata if needed
       return { type: "image" } as const;
@@ -14,7 +14,7 @@ export const ourFileRouter = {
       return { url: file.url };
     }),
 
-  documentUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 } })
+  documentUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 5 } })
     .middleware(async () => {
       return { type: "pdf" } as const;
     })

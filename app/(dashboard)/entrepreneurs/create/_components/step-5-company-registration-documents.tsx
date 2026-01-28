@@ -250,7 +250,6 @@ export function Step5CompanyRegistrationDocuments() {
                         showUploadedState={!!field.value}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -409,7 +408,6 @@ export function Step5CompanyRegistrationDocuments() {
                         showUploadedState={!!field.value}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -433,7 +431,6 @@ export function Step5CompanyRegistrationDocuments() {
                         showUploadedState={!!field.value}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

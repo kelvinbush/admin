@@ -26,16 +26,16 @@ export default function Page() {
       throw new Error("Authentication not ready. Please try again.");
     }
 
-    const result = await signIn.create({
-      identifier: email,
-      password,
-    });
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
 
-    if (result.status === "complete") {
-      await setActive({ session: result.createdSessionId });
-      toast.success("Signed in successfully!");
-      router.push("/");
-    } else {
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        toast.success("Signed in successfully!");
+        router.push("/");
+      } else {
       throw new Error("Sign in incomplete. Please try again.");
     }
   };

@@ -84,16 +84,16 @@ export default function EditUserGroupModal({
 
   const onSubmit = async () => {
     try {
-      const body: any = { id: groupId };
-      if (name) body.name = name;
-      if (slug) body.slug = slug;
-      if (description) body.description = description;
+    const body: any = { id: groupId };
+    if (name) body.name = name;
+    if (slug) body.slug = slug;
+    if (description) body.description = description;
       body.businessIds = selectedBusinessIds;
 
-      await updateMutation.mutateAsync(body);
+    await updateMutation.mutateAsync(body);
       toast.success("User group updated successfully");
-      onOpenChange(false);
-      if (onUpdated) onUpdated();
+    onOpenChange(false);
+    if (onUpdated) onUpdated();
     } catch (error: any) {
       console.error("Failed to update user group:", error);
       toast.error(

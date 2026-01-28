@@ -388,12 +388,12 @@ export default function BusinessesTable({
                           <button
                             type="button"
                             onClick={() => onRemove(business.id)}
-                            disabled={isBusy}
+                        disabled={isBusy}
                             className={cn(
                               "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-600 hover:bg-red-50 rounded-full px-2 py-1",
                               isBusy && "opacity-60 cursor-not-allowed",
                             )}
-                          >
+                      >
                             <Trash2 className="h-4 w-4" />
                             <span>Remove</span>
                           </button>

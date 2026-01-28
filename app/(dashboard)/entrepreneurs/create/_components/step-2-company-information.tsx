@@ -39,7 +39,7 @@ type CompanyInformationFormData = z.infer<typeof companyInformationSchema>;
 
 const yearOptions: SelectOption[] = [
   { value: "not-registered", label: "Not yet registered" },
-  ...Array.from({ length: 10 }, (_, i) => {
+  ...Array.from({ length: 60 }, (_, i) => {
     const year = new Date().getFullYear() - i;
     return { value: year.toString(), label: year.toString() };
   }),

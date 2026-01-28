@@ -95,16 +95,16 @@ export function InternalUsersFilters({
           onChange={(value) => onValueChange("createdAt", value)}
         />
         {hasActiveFilters && onClearFilters && (
-          <div className="flex items-stretch">
-            <Button
-              type="button"
+        <div className="flex items-stretch">
+          <Button
+            type="button"
               variant="outline"
               className="w-full h-10 border-primaryGrey-300 text-midnight-blue uppercase tracking-[0.08em]"
               onClick={onClearFilters}
-            >
+          >
               Clear filters
-            </Button>
-          </div>
+          </Button>
+        </div>
         )}
       </div>
     </div>
