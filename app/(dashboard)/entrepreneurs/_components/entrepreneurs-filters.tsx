@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,10 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export type EntrepreneurFiltersState = {
-  userGroup?: "all" | "preferred" | "standard";
-  sector?: "all" | "agriculture" | "manufacturing" | "services";
+  userGroup?: string | "all";
+  sector?: string | "all";
   status?: "all" | "complete" | "incomplete" | "pending";
   progress?: "all" | "0-25" | "25-50" | "50-75" | "75-100";
 };
@@ -24,29 +24,35 @@ type EntrepreneursFiltersProps = {
     key: K,
     value?: EntrepreneurFiltersState[K],
   ) => void;
-  onApply?: () => void;
+  userGroupOptions?: Array<{
+    label: string;
+    value: string | "all";
+  }>;
+  sectorOptions?: Array<{
+    label: string;
+    value: string | "all";
+  }>;
+  statusOptions?: Array<{
+    label: string;
+    value: EntrepreneurFiltersState["status"];
+  }>;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 };
 
-const userGroupOptions: Array<{
+const defaultUserGroupOptions: Array<{
   label: string;
   value: EntrepreneurFiltersState["userGroup"];
-}> = [
-  { label: "All user groups", value: "all" },
-  { label: "Preferred", value: "preferred" },
-  { label: "Standard", value: "standard" },
-];
+}> = [{ label: "All user groups", value: "all" }];
 
-const sectorOptions: Array<{
+const defaultSectorOptions: Array<{
   label: string;
   value: EntrepreneurFiltersState["sector"];
 }> = [
   { label: "All sectors", value: "all" },
-  { label: "Agriculture", value: "agriculture" },
-  { label: "Manufacturing", value: "manufacturing" },
-  { label: "Services", value: "services" },
 ];
 
-const statusOptions: Array<{
+const defaultStatusOptions: Array<{
   label: string;
   value: EntrepreneurFiltersState["status"];
 }> = [
@@ -71,9 +77,28 @@ export function EntrepreneursFilters({
   values,
   visible = true,
   onValueChange,
-  onApply,
+  userGroupOptions,
+  sectorOptions,
+  statusOptions,
+  hasActiveFilters,
+  onClearFilters,
 }: EntrepreneursFiltersProps) {
   if (!visible) return null;
+
+  const effectiveUserGroupOptions =
+    userGroupOptions && userGroupOptions.length > 0
+      ? userGroupOptions
+      : defaultUserGroupOptions;
+
+  const effectiveSectorOptions =
+    sectorOptions && sectorOptions.length > 0
+      ? sectorOptions
+      : defaultSectorOptions;
+
+  const effectiveStatusOptions =
+    statusOptions && statusOptions.length > 0
+      ? statusOptions
+      : defaultStatusOptions;
 
   return (
     <div className="space-y-3 border-t pt-4">
@@ -82,21 +107,21 @@ export function EntrepreneursFilters({
           label="USER GROUP"
           placeholder="USER GROUP"
           value={values.userGroup}
-          options={userGroupOptions}
+          options={effectiveUserGroupOptions}
           onChange={(value) => onValueChange("userGroup", value)}
         />
         <FilterSelect
           label="SECTOR"
           placeholder="SECTOR"
           value={values.sector}
-          options={sectorOptions}
+          options={effectiveSectorOptions}
           onChange={(value) => onValueChange("sector", value)}
         />
         <FilterSelect
           label="STATUS"
           placeholder="STATUS"
           value={values.status}
-          options={statusOptions}
+          options={effectiveStatusOptions}
           onChange={(value) => onValueChange("status", value)}
         />
         <FilterSelect
@@ -106,16 +131,21 @@ export function EntrepreneursFilters({
           options={progressOptions}
           onChange={(value) => onValueChange("progress", value)}
         />
-        <div className="flex items-stretch">
+      </div>
+      {onClearFilters && (
+        <div className="flex justify-end">
           <Button
             type="button"
-            className="h-10 px-8 bg-primary-green text-white hover:bg-primary-green/90 uppercase tracking-[0.08em]"
-            onClick={onApply}
+            variant="outline"
+            size="sm"
+            disabled={!hasActiveFilters}
+            onClick={onClearFilters}
+            className="text-xs uppercase tracking-[0.08em]"
           >
-            Apply
+            Clear Filters
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -142,9 +172,7 @@ function FilterSelect<T extends string | undefined>({
           "h-10 border-gray-300 text-left text-xs uppercase tracking-[0.08em] text-midnight-blue w-max min-w-[180px] px-5",
         )}
       >
-        <SelectValue placeholder={placeholder}>
-          {value ? undefined : label}
-        </SelectValue>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (

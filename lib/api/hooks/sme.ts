@@ -64,7 +64,16 @@ export function useEntrepreneursStats() {
     queryKeys.entrepreneurs.stats(),
     '/admin/sme/entrepreneurs/stats',
     undefined,
-    { enabled: true }
+    {
+      enabled: true,
+      // Handle possible API response wrapper { success, data }
+      select: (data: any) => {
+        if (data?.success && data?.data) {
+          return data.data as EntrepreneursStatsResponse;
+        }
+        return data as EntrepreneursStatsResponse;
+      },
+    }
   );
 }
 

@@ -2,7 +2,10 @@
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EntrepreneursHeader, type EntrepreneurSort } from "./_components/entrepreneurs-header";
+import {
+  EntrepreneursHeader,
+  type EntrepreneurSort,
+} from "./_components/entrepreneurs-header";
 import {
   EntrepreneursFilters,
   type EntrepreneurFiltersState,
@@ -10,7 +13,8 @@ import {
 import { EntrepreneursTabs, type EntrepreneurTab } from "./_components/entrepreneurs-tabs";
 import { EntrepreneursTable } from "./_components/entrepreneurs-table";
 import { useEntrepreneurs, useEntrepreneursStats } from "@/lib/api/hooks/sme";
-import type { SMEOnboardingStatus } from "@/lib/api/types";
+import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
+import type { SMEOnboardingStatus, UserGroup } from "@/lib/api/types";
 
 export default function EntrepreneursPage() {
   const router = useRouter();
@@ -34,23 +38,114 @@ export default function EntrepreneursPage() {
       onboardingStatus = "active";
     }
 
+    // Fetch a large page once; all filtering, sorting & pagination are client-side
     return {
-      page,
-      limit,
+      page: 1,
+      limit: 1000,
       onboardingStatus,
-      search: searchValue || undefined,
     };
-  }, [activeTab, page, limit, searchValue]);
+  }, [activeTab]);
 
   const { data, isLoading } = useEntrepreneurs(apiFilters);
   const { data: stats } = useEntrepreneursStats();
 
   const items = data?.items ?? [];
-  const total = data?.total ?? 0;
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // Apply status filter (tabs already mapped for API, but also consider local filters.status)
+  // User groups for dynamic filter options
+  const { data: userGroupsData } = useUserGroups(undefined, {
+    page: 1,
+    limit: 1000,
+  });
+
+  const userGroupFilterOptions = useMemo(
+    () => {
+      const groups: UserGroup[] = userGroupsData?.data || [];
+      return [
+        { label: "All user groups", value: "all" as const },
+        ...groups.map((group) => ({
+          label: (group as any).name || group.id,
+          value: group.id,
+        })),
+      ];
+    },
+    [userGroupsData],
+  );
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        filters.userGroup ||
+          filters.sector ||
+          filters.status ||
+          filters.progress,
+      ),
+    [filters],
+  );
+
+  // Dynamic sector options based on data
+  const sectorFilterOptions = useMemo(
+    () => {
+      const sectorSet = new Set<string>();
+      items.forEach((item) => {
+        item.business?.sectors?.forEach((sector) => {
+          if (sector) {
+            sectorSet.add(sector);
+          }
+        });
+      });
+
+      const sectors = Array.from(sectorSet).sort((a, b) =>
+        a.localeCompare(b),
+      );
+
+      return [
+        { label: "All sectors", value: "all" as const },
+        ...sectors.map((sector) => ({
+          label: sector,
+          value: sector,
+        })),
+      ];
+    },
+    [items],
+  );
+
+  // Dynamic status options based on data (complete / incomplete / pending)
+  const statusFilterOptions = useMemo(
+    () => {
+      const hasComplete = items.some((item) => item.hasCompleteProfile);
+      const hasIncomplete = items.some((item) => !item.hasCompleteProfile);
+      const hasPending = items.some((item) => item.hasPendingActivation);
+
+      const options: Array<{
+        label: string;
+        value: EntrepreneurFiltersState["status"];
+      }> = [{ label: "All status", value: "all" }];
+
+      if (hasComplete) {
+        options.push({ label: "Complete", value: "complete" });
+      }
+      if (hasIncomplete) {
+        options.push({ label: "Incomplete", value: "incomplete" });
+      }
+      if (hasPending) {
+        options.push({ label: "Pending", value: "pending" });
+      }
+
+      return options;
+    },
+    [items],
+  );
+
+  const filteredAndSortedItems = useMemo(() => {
+    const term = searchValue.trim().toLowerCase();
+
+    const filtered = items.filter((item) => {
+      // Tab-based filters
+      if (activeTab === "complete" && !item.hasCompleteProfile) return false;
+      if (activeTab === "incomplete" && item.hasCompleteProfile) return false;
+      if (activeTab === "pending" && !item.hasPendingActivation) return false;
+
+      // Status filter
       if (filters.status && filters.status !== "all") {
         if (filters.status === "complete" && !item.hasCompleteProfile) {
           return false;
@@ -63,7 +158,24 @@ export default function EntrepreneursPage() {
         }
       }
 
-      // Apply progress filter (client-side) using businessProfileProgress
+      // User group filter
+      if (filters.userGroup && filters.userGroup !== "all") {
+        const groups = item.userGroups || [];
+        if (!groups.some((g) => g.id === filters.userGroup)) {
+          return false;
+        }
+      }
+
+      // Sector filter
+      if (filters.sector && filters.sector !== "all") {
+        const sectors = item.business?.sectors || [];
+        const sectorTerm = filters.sector.toLowerCase();
+        if (!sectors.some((s) => s.toLowerCase().includes(sectorTerm))) {
+          return false;
+        }
+      }
+
+      // Progress filter
       if (filters.progress && filters.progress !== "all") {
         const progress = item.businessProfileProgress ?? 0;
         switch (filters.progress) {
@@ -82,9 +194,61 @@ export default function EntrepreneursPage() {
         }
       }
 
+      // Text search (registered user + business name)
+      if (term) {
+        const fullName = `${item.firstName ?? ""} ${item.lastName ?? ""}`
+          .trim()
+          .toLowerCase();
+        const email = item.email.toLowerCase();
+        const phone = (item.phone ?? "").toLowerCase();
+        const businessName = (item.business?.name ?? "").toLowerCase();
+
+        if (
+          !fullName.includes(term) &&
+          !email.includes(term) &&
+          !phone.includes(term) &&
+          !businessName.includes(term)
+        ) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [items, filters.status, filters.progress]);
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (sort.sortBy === "createdAt") {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return sort.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      }
+
+      // Sort by business name (fallback to user name)
+      const nameA =
+        (a.business?.name ||
+          `${a.firstName ?? ""} ${a.lastName ?? ""}` ||
+          "").toLowerCase();
+      const nameB =
+        (b.business?.name ||
+          `${b.firstName ?? ""} ${b.lastName ?? ""}` ||
+          "").toLowerCase();
+
+      if (nameA === nameB) return 0;
+      const dir = sort.sortOrder === "asc" ? 1 : -1;
+      return nameA > nameB ? dir : -dir;
+    });
+
+    return sorted;
+  }, [items, activeTab, filters, searchValue, sort]);
+
+  const total = filteredAndSortedItems.length;
+
+  const paginatedItems = useMemo(() => {
+    if (total === 0) return [];
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    return filteredAndSortedItems.slice(start, end);
+  }, [filteredAndSortedItems, page, limit, total]);
 
   const handleAddEntrepreneur = () => {
     router.push("/entrepreneurs/create");
@@ -101,36 +265,114 @@ export default function EntrepreneursPage() {
     setPage(1);
   };
 
+  const handleClearFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
+
   const statCards = useMemo(
     () => [
       {
         label: "Total SMEs",
         value: stats ? stats.totalSMEs.value.toString() : "0",
-        delta: stats ? `${stats.totalSMEs.deltaPercent.toFixed(1)}%` : "0%",
       },
       {
         label: "Complete Profiles",
         value: stats ? stats.completeProfiles.value.toString() : "0",
-        delta: stats ? `${stats.completeProfiles.deltaPercent.toFixed(1)}%` : "0%",
       },
       {
         label: "Incomplete Profiles",
         value: stats ? stats.incompleteProfiles.value.toString() : "0",
-        delta: stats ? `${stats.incompleteProfiles.deltaPercent.toFixed(1)}%` : "0%",
       },
       {
         label: "Pending Activation",
         value: stats ? stats.pendingActivation.value.toString() : "0",
-        delta: stats ? `${stats.pendingActivation.deltaPercent.toFixed(1)}%` : "0%",
       },
       {
         label: "SMEs with Loans",
         value: stats ? stats.smesWithLoans.value.toString() : "0",
-        delta: stats ? `${stats.smesWithLoans.deltaPercent.toFixed(1)}%` : "0%",
       },
     ],
-    [stats]
+    [stats],
   );
+
+  const handleDownload = () => {
+    if (!filteredAndSortedItems.length) return;
+
+    const headers = [
+      "Business Name",
+      "Registered User Name",
+      "Registered User Email",
+      "Registered User Phone",
+      "User Groups",
+      "B/S Sector",
+      "B/S Profile Progress",
+      "Status",
+      "Created At",
+    ];
+
+    const rows = filteredAndSortedItems.map((item) => {
+      const businessName = item.business?.name ?? "";
+      const registeredUserName = `${item.firstName ?? ""} ${
+        item.lastName ?? ""
+      }`.trim();
+      const userGroups =
+        item.userGroups && item.userGroups.length > 0
+          ? item.userGroups.map((g) => g.name).join(", ")
+          : "";
+      const sectors =
+        item.business?.sectors && item.business.sectors.length > 0
+          ? item.business.sectors.join(", ")
+          : "";
+      const status = item.onboardingStatus;
+      const createdAt = item.createdAt
+        ? new Date(item.createdAt).toLocaleDateString(undefined, {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+          })
+        : "";
+
+      return [
+        businessName,
+        registeredUserName,
+        item.email,
+        item.phone ?? "",
+        userGroups,
+        sectors,
+        `${Math.round(item.businessProfileProgress ?? 0)}%`,
+        status,
+        createdAt,
+      ];
+    });
+
+    const escapeCell = (cell: string) => {
+      const s = String(cell);
+      const needsEscaping =
+        s.includes(",") || s.includes('"') || s.includes("\n");
+      const sanitized = s.replace(/"/g, '""');
+      return needsEscaping ? `"${sanitized}"` : sanitized;
+    };
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => escapeCell(cell)).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `entrepreneurs-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
@@ -142,13 +384,6 @@ export default function EntrepreneursPage() {
           >
             <p className="text-base tracking-tight">{card.label}</p>
             <p className="text-3xl font-semibold mt-4">{card.value}</p>
-            <div className="mt-5 flex items-center gap-2 text-sm">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-primary-green/30 bg-primary-green">
-                <ArrowUpRight className="h-3.5 w-3.5 text-black" />
-              </span>
-              <span className="text-primary-green font-medium">{card.delta}</span>
-              <span className="text-primaryGrey-200">From last month</span>
-            </div>
           </div>
         ))}
       </section>
@@ -163,9 +398,7 @@ export default function EntrepreneursPage() {
           onClearSearch={() => setSearchValue("")}
           onSortChange={setSort}
           onToggleFilters={() => setFiltersVisible((prev) => !prev)}
-          onDownload={() => {
-            /* TODO: hook up download */
-          }}
+          onDownload={handleDownload}
           onAddEntrepreneur={handleAddEntrepreneur}
         />
 
@@ -173,9 +406,11 @@ export default function EntrepreneursPage() {
           values={filters}
           visible={filtersVisible}
           onValueChange={handleFilterChange}
-          onApply={() => {
-            /* Filters reactive */
-          }}
+          userGroupOptions={userGroupFilterOptions}
+          sectorOptions={sectorFilterOptions}
+          statusOptions={statusFilterOptions}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearFilters}
         />
 
         <EntrepreneursTabs
@@ -185,7 +420,7 @@ export default function EntrepreneursPage() {
 
         <div className="flex-1 min-h-[320px]">
           <EntrepreneursTable
-            items={filteredItems}
+            items={paginatedItems}
             page={page}
             limit={limit}
             total={total}

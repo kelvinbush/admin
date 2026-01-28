@@ -7,7 +7,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectWithDescription, type SelectOption } from "@/components/ui/select-with-description";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -15,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useCreateSMEUser, useUpdateSMEUserStep1, useSMEUser } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
@@ -342,17 +343,27 @@ export function Step1EntrepreneurDetails() {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 z-50" align="start" sideOffset={4}>
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          captionLayout="dropdown"
-                          fromYear={1900}
-                          toYear={new Date().getFullYear()}
-                          disabled={(date) => date > new Date()}
-                          initialFocus
-                          className="rounded-md border"
+                      <div className="p-2">
+                        <ReactDatePicker
+                          selected={field.value ?? null}
+                          onChange={(date) => field.onChange(date ?? undefined)}
+                          maxDate={new Date()}
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          inline
+                          dateFormat="PPP"
                         />
+                        {field.value && (
+                          <button
+                            type="button"
+                            onClick={() => field.onChange(undefined)}
+                            className="mt-2 text-xs text-primaryGrey-500 hover:text-midnight-blue underline"
+                          >
+                            Clear date
+                          </button>
+                        )}
+                      </div>
                       </PopoverContent>
                     </Popover>
                   </FormControl>
