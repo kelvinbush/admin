@@ -392,6 +392,7 @@ export interface BusinessDocument {
   docPassword?: string | null;
   docBankName?: string | null;
   docYear?: number | null;
+  docName?: string | null;
   createdAt: string;
   updatedAt: string;
 }

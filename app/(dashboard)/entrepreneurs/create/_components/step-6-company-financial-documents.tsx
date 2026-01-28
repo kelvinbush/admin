@@ -17,7 +17,10 @@ import { useEffect } from "react";
 import { useSMEOnboarding } from "../_context/sme-onboarding-context";
 import { useSaveFinancialDocuments, useSMEBusinessDocuments } from "@/lib/api/hooks/sme";
 import { toast } from "sonner";
-import { MultiDocumentUpload } from "@/components/ui/multi-document-upload";
+import {
+  MultiDocumentUpload,
+  type MultiDocumentItem,
+} from "@/components/ui/multi-document-upload";
 
 const bankStatementSchema = z.object({
   bankName: z.string().min(1, "Bank name is required"),
@@ -39,13 +42,24 @@ const financialStatementSchema = z.object({
   statementFile: z.string().min(1, "Financial statement file is required"),
 });
 
-const companyFinancialDocumentsSchema = z.object({
-  hasBankStatements: z.enum(["yes", "no"]),
-  bankStatements: z.array(bankStatementSchema).optional(),
-  financialStatements: z.array(financialStatementSchema).min(1, "At least one financial statement is required"),
-  businessPlan: z.string().min(1, "Company business plan is required"),
-  managementAccounts: z.array(z.string()).optional(),
-}).refine((data) => {
+const companyFinancialDocumentsSchema = z
+  .object({
+    hasBankStatements: z.enum(["yes", "no"]),
+    bankStatements: z.array(bankStatementSchema).optional(),
+    financialStatements: z
+      .array(financialStatementSchema)
+      .min(1, "At least one financial statement is required"),
+    businessPlan: z.string().min(1, "Company business plan is required"),
+    managementAccounts: z
+      .array(
+        z.object({
+          url: z.string(),
+          name: z.string(),
+        }),
+      )
+      .optional(),
+  })
+  .refine((data) => {
   if (data.hasBankStatements === "yes" && (!data.bankStatements || data.bankStatements.length === 0)) {
     return false;
   }
@@ -128,14 +142,37 @@ export function Step6CompanyFinancialDocuments() {
   const watchHasBankStatements = form.watch("hasBankStatements");
   const watchFinancialStatements = form.watch("financialStatements");
 
+  const getFileNameFromUrl = (url: string): string => {
+    try {
+      const path = new URL(url).pathname;
+      const lastSegment = path.split("/").filter(Boolean).pop();
+      if (lastSegment) {
+        return decodeURIComponent(lastSegment);
+      }
+    } catch {
+      // ignore parsing errors and fall back
+    }
+    return "Document";
+  };
+
   // Load existing data if userId is present
   useEffect(() => {
     if (userId && existingDocuments) {
       // Map existing documents to form fields
-      const bankStatements = existingDocuments.filter(d => d.docType === "annual_bank_statement");
-      const financialStatements = existingDocuments.filter(d => d.docType === "audited_financial_statements");
-      const businessPlan = existingDocuments.find(d => d.docType === "business_plan");
-      const managementAccounts = existingDocuments.filter(d => d.docType === "income_statements");
+      const bankStatements = existingDocuments.filter(
+        (d) => d.docType === "annual_bank_statement",
+      );
+      const financialStatements = existingDocuments.filter(
+        (d) => d.docType === "audited_financial_statements",
+      );
+      const businessPlan = existingDocuments.find(
+        (d) => d.docType === "business_plan",
+      );
+      // Management accounts are now stored as generic "other" documents.
+      // Keep backward compatibility with any legacy "income_statements" docs.
+      const managementAccounts = existingDocuments.filter(
+        (d) => d.docType === "other" || d.docType === "income_statements",
+      );
       
       // Set has bank statements
       if (bankStatements.length > 0) {
@@ -172,10 +209,11 @@ export function Step6CompanyFinancialDocuments() {
       
       if (businessPlan) form.setValue("businessPlan", businessPlan.docUrl);
       if (managementAccounts && managementAccounts.length > 0) {
-        form.setValue(
-          "managementAccounts",
-          managementAccounts.map((d) => d.docUrl),
-        );
+        const items: MultiDocumentItem[] = managementAccounts.map((d) => ({
+          url: d.docUrl,
+          name: d.docName || getFileNameFromUrl(d.docUrl),
+        }));
+        form.setValue("managementAccounts", items);
       }
     }
   }, [userId, existingDocuments, form]);
@@ -203,6 +241,7 @@ export function Step6CompanyFinancialDocuments() {
         docBankName?: string;
         isPasswordProtected?: boolean;
         docPassword?: string;
+        docName?: string;
       }> = [];
 
       // Add bank statements
@@ -247,14 +286,15 @@ export function Step6CompanyFinancialDocuments() {
         });
       }
 
-      // Add management accounts (income statements)
+      // Add management accounts (generic "other" documents with original file names)
       if (data.managementAccounts && data.managementAccounts.length > 0) {
-        data.managementAccounts.forEach((url) => {
-          if (!url) return;
+        data.managementAccounts.forEach((doc) => {
+          if (!doc.url) return;
           documents.push({
-            docType: "income_statements",
-            docUrl: url,
+            docType: "other",
+            docUrl: doc.url,
             isPasswordProtected: false,
+            docName: doc.name || getFileNameFromUrl(doc.url),
           });
         });
       }

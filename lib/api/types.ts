@@ -1299,6 +1299,7 @@ export interface FinancialDocumentData {
   docBankName?: string;
   isPasswordProtected?: boolean;
   docPassword?: string;
+  docName?: string;
 }
 
 export interface SaveFinancialDocumentsData {

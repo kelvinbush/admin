@@ -6,9 +6,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
 
+export interface MultiDocumentItem {
+  url: string;
+  name: string;
+}
+
 interface MultiDocumentUploadProps {
-  value?: string[];
-  onChange: (value: string[]) => void;
+  value?: MultiDocumentItem[];
+  onChange: (value: MultiDocumentItem[]) => void;
   label?: string;
   required?: boolean;
   error?: boolean;
@@ -31,7 +36,6 @@ export function MultiDocumentUpload({
 }: MultiDocumentUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [fileNames, setFileNames] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload } = useUploadThing("documentUploader");
@@ -75,21 +79,13 @@ export function MultiDocumentUpload({
         return;
       }
 
-      const urls = res.map((r) => r.url);
+      const items: MultiDocumentItem[] = res.map((r, index) => ({
+        url: r.url,
+        // Prefer the name from uploadthing response, fall back to local file name
+        name: (r as any).name || files[index]?.name || `Document ${index + 1}`,
+      }));
 
-      // Map uploaded URLs to their original filenames
-      setFileNames((prev) => {
-        const next = { ...prev };
-        urls.forEach((url, index) => {
-          const originalName = files[index]?.name;
-          if (originalName) {
-            next[url] = originalName;
-          }
-        });
-        return next;
-      });
-
-      onChange([...value, ...urls]);
+      onChange([...value, ...items]);
     } catch (err) {
       setUploadError("Upload failed.");
     } finally {
@@ -104,21 +100,6 @@ export function MultiDocumentUpload({
     const next = [...value];
     next.splice(index, 1);
     onChange(next);
-  };
-
-  const getDisplayName = (url: string, index: number) => {
-    // Prefer the original filename if we captured it during upload
-    if (fileNames[url]) return fileNames[url];
-
-    // Fallback: derive a name from the URL path
-    try {
-      const path = new URL(url).pathname;
-      const lastSegment = path.split("/").filter(Boolean).pop();
-      if (lastSegment) return decodeURIComponent(lastSegment);
-    } catch {
-      // ignore
-    }
-    return `Document ${index + 1}`;
   };
 
   return (
@@ -166,9 +147,9 @@ export function MultiDocumentUpload({
 
       {value.length > 0 && (
         <div className="mt-2 space-y-2">
-          {value.map((url, index) => (
+          {value.map((item, index) => (
             <div
-              key={url + index}
+              key={item.url + index}
               className={cn(
                 "flex items-center justify-between gap-2 rounded-md border px-3 py-2 bg-white",
                 error && "border-red-500",
@@ -177,7 +158,7 @@ export function MultiDocumentUpload({
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="h-4 w-4 text-primaryGrey-500 flex-shrink-0" />
                 <span className="text-sm text-primaryGrey-700 truncate">
-                  {getDisplayName(url, index)}
+                  {item.name}
                 </span>
               </div>
               <Button
