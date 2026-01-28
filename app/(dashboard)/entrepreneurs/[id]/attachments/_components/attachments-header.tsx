@@ -23,7 +23,7 @@ interface AttachmentsHeaderProps {
   onSortChange: (sort: SortOption) => void;
   filterStatus: FilterStatus;
   onFilterChange: (status: FilterStatus) => void;
-  onUpload: () => void;
+  onUpload?: () => void;
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -124,18 +124,20 @@ export function AttachmentsHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Upload Button */}
-        <Button
-          className="h-10 px-5 text-white border-0"
-          style={{
-            background:
-              "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
-          }}
-          onClick={onUpload}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Document
-        </Button>
+        {/* Upload Button (optional) */}
+        {onUpload && (
+          <Button
+            className="h-10 px-5 text-white border-0"
+            style={{
+              background:
+                "linear-gradient(90deg, var(--green-500, #0C9) 0%, var(--pink-500, #F0459C) 100%)",
+            }}
+            onClick={onUpload}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Document
+          </Button>
+        )}
       </div>
     </div>
   );

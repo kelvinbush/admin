@@ -130,6 +130,7 @@ export default function CompanyDocumentsPage() {
   const [selectedDocument, setSelectedDocument] = useState<AttachmentDocument | null>(null);
   const [bankStatementModalOpen, setBankStatementModalOpen] = useState(false);
   const [financialStatementModalOpen, setFinancialStatementModalOpen] = useState(false);
+  const [globalUploadModalOpen, setGlobalUploadModalOpen] = useState(false);
 
   const { data: businessDocuments, isLoading, isError } = useSMEBusinessDocuments(entrepreneurId, {
     enabled: !!entrepreneurId,
@@ -140,8 +141,10 @@ export default function CompanyDocumentsPage() {
   const savePermitsMutation = useSavePermitsAndPitchDeck();
 
   const allDocuments: AttachmentDocument[] = useMemo(() => {
-    return COMPANY_DOC_CONFIGS.map((config) => {
-      const found = businessDocuments?.find((d) => config.docTypes.includes(d.docType));
+    const baseDocs: AttachmentDocument[] = COMPANY_DOC_CONFIGS.map((config) => {
+      const found = businessDocuments?.find((d) =>
+        config.docTypes.includes(d.docType),
+      );
       return {
         id: config.id,
         name: config.name,
@@ -151,6 +154,30 @@ export default function CompanyDocumentsPage() {
         docType: found?.docType ?? config.docTypes[0],
       };
     });
+
+    // Additional dynamic documents:
+    // - Generic "other" documents (with custom names)
+    // - Management accounts / income statements (can be multiple)
+    const extraDocs: AttachmentDocument[] =
+      businessDocuments
+        ?.filter(
+          (d) =>
+            d.docType === "other" || d.docType === "income_statements",
+        )
+        .map((d) => ({
+          id: d.id,
+          name:
+            d.docName ||
+            (d.docType === "income_statements"
+              ? "Management Accounts"
+              : "Other Document"),
+          uploadedAt: d.createdAt,
+          status: "pending_review",
+          url: d.docUrl,
+          docType: d.docType,
+        })) ?? [];
+
+    return [...baseDocs, ...extraDocs];
   }, [businessDocuments]);
 
   const filteredDocuments = allDocuments.filter((doc) => {
@@ -194,10 +221,52 @@ export default function CompanyDocumentsPage() {
   };
 
   const handleView = (document: AttachmentDocument) => {
+    // Special handling for multi-document types
+    if (document.name === "Bank Statements") {
+      const statements =
+        businessDocuments?.filter(
+          (d) => d.docType === "annual_bank_statement",
+        ) ?? [];
+
+      if (!statements.length) {
+        toast.error("No bank statements available to view.");
+        return;
+      }
+
+      statements.forEach((d) => {
+        if (d.docUrl) {
+          window.open(d.docUrl, "_blank", "noopener,noreferrer");
+        }
+      });
+      return;
+    }
+
+    if (document.name === "Financial Statements") {
+      const statements =
+        businessDocuments?.filter(
+          (d) => d.docType === "audited_financial_statements",
+        ) ?? [];
+
+      if (!statements.length) {
+        toast.error("No financial statements available to view.");
+        return;
+      }
+
+      statements.forEach((d) => {
+        if (d.docUrl) {
+          window.open(d.docUrl, "_blank", "noopener,noreferrer");
+        }
+      });
+      return;
+    }
+
+    // Default single-document behaviour
     if (document.url) {
       window.open(document.url, "_blank", "noopener,noreferrer");
     } else {
-      toast.error("Document not available. This document has not been uploaded yet.");
+      toast.error(
+        "Document not available. This document has not been uploaded yet.",
+      );
     }
   };
 
@@ -209,7 +278,7 @@ export default function CompanyDocumentsPage() {
     }
   };
 
-  const handleUpdateSubmit = async (fileUrl: string) => {
+  const handleUpdateSubmit = async (fileUrl: string, documentName?: string) => {
     if (!selectedDocument?.docType) return;
 
     const config = COMPANY_DOC_CONFIGS.find((c) =>
@@ -239,6 +308,11 @@ export default function CompanyDocumentsPage() {
               {
                 docType: selectedDocument.docType,
                 docUrl: fileUrl,
+                // For generic "other" financial docs, persist the provided document name
+                docName:
+                  selectedDocument.docType === "other"
+                    ? documentName || selectedDocument.name
+                    : undefined,
               },
             ],
           },
@@ -329,8 +403,30 @@ export default function CompanyDocumentsPage() {
       .filter((d) => d.docType === "annual_bank_statement")
       .map((d) => ({
         id: d.id,
-        bankName: "other",
-        specifyBankName: d.docBankName || "",
+        // If the stored bank name matches a known option, use that option value.
+        // Otherwise default to "other" and show the name in the specify field.
+        bankName:
+          d.docBankName &&
+          ["equity", "kcb", "cooperative", "absa", "standard-chartered", "diamond-trust", "ncba", "stanbic", "citibank"].includes(
+            d.docBankName,
+          )
+            ? d.docBankName
+            : "other",
+        specifyBankName:
+          d.docBankName &&
+          ![
+            "equity",
+            "kcb",
+            "cooperative",
+            "absa",
+            "standard-chartered",
+            "diamond-trust",
+            "ncba",
+            "stanbic",
+            "citibank",
+          ].includes(d.docBankName)
+            ? d.docBankName
+            : "",
         statementFile: d.docUrl,
         password: d.docPassword || "",
       }));
@@ -373,7 +469,7 @@ export default function CompanyDocumentsPage() {
         onSortChange={setSort}
         filterStatus={filterStatus}
         onFilterChange={setFilterStatus}
-        onUpload={() => {}} // uploads are triggered per-row
+        onUpload={() => setGlobalUploadModalOpen(true)}
       />
 
       <AttachmentsTable
@@ -425,6 +521,47 @@ export default function CompanyDocumentsPage() {
         onOpenChange={setFinancialStatementModalOpen}
         onSubmit={handleFinancialStatementSubmit}
         initialEntries={financialStatementInitialEntries}
+        isLoading={saveFinancialDocumentsMutation.isPending}
+      />
+
+      {/* Global upload from header - for generic "other" documents */}
+      <DocumentUploadModal
+        open={globalUploadModalOpen}
+        onOpenChange={setGlobalUploadModalOpen}
+        onSubmit={async (fileUrl, documentName) => {
+          if (!documentName) {
+            toast.error("Document name is required");
+            return;
+          }
+
+          try {
+            await saveFinancialDocumentsMutation.mutateAsync({
+              userId: entrepreneurId,
+              data: {
+                documents: [
+                  {
+                    docType: "other",
+                    docUrl: fileUrl,
+                    isPasswordProtected: false,
+                    docName: documentName,
+                  },
+                ],
+              },
+            });
+
+            toast.success("Document uploaded successfully.");
+            setGlobalUploadModalOpen(false);
+          } catch (error: any) {
+            const errorMessage =
+              error?.response?.data?.error ||
+              error?.message ||
+              "Failed to upload document.";
+            toast.error(errorMessage);
+          }
+        }}
+        requireDocumentName
+        acceptedFormats={["PNG", "JPG", "JPEG", "PDF"]}
+        maxSizeMB={8}
         isLoading={saveFinancialDocumentsMutation.isPending}
       />
     </div>

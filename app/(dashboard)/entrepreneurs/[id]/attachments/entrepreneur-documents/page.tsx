@@ -154,7 +154,7 @@ export default function EntrepreneurDocumentsPage() {
         onSortChange={setSort}
         filterStatus={filterStatus}
         onFilterChange={setFilterStatus}
-        onUpload={() => {}} // Not used for personal docs; uploads are per-row
+        // No global upload button for personal docs; uploads are per-row only
       />
 
       <AttachmentsTable
