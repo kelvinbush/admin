@@ -149,6 +149,39 @@ export function Step2TermsPricing({
   }, [formState.step2Data, form]); // Watch formState changes
 
   const onSubmit = (values: Step2TermsPricingValues) => {
+    // Basic required-field validation for Step 2
+    const errors: Partial<Record<keyof Step2TermsPricingValues, string>> = {};
+
+    if (!values.repaymentFrequency) {
+      errors.repaymentFrequency = "Repayment cycle is required";
+    }
+    if (!values.maxGracePeriod || Number(values.maxGracePeriod) < 0) {
+      errors.maxGracePeriod = "Maximum grace period is required";
+    }
+    if (!values.interestRate || Number(values.interestRate) <= 0) {
+      errors.interestRate = "Interest rate must be greater than zero";
+    }
+    if (!values.amortizationMethod) {
+      errors.amortizationMethod = "Interest calculation method is required";
+    }
+    if (!values.interestCollectionMethod) {
+      errors.interestCollectionMethod = "Interest collection method is required";
+    }
+    if (!values.interestRecognitionCriteria) {
+      errors.interestRecognitionCriteria =
+        "Interest recognition criteria is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      // Set RHF errors and do not continue
+      (Object.entries(errors) as [keyof Step2TermsPricingValues, string][]).forEach(
+        ([key, message]) => {
+          form.setError(key, { type: "manual", message });
+        },
+      );
+      return;
+    }
+
     // Save Step 2 data to context
     updateStep2Data(values);
     // Continue to next step

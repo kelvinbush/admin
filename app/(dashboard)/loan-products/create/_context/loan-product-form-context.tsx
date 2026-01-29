@@ -80,7 +80,7 @@ export function LoanProductFormProvider({
           maxTerm: initialData.maxTerm,
           termUnit: initialData.termUnit as any,
           loanProvider: initialData.organizationId, // Transform organizationId → loanProvider
-          loanVisibility: initialData.userGroupIds?.[0] || "", // Transform userGroupIds array → loanVisibility (single value)
+          loanVisibility: initialData.userGroupIds || [], // Transform userGroupIds array → loanVisibility (multi-select)
           availabilityStartDate: initialData.availabilityStartDate
             ? parseISO(initialData.availabilityStartDate)
             : undefined,
@@ -181,7 +181,12 @@ export function LoanProductFormProvider({
         ? format(step1.availabilityEndDate, "yyyy-MM-dd")
         : undefined,
       organizationId: step1.loanProvider, // Transform loanProvider → organizationId
-      userGroupIds: step1.loanVisibility ? [step1.loanVisibility] : [], // Transform loanVisibility → userGroupIds array
+      userGroupIds: Array.isArray(step1.loanVisibility)
+        ? step1.loanVisibility
+        : step1.loanVisibility
+          ? [step1.loanVisibility]
+          : [], // Transform loanVisibility → userGroupIds array
+      isRevolvingCreditLine: (step1 as any).isRevolvingCreditLine,
 
       // Step 2 fields
       repaymentFrequency: step2?.repaymentFrequency,

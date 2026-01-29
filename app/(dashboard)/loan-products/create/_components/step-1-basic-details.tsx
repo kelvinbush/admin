@@ -30,6 +30,9 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import CreateUserGroupModal from "@/app/(dashboard)/usergroups/_components/create-user-group-modal";
+import { CreateOrganizationModal } from "@/app/(dashboard)/organizations/_components/create-organization-modal";
+import { MultiSelectDropdown, type MultiSelectOption } from "@/components/ui/multi-select-dropdown";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLoanProductForm } from "../_context/loan-product-form-context";
 import { useOrganizations } from "@/lib/api/hooks/organizations";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
@@ -44,14 +47,15 @@ export function Step1BasicDetails({
   onBack,
 }: Step1BasicDetailsProps) {
   const [createUserGroupOpen, setCreateUserGroupOpen] = useState(false);
+  const [createOrganizationOpen, setCreateOrganizationOpen] = useState(false);
   const { formState, updateStep1Data, isEditMode } = useLoanProductForm();
 
   // Fetch organizations and user groups
-  const { data: organizationsData } = useOrganizations(undefined, {
+  const { data: organizationsData, refetch: refetchOrganizations } = useOrganizations(undefined, {
     page: 1,
     limit: 100,
   });
-  const { data: userGroupsData } = useUserGroups(undefined, {
+  const { data: userGroupsData, refetch: refetchUserGroups } = useUserGroups(undefined, {
     page: 1,
     limit: 100,
   });
@@ -66,7 +70,7 @@ export function Step1BasicDetails({
   }, [organizationsData]);
 
   // Transform user groups to options
-  const userGroupOptions = useMemo(() => {
+  const userGroupOptions: MultiSelectOption[] = useMemo(() => {
     if (!userGroupsData?.data) return [];
     return userGroupsData.data.map((group: any) => ({
       label: group.name,
@@ -90,7 +94,7 @@ export function Step1BasicDetails({
       maxTerm: 0,
       termUnit: "days",
       loanProvider: "",
-      loanVisibility: "",
+      loanVisibility: [],
       availabilityStartDate: undefined,
       availabilityEndDate: undefined,
       // Step 2 fields (optional for Step 1 validation)
@@ -99,6 +103,7 @@ export function Step1BasicDetails({
       amortizationMethod: "flat" as const,
       interestCollectionMethod: "",
       interestRecognitionCriteria: "",
+      isRevolvingCreditLine: undefined,
     },
     mode: "onChange",
   });
@@ -185,20 +190,43 @@ export function Step1BasicDetails({
               )}
             />
 
-            <SearchableSelect
-              name="loanProvider"
-              label="Loan provider/organization"
-              notFound="No providers found"
-              options={organizationOptions}
-              placeholder="Select loan provider"
+            <FormField
               control={form.control}
-              required
+              name="loanProvider"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between -mb-3.5">
+                    <FormLabel required className="text-sm text-[#444C53]">
+                      Loan provider/organization
+                    </FormLabel>
+                    <button
+                      type="button"
+                      onClick={() => setCreateOrganizationOpen(true)}
+                      className="text-xs font-medium text-primary-green hover:underline"
+                    >
+                      + New loan provider
+                    </button>
+                  </div>
+                  <FormControl>
+                    <SearchableSelect
+                      name="loanProvider"
+                      label=""
+                      notFound="No providers found"
+                      options={organizationOptions}
+                      placeholder="Select loan provider"
+                      control={form.control}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
               control={form.control}
               name="loanVisibility"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between -mb-3.5">
                     <FormLabel required className="text-sm text-[#444C53]">
@@ -213,13 +241,12 @@ export function Step1BasicDetails({
                     </button>
                   </div>
                   <FormControl>
-                    <SearchableSelect
-                      name="loanVisibility"
-                      label=""
-                      notFound="No user groups found"
+                    <MultiSelectDropdown
                       options={userGroupOptions}
-                      placeholder="Select user group"
-                      control={form.control}
+                      value={(field.value as string[]) || []}
+                      onValueChange={(val) => field.onChange(val)}
+                      placeholder="Select user groups"
+                      maxDisplay={3}
                     />
                   </FormControl>
                   <FormMessage />
@@ -334,6 +361,58 @@ export function Step1BasicDetails({
               </FormItem>
             )}
           />
+
+          {/* Revolving credit line */}
+          <FormField
+            control={form.control}
+            name="isRevolvingCreditLine"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required className="text-sm text-[#444C53]">
+                  Is this loan product a revolving credit line?
+                </FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    className="flex gap-8 mt-2"
+                    value={
+                      field.value === undefined
+                        ? ""
+                        : field.value
+                          ? "yes"
+                          : "no"
+                    }
+                    onValueChange={(val) => {
+                      if (val === "") {
+                        field.onChange(undefined);
+                      } else {
+                        field.onChange(val === "yes");
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="yes" id="revolving-yes" />
+                      <label
+                        htmlFor="revolving-yes"
+                        className="text-sm text-midnight-blue"
+                      >
+                        Yes
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="no" id="revolving-no" />
+                      <label
+                        htmlFor="revolving-no"
+                        className="text-sm text-midnight-blue"
+                      >
+                        No
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </section>
 
         {/* Loan terms & conditions */}
@@ -357,7 +436,7 @@ export function Step1BasicDetails({
                       <div className="flex">
                         <Input
                           type="number"
-                          min={0}
+                          min={1}
                           className="rounded-r-none border-r-0"
                           placeholder="Enter value"
                           {...field}
@@ -411,7 +490,7 @@ export function Step1BasicDetails({
                       <div className="flex">
                         <Input
                           type="number"
-                          min={0}
+                          min={1}
                           className="rounded-r-none border-r-0"
                           placeholder="Enter value"
                           {...field}
@@ -464,15 +543,18 @@ export function Step1BasicDetails({
                   </FormLabel>
                   <FormControl>
                     <InputWithCurrency
-                      type="number"
-                      min={0}
+                      type="text"
                       placeholder="Enter loan amount"
-                      value={field.value?.toString() ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
+                      value={
+                        typeof field.value === "number" && !isNaN(field.value)
+                          ? field.value.toLocaleString()
+                          : field.value?.toString() ?? ""
                       }
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, "");
+                        const num = raw === "" ? NaN : Number(raw);
+                        field.onChange(isNaN(num) ? "" : num);
+                      }}
                       currencyValue={form.watch("currency")}
                       onCurrencyValueChange={(value) =>
                         form.setValue("currency", value)
@@ -494,15 +576,18 @@ export function Step1BasicDetails({
                   </FormLabel>
                   <FormControl>
                     <InputWithCurrency
-                      type="number"
-                      min={0}
+                      type="text"
                       placeholder="Enter loan amount"
-                      value={field.value?.toString() ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
+                      value={
+                        typeof field.value === "number" && !isNaN(field.value)
+                          ? field.value.toLocaleString()
+                          : field.value?.toString() ?? ""
                       }
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, "");
+                        const num = raw === "" ? NaN : Number(raw);
+                        field.onChange(isNaN(num) ? "" : num);
+                      }}
                       currencyValue={form.watch("currency")}
                       onCurrencyValueChange={(value) =>
                         form.setValue("currency", value)
@@ -540,9 +625,16 @@ export function Step1BasicDetails({
         open={createUserGroupOpen}
         onOpenChange={setCreateUserGroupOpen}
         onCreated={() => {
-          // TODO: Refresh user groups list and optionally select the new group
-          // For now, just close the modal
           setCreateUserGroupOpen(false);
+          refetchUserGroups();
+        }}
+      />
+      <CreateOrganizationModal
+        open={createOrganizationOpen}
+        onOpenChange={setCreateOrganizationOpen}
+        onCreated={() => {
+          setCreateOrganizationOpen(false);
+          refetchOrganizations();
         }}
       />
     </Form>

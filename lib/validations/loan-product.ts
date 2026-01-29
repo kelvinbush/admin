@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 // Enums for validation - matching backend enum values
-export const LoanTermUnitEnum = ['days', 'weeks', 'months', 'quarters', 'years'] as const;
+// Quarters removed from UI per latest designs
+export const LoanTermUnitEnum = ['days', 'weeks', 'months', 'years'] as const;
 export const InterestTypeEnum = ['fixed', 'variable'] as const;
 export const InterestRatePeriodEnum = ['per_day', 'per_month', 'per_quarter', 'per_year'] as const;
 export const AmortizationMethodEnum = ['flat', 'reducing_balance'] as const;
@@ -36,17 +37,17 @@ export const createLoanProductSchema = z.object({
   summary: z.string().optional(),
   description: z.string().optional(),
   currency: z.string().min(1, 'Currency is required').max(10, 'Currency must be less than 10 characters'),
-  minAmount: z.number().min(0, 'Minimum amount must be positive'),
-  maxAmount: z.number().min(0, 'Maximum amount must be positive'),
-  minTerm: z.number().int().min(0, 'Minimum term must be positive'),
-  maxTerm: z.number().int().min(0, 'Maximum term must be positive'),
+  minAmount: z.number().min(1, 'Minimum amount must be greater than zero'),
+  maxAmount: z.number().min(1, 'Maximum amount must be greater than zero'),
+  minTerm: z.number().int().min(1, 'Minimum term must be greater than zero'),
+  maxTerm: z.number().int().min(1, 'Maximum term must be greater than zero'),
   termUnit: z.enum(LoanTermUnitEnum),
   // Loan availability window
   availabilityStartDate: z.date().optional(),
   availabilityEndDate: z.date().optional(),
   // UI-only fields (will be transformed before API submission)
   loanProvider: z.string().optional(),
-  loanVisibility: z.string().optional(),
+  loanVisibility: z.array(z.string()).optional(),
   // Step 2: Loan Repayment Terms & Interest Details
   // Note: Step 2 uses separate form, these fields are included here for completeness
   // but Step 2 form values will be merged when submitting
@@ -58,6 +59,8 @@ export const createLoanProductSchema = z.object({
   amortizationMethod: z.enum(AmortizationMethodEnum),
   interestCollectionMethod: z.string().optional(),
   interestRecognitionCriteria: z.string().optional(),
+  // Additional options
+  isRevolvingCreditLine: z.boolean().optional(),
   // Step 3: Loan Fees (optional)
   fees: z.array(loanFeeSchema).optional(),
 }).refine((data) => {
@@ -74,6 +77,16 @@ export const createLoanProductSchema = z.object({
   return maxTerm >= minTerm;
 }, {
   message: 'Maximum term must be greater than or equal to minimum term',
+  path: ['maxTerm'],
+}).refine((data) => {
+  // When using months as the unit, maxTerm must not exceed 12
+  if (data.termUnit === 'months') {
+    const maxTerm = typeof data.maxTerm === 'number' ? data.maxTerm : 0;
+    return maxTerm <= 12;
+  }
+  return true;
+}, {
+  message: 'Maximum loan duration in months cannot exceed 12',
   path: ['maxTerm'],
 }).refine((data) => {
   // If both dates are provided, end date must be >= start date
