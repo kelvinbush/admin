@@ -139,7 +139,11 @@ export default function UserGroupDetailPage() {
 
   const totalBusinesses = (group as any)?.businessCount ?? 0;
   const totalResults = businessesData?.pagination?.total ?? 0;
-  const totalPages = Math.max(1, businessesData?.pagination?.totalPages ?? Math.ceil(totalResults / limit) || 1);
+  const totalPages = Math.max(
+    1,
+    (businessesData?.pagination?.totalPages ??
+      Math.ceil(totalResults / limit)) || 1,
+  );
   const startIndex = totalResults === 0 ? 0 : (page - 1) * limit + 1;
   const endIndex = Math.min(totalResults, page * limit);
 
@@ -147,7 +151,7 @@ export default function UserGroupDetailPage() {
     sectorFilter !== "all" ||
     statusFilter !== "all" ||
     progressFilter !== "all" ||
-    (debouncedSearch && debouncedSearch.trim().length > 0);
+    !!(debouncedSearch && debouncedSearch.trim().length > 0);
 
   const handleClearFilters = () => {
     setSectorFilter("all");

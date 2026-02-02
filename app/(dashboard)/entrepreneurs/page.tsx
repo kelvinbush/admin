@@ -1,5 +1,4 @@
 "use client";
-import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -10,7 +9,10 @@ import {
   EntrepreneursFilters,
   type EntrepreneurFiltersState,
 } from "./_components/entrepreneurs-filters";
-import { EntrepreneursTabs, type EntrepreneurTab } from "./_components/entrepreneurs-tabs";
+import {
+  EntrepreneursTabs,
+  type EntrepreneurTab,
+} from "./_components/entrepreneurs-tabs";
 import { EntrepreneursTable } from "./_components/entrepreneurs-table";
 import { useEntrepreneurs, useEntrepreneursStats } from "@/lib/api/hooks/sme";
 import { useUserGroups } from "@/lib/api/hooks/useUserGroups";
@@ -57,19 +59,16 @@ export default function EntrepreneursPage() {
     limit: 1000,
   });
 
-  const userGroupFilterOptions = useMemo(
-    () => {
-      const groups: UserGroup[] = userGroupsData?.data || [];
-      return [
-        { label: "All user groups", value: "all" as const },
-        ...groups.map((group) => ({
-          label: (group as any).name || group.id,
-          value: group.id,
-        })),
-      ];
-    },
-    [userGroupsData],
-  );
+  const userGroupFilterOptions = useMemo(() => {
+    const groups: UserGroup[] = userGroupsData?.data || [];
+    return [
+      { label: "All user groups", value: "all" as const },
+      ...groups.map((group) => ({
+        label: (group as any).name || group.id,
+        value: group.id,
+      })),
+    ];
+  }, [userGroupsData]);
 
   const hasActiveFilters = useMemo(
     () =>
@@ -83,58 +82,50 @@ export default function EntrepreneursPage() {
   );
 
   // Dynamic sector options based on data
-  const sectorFilterOptions = useMemo(
-    () => {
-      const sectorSet = new Set<string>();
-      items.forEach((item) => {
-        item.business?.sectors?.forEach((sector) => {
-          if (sector) {
-            sectorSet.add(sector);
-          }
-        });
+  const sectorFilterOptions = useMemo(() => {
+    const sectorSet = new Set<string>();
+    items.forEach((item) => {
+      item.business?.sectors?.forEach((sector) => {
+        if (sector) {
+          sectorSet.add(sector);
+        }
       });
+    });
 
-      const sectors = Array.from(sectorSet).sort((a, b) =>
-        a.localeCompare(b),
-      );
+    const sectors = Array.from(sectorSet).sort((a, b) => a.localeCompare(b));
 
-      return [
-        { label: "All sectors", value: "all" as const },
-        ...sectors.map((sector) => ({
-          label: sector,
-          value: sector,
-        })),
-      ];
-    },
-    [items],
-  );
+    return [
+      { label: "All sectors", value: "all" as const },
+      ...sectors.map((sector) => ({
+        label: sector,
+        value: sector,
+      })),
+    ];
+  }, [items]);
 
   // Dynamic status options based on data (complete / incomplete / pending)
-  const statusFilterOptions = useMemo(
-    () => {
-      const hasComplete = items.some((item) => item.hasCompleteProfile);
-      const hasIncomplete = items.some((item) => !item.hasCompleteProfile);
-      const hasPending = items.some((item) => item.hasPendingActivation);
+  const statusFilterOptions = useMemo(() => {
+    const hasComplete = items.some((item) => item.hasCompleteProfile);
+    const hasIncomplete = items.some((item) => !item.hasCompleteProfile);
+    const hasPending = items.some((item) => item.hasPendingActivation);
 
-      const options: Array<{
-        label: string;
-        value: EntrepreneurFiltersState["status"];
-      }> = [{ label: "All status", value: "all" }];
+    const options: Array<{
+      label: string;
+      value: EntrepreneurFiltersState["status"];
+    }> = [{ label: "All status", value: "all" }];
 
-      if (hasComplete) {
-        options.push({ label: "Complete", value: "complete" });
-      }
-      if (hasIncomplete) {
-        options.push({ label: "Incomplete", value: "incomplete" });
-      }
-      if (hasPending) {
-        options.push({ label: "Pending", value: "pending" });
-      }
+    if (hasComplete) {
+      options.push({ label: "Complete", value: "complete" });
+    }
+    if (hasIncomplete) {
+      options.push({ label: "Incomplete", value: "incomplete" });
+    }
+    if (hasPending) {
+      options.push({ label: "Pending", value: "pending" });
+    }
 
-      return options;
-    },
-    [items],
-  );
+    return options;
+  }, [items]);
 
   const filteredAndSortedItems = useMemo(() => {
     const term = searchValue.trim().toLowerCase();
@@ -224,14 +215,16 @@ export default function EntrepreneursPage() {
       }
 
       // Sort by business name (fallback to user name)
-      const nameA =
-        (a.business?.name ||
-          `${a.firstName ?? ""} ${a.lastName ?? ""}` ||
-          "").toLowerCase();
-      const nameB =
-        (b.business?.name ||
-          `${b.firstName ?? ""} ${b.lastName ?? ""}` ||
-          "").toLowerCase();
+      const nameA = (
+        a.business?.name ||
+        `${a.firstName ?? ""} ${a.lastName ?? ""}` ||
+        ""
+      ).toLowerCase();
+      const nameB = (
+        b.business?.name ||
+        `${b.firstName ?? ""} ${b.lastName ?? ""}` ||
+        ""
+      ).toLowerCase();
 
       if (nameA === nameB) return 0;
       const dir = sort.sortOrder === "asc" ? 1 : -1;
@@ -413,10 +406,7 @@ export default function EntrepreneursPage() {
           onClearFilters={handleClearFilters}
         />
 
-        <EntrepreneursTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        <EntrepreneursTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1 min-h-[320px]">
           <EntrepreneursTable

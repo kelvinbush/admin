@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.0",
-    "@edgestore/react": "^0.3.3",
-    "@edgestore/server": "^0.3.3",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.14",

@@ -48,9 +48,7 @@ const defaultUserGroupOptions: Array<{
 const defaultSectorOptions: Array<{
   label: string;
   value: EntrepreneurFiltersState["sector"];
-}> = [
-  { label: "All sectors", value: "all" },
-];
+}> = [{ label: "All sectors", value: "all" }];
 
 const defaultStatusOptions: Array<{
   label: string;
@@ -159,7 +157,6 @@ type FilterSelectProps<T extends string | undefined> = {
 };
 
 function FilterSelect<T extends string | undefined>({
-  label,
   placeholder,
   value,
   options,
@@ -184,4 +181,3 @@ function FilterSelect<T extends string | undefined>({
     </Select>
   );
 }
-

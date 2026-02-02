@@ -31,7 +31,10 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import CreateUserGroupModal from "@/app/(dashboard)/usergroups/_components/create-user-group-modal";
 import { CreateOrganizationModal } from "@/app/(dashboard)/organizations/_components/create-organization-modal";
-import { MultiSelectDropdown, type MultiSelectOption } from "@/components/ui/multi-select-dropdown";
+import {
+  MultiSelectDropdown,
+  type MultiSelectOption,
+} from "@/components/ui/multi-select-dropdown";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLoanProductForm } from "../_context/loan-product-form-context";
 import { useOrganizations } from "@/lib/api/hooks/organizations";
@@ -51,14 +54,18 @@ export function Step1BasicDetails({
   const { formState, updateStep1Data, isEditMode } = useLoanProductForm();
 
   // Fetch organizations and user groups
-  const { data: organizationsData, refetch: refetchOrganizations } = useOrganizations(undefined, {
-    page: 1,
-    limit: 100,
-  });
-  const { data: userGroupsData, refetch: refetchUserGroups } = useUserGroups(undefined, {
-    page: 1,
-    limit: 100,
-  });
+  const { data: organizationsData, refetch: refetchOrganizations } =
+    useOrganizations(undefined, {
+      page: 1,
+      limit: 100,
+    });
+  const { data: userGroupsData, refetch: refetchUserGroups } = useUserGroups(
+    undefined,
+    {
+      page: 1,
+      limit: 100,
+    },
+  );
 
   // Transform organizations to options
   const organizationOptions = useMemo(() => {
@@ -193,7 +200,7 @@ export function Step1BasicDetails({
             <FormField
               control={form.control}
               name="loanProvider"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <div className="flex items-center justify-between -mb-3.5">
                     <FormLabel required className="text-sm text-[#444C53]">
@@ -548,7 +555,7 @@ export function Step1BasicDetails({
                       value={
                         typeof field.value === "number" && !isNaN(field.value)
                           ? field.value.toLocaleString()
-                          : field.value?.toString() ?? ""
+                          : (field.value?.toString() ?? "")
                       }
                       onChange={(e) => {
                         const raw = e.target.value.replace(/,/g, "");
@@ -581,7 +588,7 @@ export function Step1BasicDetails({
                       value={
                         typeof field.value === "number" && !isNaN(field.value)
                           ? field.value.toLocaleString()
-                          : field.value?.toString() ?? ""
+                          : (field.value?.toString() ?? "")
                       }
                       onChange={(e) => {
                         const raw = e.target.value.replace(/,/g, "");

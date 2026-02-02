@@ -45,7 +45,9 @@ export function DuplicateLoanProductModal({
   onSubmit,
   isLoading = false,
 }: DuplicateLoanProductModalProps) {
-  const form = useForm<DuplicateLoanProductFormValues>({
+  // Use untyped form instance to avoid strict generic mismatch between
+  // react-hook-form and Zod resolver (similar to other forms in this project).
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultName ?? "",
@@ -62,8 +64,8 @@ export function DuplicateLoanProductModal({
     }
   }, [open, defaultName, form]);
 
-  const handleSubmit = (values: DuplicateLoanProductFormValues) => {
-    onSubmit(values);
+  const handleSubmit = (values: any) => {
+    onSubmit(values as DuplicateLoanProductFormValues);
   };
 
   return (

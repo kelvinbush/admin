@@ -87,6 +87,7 @@ export function MultiDocumentUpload({
 
       onChange([...value, ...items]);
     } catch (err) {
+      console.log(err);
       setUploadError("Upload failed.");
     } finally {
       setIsUploading(false);
@@ -141,7 +142,8 @@ export function MultiDocumentUpload({
           accept={acceptedFormats.map((f) => `.${f.toLowerCase()}`).join(",")}
         />
         <span className="text-xs text-primaryGrey-400">
-          Up to {maxFiles} files, {maxSizeMB}MB each ({acceptedFormats.join(", ")})
+          Up to {maxFiles} files, {maxSizeMB}MB each (
+          {acceptedFormats.join(", ")})
         </span>
       </div>
 
@@ -176,13 +178,10 @@ export function MultiDocumentUpload({
         </div>
       )}
 
-      {uploadError && (
-        <p className="text-sm text-red-500">{uploadError}</p>
-      )}
+      {uploadError && <p className="text-sm text-red-500">{uploadError}</p>}
       {!uploadError && errorMessage && (
         <p className="text-sm text-red-500">{errorMessage}</p>
       )}
     </div>
   );
 }
-
