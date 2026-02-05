@@ -58,7 +58,7 @@ export interface LoanProduct {
   termUnit: "months" | "years";
   interestRate: number;
   interestType: "fixed" | "variable";
-  ratePeriod: "per_year" | "per_month";
+  ratePeriod: "per_day" | "per_month" | "per_quarter" | "per_year";
   amortizationMethod: "flat" | "reducing_balance";
   repaymentFrequency: "monthly" | "quarterly" | "semi_annual" | "annual";
   gracePeriodDays: number;
@@ -105,7 +105,7 @@ export interface LoanProductFilters {
   maxTerm?: number;
   termUnit?: "months" | "years";
   interestType?: "fixed" | "variable";
-  ratePeriod?: "per_year" | "per_month";
+  ratePeriod?: "per_day" | "per_month" | "per_quarter" | "per_year";
   amortizationMethod?: "flat" | "reducing_balance";
   repaymentFrequency?: "monthly" | "quarterly" | "semi_annual" | "annual";
   isActive?: boolean;

@@ -11,13 +11,14 @@ import { InputWithCurrency } from "@/components/ui/input-with-currency";
 import { X, Building2, Info, ExternalLink } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
-import { 
-  useCreateLoanApplication, 
-  useSearchLoanProducts, 
+import {
+  useCreateLoanApplication,
+  useSearchLoanProducts,
   useSearchBusinesses,
   type LoanProductSearchItem,
-  type BusinessSearchItem 
+  type BusinessSearchItem,
 } from "@/lib/api/hooks/loan-applications";
+import { useLoanProduct } from "@/lib/api/hooks/loan-products";
 
 interface CreateLoanApplicationModalProps {
   open: boolean;
@@ -71,13 +72,16 @@ export function CreateLoanApplicationModal({
   
   // Intended use of funds
   const [intendedUse, setIntendedUse] = useState("");
-  
-  // Interest rate
-  const [interestRate, setInterestRate] = useState("10");
+
+  // Interest rate (loaded from selected loan product details)
+  const [interestRate, setInterestRate] = useState("");
 
   // Get businesses and loan products from API
   const businesses = businessesData?.data || [];
   const loanProducts = loanProductsData?.data || [];
+
+  // Load full loan product details for the selected product (interest rate, periods, etc.)
+  const { data: loanProductDetails } = useLoanProduct(selectedLoanProduct?.id ?? "");
 
   // Get loan product constraints
   const loanProductConstraints = useMemo(() => {
@@ -278,9 +282,18 @@ export function CreateLoanApplicationModal({
     setRepaymentPeriod("3");
     setRepaymentSliderValue(3);
     setIntendedUse("");
-    setInterestRate("10");
+    setInterestRate("");
     setFundingCurrency("EUR");
   };
+
+  // Keep interest rate in sync with the selected loan product details
+  useEffect(() => {
+    if (loanProductDetails?.interestRate !== undefined && loanProductDetails?.interestRate !== null) {
+      setInterestRate(loanProductDetails.interestRate.toString());
+    } else if (!selectedLoanProduct) {
+      setInterestRate("");
+    }
+  }, [loanProductDetails, selectedLoanProduct]);
 
   const handleClose = () => {
     resetForm();
@@ -496,107 +509,155 @@ export function CreateLoanApplicationModal({
                 How much funding do they need? <span className="text-red-500">*</span>
                 {selectedLoanProduct && loanProductConstraints && (
                   <span className="ml-2 text-xs font-normal text-primaryGrey-500">
-                    (Range: {loanProductConstraints.currency} {loanProductConstraints.minAmount.toLocaleString()} - {loanProductConstraints.maxAmount.toLocaleString()})
+                    (Range: {loanProductConstraints.currency}{" "}
+                    {loanProductConstraints.minAmount.toLocaleString()} -{" "}
+                    {loanProductConstraints.maxAmount.toLocaleString()})
                   </span>
                 )}
               </Label>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <InputWithCurrency
-                      type="text"
-                      value={fundingAmount}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFundingAmount(value);
-                      }}
-                      currencyValue={fundingCurrency}
-                      onCurrencyValueChange={setFundingCurrency}
-                      className={cn("h-10", fundingAmountError && "border-red-500")}
-                      disabled={!selectedLoanProduct}
-                    />
-                  </div>
-                  <span className="text-primaryGrey-400">=</span>
-                  <div className="flex-1">
-                    <InputWithCurrency
-                      type="text"
-                      value={convertedAmount}
-                      readOnly
-                      currencyValue={convertedCurrency}
-                      onCurrencyValueChange={setConvertedCurrency}
-                      className="h-10"
-                    />
-                  </div>
-                </div>
-                {fundingAmountError && (
-                  <p className="text-xs text-red-500">{fundingAmountError}</p>
-                )}
+              {!selectedLoanProduct ? (
                 <p className="text-xs text-primaryGrey-500">
-                  Exchange rate: 1 {fundingCurrency} = {exchangeRate.toFixed(2)} {convertedCurrency}
+                  Select a loan product first to configure the funding amount.
                 </p>
-                {selectedLoanProduct && loanProductConstraints && (
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min={loanProductConstraints.minAmount}
-                      max={loanProductConstraints.maxAmount}
-                      step={Math.max(1, (loanProductConstraints.maxAmount - loanProductConstraints.minAmount) / 100)}
-                      value={sliderValue}
-                      onChange={handleFundingSliderChange}
-                      className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
-                      disabled={!selectedLoanProduct}
-                    />
-                    <div className="flex justify-between text-xs text-primaryGrey-500">
-                      <span>{loanProductConstraints.currency} {loanProductConstraints.minAmount.toLocaleString()}</span>
-                      <span>{loanProductConstraints.currency} {loanProductConstraints.maxAmount.toLocaleString()}</span>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <InputWithCurrency
+                        type="text"
+                        value={fundingAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFundingAmount(value);
+                        }}
+                        currencyValue={fundingCurrency}
+                        onCurrencyValueChange={setFundingCurrency}
+                        className={cn("h-10", fundingAmountError && "border-red-500")}
+                      />
+                    </div>
+                    <span className="text-primaryGrey-400">=</span>
+                    <div className="flex-1">
+                      <InputWithCurrency
+                        type="text"
+                        value={convertedAmount}
+                        readOnly
+                        currencyValue={convertedCurrency}
+                        onCurrencyValueChange={setConvertedCurrency}
+                        className="h-10"
+                      />
                     </div>
                   </div>
-                )}
-              </div>
+                  {fundingAmountError && (
+                    <p className="text-xs text-red-500">{fundingAmountError}</p>
+                  )}
+                  <p className="text-xs text-primaryGrey-500">
+                    Exchange rate: 1 {fundingCurrency} = {exchangeRate.toFixed(2)}{" "}
+                    {convertedCurrency}
+                  </p>
+                  {loanProductConstraints && (
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min={loanProductConstraints.minAmount}
+                        max={loanProductConstraints.maxAmount}
+                        step={Math.max(
+                          1,
+                          (loanProductConstraints.maxAmount -
+                            loanProductConstraints.minAmount) / 100,
+                        )}
+                        value={sliderValue}
+                        onChange={handleFundingSliderChange}
+                        className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
+                      />
+                      <div className="flex justify-between text-xs text-primaryGrey-500">
+                        <span>
+                          {loanProductConstraints.currency}{" "}
+                          {loanProductConstraints.minAmount.toLocaleString()}
+                        </span>
+                        <span>
+                          {loanProductConstraints.currency}{" "}
+                          {loanProductConstraints.maxAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Repayment Period */}
             <div className="space-y-2">
               <Label className="text-primaryGrey-400">
-                What is the preferred repayment period? <span className="text-red-500">*</span>
+                What is the preferred repayment period?{" "}
+                <span className="text-red-500">*</span>
                 {selectedLoanProduct && loanProductConstraints && (
                   <span className="ml-2 text-xs font-normal text-primaryGrey-500">
-                    (Range: {loanProductConstraints.minTerm} - {loanProductConstraints.maxTerm} months)
+                    (Range: {loanProductConstraints.minTerm} -{" "}
+                    {loanProductConstraints.maxTerm} months
+                    {loanProductConstraints.maxTerm >= 12 && (
+                      <>
+                        {" "}
+                        (~
+                        {(loanProductConstraints.minTerm / 12).toFixed(1)} -{" "}
+                        {(loanProductConstraints.maxTerm / 12).toFixed(1)} years)
+                      </>
+                    )}
+                    )
                   </span>
                 )}
               </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={repaymentPeriod}
-                  onChange={(e) => setRepaymentPeriod(e.target.value)}
-                  className={cn("h-10 w-24", repaymentPeriodError && "border-red-500")}
-                  disabled={!selectedLoanProduct}
-                  min={loanProductConstraints?.minTerm}
-                  max={loanProductConstraints?.maxTerm}
-                />
-                <span className="text-sm text-primaryGrey-500">months</span>
-              </div>
-              {repaymentPeriodError && (
-                <p className="text-xs text-red-500">{repaymentPeriodError}</p>
-              )}
-              {selectedLoanProduct && loanProductConstraints && (
-                <div className="space-y-2">
-                  <input
-                    type="range"
-                    min={loanProductConstraints.minTerm}
-                    max={loanProductConstraints.maxTerm}
-                    step={1}
-                    value={repaymentSliderValue}
-                    onChange={handleRepaymentSliderChange}
-                    className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
-                    disabled={!selectedLoanProduct}
-                  />
-                  <div className="flex justify-between text-xs text-primaryGrey-500">
-                    <span>{loanProductConstraints.minTerm} months</span>
-                    <span>{loanProductConstraints.maxTerm} months</span>
+              {!selectedLoanProduct ? (
+                <p className="text-xs text-primaryGrey-500">
+                  Select a loan product first to configure the repayment period.
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={repaymentPeriod}
+                      onChange={(e) => setRepaymentPeriod(e.target.value)}
+                      className={cn(
+                        "h-10 w-24",
+                        repaymentPeriodError && "border-red-500",
+                      )}
+                      min={loanProductConstraints?.minTerm}
+                      max={loanProductConstraints?.maxTerm}
+                    />
+                    <span className="text-sm text-primaryGrey-500">months</span>
                   </div>
-                </div>
+                  {repaymentPeriodError && (
+                    <p className="text-xs text-red-500">{repaymentPeriodError}</p>
+                  )}
+                  {repaymentPeriod && (
+                    <p className="text-xs text-primaryGrey-500">
+                      Selected: {repaymentPeriod} months
+                      {Number(repaymentPeriod) >= 12 && (
+                        <>
+                          {" "}
+                          (~{(Number(repaymentPeriod) / 12).toFixed(1)} years)
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {loanProductConstraints && (
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min={loanProductConstraints.minTerm}
+                        max={loanProductConstraints.maxTerm}
+                        step={1}
+                        value={repaymentSliderValue}
+                        onChange={handleRepaymentSliderChange}
+                        className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
+                      />
+                      <div className="flex justify-between text-xs text-primaryGrey-500">
+                        <span>{loanProductConstraints.minTerm} months</span>
+                        <span>{loanProductConstraints.maxTerm} months</span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -623,18 +684,33 @@ export function CreateLoanApplicationModal({
             {/* Interest Rate */}
             <div className="space-y-2">
               <Label className="text-primaryGrey-400">
-                Interest rate (per annum) <span className="text-red-500">*</span>
+                Interest rate{" "}
+                {(() => {
+                  const period = loanProductDetails?.ratePeriod;
+                  if (period === "per_day") return "(per day)";
+                  if (period === "per_month") return "(per month)";
+                  if (period === "per_quarter") return "(per quarter)";
+                  if (period === "per_year") return "(per annum)";
+                  return "";
+                })()}{" "}
+                <span className="text-red-500">*</span>
               </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={interestRate}
-                  onChange={(e) => setInterestRate(e.target.value)}
-                  className="h-10"
-                  readOnly
-                />
-                <span className="text-sm text-primaryGrey-500">%</span>
-              </div>
+              {!selectedLoanProduct ? (
+                <p className="text-xs text-primaryGrey-500">
+                  Select a loan product first to view the applicable interest rate.
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(e.target.value)}
+                    className="h-10"
+                    readOnly
+                  />
+                  <span className="text-sm text-primaryGrey-500">%</span>
+                </div>
+              )}
             </div>
 
             {/* Info Banner */}

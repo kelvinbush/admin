@@ -110,7 +110,6 @@ export function Step1BasicDetails({
       amortizationMethod: "flat" as const,
       interestCollectionMethod: "",
       interestRecognitionCriteria: "",
-      isRevolvingCreditLine: undefined,
     },
     mode: "onChange",
   });
