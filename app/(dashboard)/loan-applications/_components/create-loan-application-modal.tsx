@@ -83,33 +83,32 @@ export function CreateLoanApplicationModal({
   // Load full loan product details for the selected product (interest rate, periods, etc.)
   const { data: loanProductDetails } = useLoanProduct(selectedLoanProduct?.id ?? "");
 
-  // Get loan product constraints
+  // Get loan product constraints (keep raw term unit, also derive approximate months for UX)
   const loanProductConstraints = useMemo(() => {
     if (!selectedLoanProduct) return null;
-    
-    // Convert term to months if needed
-    let minTermMonths = selectedLoanProduct.minTerm;
-    let maxTermMonths = selectedLoanProduct.maxTerm;
-    
-    if (selectedLoanProduct.termUnit !== "months") {
-      const conversionFactors: Record<string, number> = {
-        days: 1 / 30,
-        weeks: 1 / 4.33,
-        months: 1,
-        quarters: 3,
-        years: 12,
-      };
-      const factor = conversionFactors[selectedLoanProduct.termUnit] || 1;
-      minTermMonths = Math.ceil(selectedLoanProduct.minTerm * factor);
-      maxTermMonths = Math.floor(selectedLoanProduct.maxTerm * factor);
-    }
-    
+
+    const conversionFactors: Record<string, number> = {
+      days: 1 / 30,
+      weeks: 7 / 30, // ~7 days per week
+      months: 1,
+      quarters: 3,
+      years: 12,
+    };
+
+    const factor = conversionFactors[selectedLoanProduct.termUnit] || 1;
+
+    const minTermMonths = selectedLoanProduct.minTerm * factor;
+    const maxTermMonths = selectedLoanProduct.maxTerm * factor;
+
     return {
       minAmount: selectedLoanProduct.minAmount,
       maxAmount: selectedLoanProduct.maxAmount,
-      minTerm: minTermMonths,
-      maxTerm: maxTermMonths,
+      minTerm: selectedLoanProduct.minTerm,
+      maxTerm: selectedLoanProduct.maxTerm,
+      termUnit: selectedLoanProduct.termUnit,
       currency: selectedLoanProduct.currency,
+      minTermMonths,
+      maxTermMonths,
     };
   }, [selectedLoanProduct]);
 
@@ -221,11 +220,26 @@ export function CreateLoanApplicationModal({
   const repaymentPeriodError = useMemo(() => {
     if (!selectedLoanProduct || !loanProductConstraints) return null;
     const period = parseInt(repaymentPeriod) || 0;
+
+    const unit = loanProductConstraints.termUnit;
+    const unitLabel =
+      unit === "days"
+        ? "days"
+        : unit === "weeks"
+          ? "weeks"
+          : unit === "months"
+            ? "months"
+            : unit === "quarters"
+              ? "quarters"
+              : unit === "years"
+                ? "years"
+                : "periods";
+
     if (period < loanProductConstraints.minTerm) {
-      return `Minimum term is ${loanProductConstraints.minTerm} months`;
+      return `Minimum term is ${loanProductConstraints.minTerm} ${unitLabel}`;
     }
     if (period > loanProductConstraints.maxTerm) {
-      return `Maximum term is ${loanProductConstraints.maxTerm} months`;
+      return `Maximum term is ${loanProductConstraints.maxTerm} ${unitLabel}`;
     }
     return null;
   }, [repaymentPeriod, loanProductConstraints, selectedLoanProduct]);
@@ -592,17 +606,41 @@ export function CreateLoanApplicationModal({
                 <span className="text-red-500">*</span>
                 {selectedLoanProduct && loanProductConstraints && (
                   <span className="ml-2 text-xs font-normal text-primaryGrey-500">
-                    (Range: {loanProductConstraints.minTerm} -{" "}
-                    {loanProductConstraints.maxTerm} months
-                    {loanProductConstraints.maxTerm >= 12 && (
-                      <>
-                        {" "}
-                        (~
-                        {(loanProductConstraints.minTerm / 12).toFixed(1)} -{" "}
-                        {(loanProductConstraints.maxTerm / 12).toFixed(1)} years)
-                      </>
-                    )}
-                    )
+                    {(() => {
+                      const unit = loanProductConstraints.termUnit;
+                      const unitLabel =
+                        unit === "days"
+                          ? "days"
+                          : unit === "weeks"
+                            ? "weeks"
+                            : unit === "months"
+                              ? "months"
+                              : unit === "quarters"
+                                ? "quarters"
+                                : unit === "years"
+                                  ? "years"
+                                  : "periods";
+
+                      const min = loanProductConstraints.minTerm;
+                      const max = loanProductConstraints.maxTerm;
+                      const minMonths = loanProductConstraints.minTermMonths;
+                      const maxMonths = loanProductConstraints.maxTermMonths;
+
+                      return (
+                        <>
+                          (Range: {min} - {max} {unitLabel}
+                          {maxMonths >= 12 && (
+                            <>
+                              {" "}
+                              (~
+                              {(minMonths / 12).toFixed(1)} -{" "}
+                              {(maxMonths / 12).toFixed(1)} years)
+                            </>
+                          )}
+                          )
+                        </>
+                      );
+                    })()}
                   </span>
                 )}
               </Label>
@@ -624,20 +662,61 @@ export function CreateLoanApplicationModal({
                       min={loanProductConstraints?.minTerm}
                       max={loanProductConstraints?.maxTerm}
                     />
-                    <span className="text-sm text-primaryGrey-500">months</span>
+                    <span className="text-sm text-primaryGrey-500">
+                      {(() => {
+                        const unit = loanProductConstraints?.termUnit;
+                        if (unit === "days") return "days";
+                        if (unit === "weeks") return "weeks";
+                        if (unit === "months") return "months";
+                        if (unit === "quarters") return "quarters";
+                        if (unit === "years") return "years";
+                        return "periods";
+                      })()}
+                    </span>
                   </div>
                   {repaymentPeriodError && (
                     <p className="text-xs text-red-500">{repaymentPeriodError}</p>
                   )}
-                  {repaymentPeriod && (
+                  {repaymentPeriod && loanProductConstraints && (
                     <p className="text-xs text-primaryGrey-500">
-                      Selected: {repaymentPeriod} months
-                      {Number(repaymentPeriod) >= 12 && (
-                        <>
-                          {" "}
-                          (~{(Number(repaymentPeriod) / 12).toFixed(1)} years)
-                        </>
-                      )}
+                      {(() => {
+                        const unit = loanProductConstraints.termUnit;
+                        const unitLabel =
+                          unit === "days"
+                            ? "days"
+                            : unit === "weeks"
+                              ? "weeks"
+                              : unit === "months"
+                                ? "months"
+                                : unit === "quarters"
+                                  ? "quarters"
+                                  : unit === "years"
+                                    ? "years"
+                                    : "periods";
+                        const periodNum = Number(repaymentPeriod) || 0;
+
+                        const conversionFactors: Record<string, number> = {
+                          days: 1 / 30,
+                          weeks: 7 / 30,
+                          months: 1,
+                          quarters: 3,
+                          years: 12,
+                        };
+                        const factor = conversionFactors[unit] || 1;
+                        const months = periodNum * factor;
+
+                        return (
+                          <>
+                            Selected: {repaymentPeriod} {unitLabel}
+                            {months >= 12 && (
+                              <>
+                                {" "}
+                                (~{(months / 12).toFixed(1)} years)
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </p>
                   )}
                   {loanProductConstraints && (
@@ -652,8 +731,30 @@ export function CreateLoanApplicationModal({
                         className="w-full h-2 bg-primaryGrey-200 rounded-lg appearance-none cursor-pointer accent-primary-green"
                       />
                       <div className="flex justify-between text-xs text-primaryGrey-500">
-                        <span>{loanProductConstraints.minTerm} months</span>
-                        <span>{loanProductConstraints.maxTerm} months</span>
+                        <span>
+                          {loanProductConstraints.minTerm}{" "}
+                          {(() => {
+                            const unit = loanProductConstraints.termUnit;
+                            if (unit === "days") return "days";
+                            if (unit === "weeks") return "weeks";
+                            if (unit === "months") return "months";
+                            if (unit === "quarters") return "quarters";
+                            if (unit === "years") return "years";
+                            return "periods";
+                          })()}
+                        </span>
+                        <span>
+                          {loanProductConstraints.maxTerm}{" "}
+                          {(() => {
+                            const unit = loanProductConstraints.termUnit;
+                            if (unit === "days") return "days";
+                            if (unit === "weeks") return "weeks";
+                            if (unit === "months") return "months";
+                            if (unit === "quarters") return "quarters";
+                            if (unit === "years") return "years";
+                            return "periods";
+                          })()}
+                        </span>
                       </div>
                     </div>
                   )}
