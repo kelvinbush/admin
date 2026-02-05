@@ -2,7 +2,13 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { Roles } from '@/lib/types/global'
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/accept-invite(.*)', '/forgot-password(.*)', "/api/uploadthing(.*)"])
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/accept-invite(.*)',
+  '/forgot-password(.*)',
+  '/no-access(.*)',
+  '/api/uploadthing(.*)',
+])
 
 const ALLOWED_ROLES: Roles[] = ['admin', 'member', 'super-admin']
 
@@ -16,9 +22,9 @@ export default clerkMiddleware(async (auth, req) => {
   const userRole = sessionClaims?.metadata?.role as Roles | undefined
 
   if (!userRole || !ALLOWED_ROLES.includes(userRole)) {
-    const signInUrl = new URL('/sign-in', req.url)
-    signInUrl.searchParams.set('redirect_url', req.url)
-    return NextResponse.redirect(signInUrl)
+    const noAccessUrl = new URL('/no-access', req.url)
+    noAccessUrl.searchParams.set('redirect_url', req.url)
+    return NextResponse.redirect(noAccessUrl)
   }
 
   return NextResponse.next()
