@@ -79,16 +79,6 @@ export const createLoanProductSchema = z.object({
   message: 'Maximum term must be greater than or equal to minimum term',
   path: ['maxTerm'],
 }).refine((data) => {
-  // When using months as the unit, maxTerm must not exceed 12
-  if (data.termUnit === 'months') {
-    const maxTerm = typeof data.maxTerm === 'number' ? data.maxTerm : 0;
-    return maxTerm <= 12;
-  }
-  return true;
-}, {
-  message: 'Maximum loan duration in months cannot exceed 12',
-  path: ['maxTerm'],
-}).refine((data) => {
   // If both dates are provided, end date must be >= start date
   if (data.availabilityStartDate && data.availabilityEndDate) {
     return data.availabilityEndDate >= data.availabilityStartDate;

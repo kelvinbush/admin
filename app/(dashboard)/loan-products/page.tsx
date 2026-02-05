@@ -89,9 +89,11 @@ export default function LoanProductsPage() {
       const organizationName =
         organizationsMap.get(product.organizationId) || product.organizationId;
       const userGroupNames =
-        product.userGroupIds
-          .map((id) => userGroupsMap.get(id) || id)
-          .join(", ") || "All Users";
+        product.userGroupIds && product.userGroupIds.length > 0
+          ? product.userGroupIds
+              .map((id) => userGroupsMap.get(id) || id)
+              .join(", ")
+          : "All Users";
 
       // Map API status to table status
       // API has: "draft" | "active" | "archived" and isActive boolean
@@ -127,9 +129,11 @@ export default function LoanProductsPage() {
 
   const selectedUserGroupNames = useMemo(() => {
     if (!selectedProduct) return [];
-    return selectedProduct.userGroupIds
-      .map((id) => userGroupsMap.get(id) || id)
-      .filter(Boolean);
+    return (
+      selectedProduct.userGroupIds
+        ?.map((id) => userGroupsMap.get(id) || id)
+        .filter(Boolean) ?? []
+    );
   }, [selectedProduct, userGroupsMap]);
 
   const total = loanProductsData?.pagination?.total || 0;
