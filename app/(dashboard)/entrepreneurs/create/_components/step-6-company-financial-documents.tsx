@@ -42,6 +42,21 @@ const financialStatementSchema = z.object({
   statementFile: z.string().min(1, "Financial statement file is required"),
 });
 
+// Allow all common document types (PDF, Word, Excel, PowerPoint, images, etc.)
+const COMPANY_FINANCIAL_DOC_ACCEPTED_FORMATS = [
+  "PDF",
+  "PNG",
+  "JPG",
+  "JPEG",
+  "DOC",
+  "DOCX",
+  "XLS",
+  "XLSX",
+  "CSV",
+  "PPT",
+  "PPTX",
+] as const;
+
 const companyFinancialDocumentsSchema = z
   .object({
     hasBankStatements: z.enum(["yes", "no"]),
@@ -512,7 +527,7 @@ export function Step6CompanyFinancialDocuments() {
                         required
                         error={!!form.formState.errors.businessPlan}
                         errorMessage={form.formState.errors.businessPlan?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_FINANCIAL_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -533,7 +548,7 @@ export function Step6CompanyFinancialDocuments() {
                         value={field.value || []}
                         onChange={field.onChange}
                         label="Upload recent management accounts (e.g., income statement, balance sheet, cash flow etc.) (optional)"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_FINANCIAL_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         maxFiles={5}
                         error={!!form.formState.errors.managementAccounts}

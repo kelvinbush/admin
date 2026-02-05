@@ -24,6 +24,21 @@ const companyRegistrationDocumentsSchema = z.object({
   companyTaxClearanceCertificate: z.string().min(1, "Company tax clearance certificate is required"),
 });
 
+// Allow all common document types (PDF, Word, Excel, PowerPoint, images, etc.)
+const COMPANY_DOC_ACCEPTED_FORMATS = [
+  "PDF",
+  "PNG",
+  "JPG",
+  "JPEG",
+  "DOC",
+  "DOCX",
+  "XLS",
+  "XLSX",
+  "CSV",
+  "PPT",
+  "PPTX",
+] as const;
+
 type CompanyRegistrationDocumentsFormData = z.infer<typeof companyRegistrationDocumentsSchema>;
 
 export function Step5CompanyRegistrationDocuments() {
@@ -245,7 +260,7 @@ export function Step5CompanyRegistrationDocuments() {
                         required
                         error={!!form.formState.errors.certificateOfRegistration}
                         errorMessage={form.formState.errors.certificateOfRegistration?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -265,7 +280,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Upload copy of CR1"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -286,7 +301,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Upload copy of CR2"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -307,7 +322,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Upload copy of CR8"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -328,7 +343,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Upload the most recent CR12"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -349,7 +364,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Memorandum of association"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -370,7 +385,7 @@ export function Step5CompanyRegistrationDocuments() {
                         value={field.value}
                         onChange={field.onChange}
                         label="Articles of association"
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -403,7 +418,7 @@ export function Step5CompanyRegistrationDocuments() {
                         required
                         error={!!form.formState.errors.companyTaxRegistrationCertificate}
                         errorMessage={form.formState.errors.companyTaxRegistrationCertificate?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -426,7 +441,7 @@ export function Step5CompanyRegistrationDocuments() {
                         required
                         error={!!form.formState.errors.companyTaxClearanceCertificate}
                         errorMessage={form.formState.errors.companyTaxClearanceCertificate?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...COMPANY_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />

@@ -18,6 +18,21 @@ const otherSupportingDocumentsSchema = z.object({
   companyPitchDeck: z.string().min(1, "Company pitch deck / company profile is required"),
 });
 
+// Allow all common document types (PDF, Word, Excel, PowerPoint, images, etc.)
+const OTHER_SUPPORTING_DOC_ACCEPTED_FORMATS = [
+  "PDF",
+  "PNG",
+  "JPG",
+  "JPEG",
+  "DOC",
+  "DOCX",
+  "XLS",
+  "XLSX",
+  "CSV",
+  "PPT",
+  "PPTX",
+] as const;
+
 type OtherSupportingDocumentsFormData = z.infer<typeof otherSupportingDocumentsSchema>;
 
 export function Step7OtherSupportingDocuments() {
@@ -184,7 +199,7 @@ export function Step7OtherSupportingDocuments() {
                         required
                         error={!!form.formState.errors.businessPermit}
                         errorMessage={form.formState.errors.businessPermit?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...OTHER_SUPPORTING_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
@@ -217,7 +232,7 @@ export function Step7OtherSupportingDocuments() {
                         required
                         error={!!form.formState.errors.companyPitchDeck}
                         errorMessage={form.formState.errors.companyPitchDeck?.message}
-                        acceptedFormats={["PDF", "PNG", "JPG", "JPEG"]}
+                        acceptedFormats={[...OTHER_SUPPORTING_DOC_ACCEPTED_FORMATS]}
                         maxSizeMB={8}
                         showUploadedState={!!field.value}
                       />
