@@ -201,7 +201,7 @@ export function Step1BasicDetails({
               name="loanProvider"
               render={() => (
                 <FormItem>
-                  <div className="flex items-center justify-between -mb-3.5">
+                  <div className="flex items-center justify-between -mb-2">
                     <FormLabel required className="text-sm text-[#444C53]">
                       Loan provider/organization
                     </FormLabel>
@@ -221,7 +221,6 @@ export function Step1BasicDetails({
                       options={organizationOptions}
                       placeholder="Select loan provider"
                       control={form.control}
-                      required
                     />
                   </FormControl>
                   <FormMessage />
@@ -234,7 +233,7 @@ export function Step1BasicDetails({
               name="loanVisibility"
               render={({ field }) => (
                 <FormItem>
-                  <div className="flex items-center justify-between -mb-3.5">
+                  <div className="flex items-center justify-between">
                     <FormLabel required className="text-sm text-[#444C53]">
                       Loan visibility
                     </FormLabel>
