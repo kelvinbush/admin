@@ -94,12 +94,18 @@ function formatDate(dateString: string): string {
   });
 }
 
-function getInitials(name: string): string {
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+function getInitials(name?: string, email?: string): string {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
-  return name.substring(0, 2).toUpperCase();
+  if (email && email.trim()) {
+    return email.substring(0, 2).toUpperCase();
+  }
+  return "U";
 }
 
 export function LoanApplicationsTable({
@@ -173,6 +179,10 @@ export function LoanApplicationsTable({
           {!isLoading &&
             data.map((application) => {
               const statusBadge = getStatusBadge(application.status);
+              const applicantName = application.applicant?.name;
+              const applicantEmail = application.applicant?.email;
+              const applicantPhone = application.applicant?.phone;
+              const applicantAvatar = application.applicant?.avatar;
 
               return (
                 <TableRow
@@ -201,22 +211,22 @@ export function LoanApplicationsTable({
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarImage
-                          src={application.applicant.avatar}
-                          alt={application.applicant.name}
+                          src={applicantAvatar}
+                          alt={applicantName || applicantEmail || "Loan applicant"}
                         />
                         <AvatarFallback className="bg-primaryGrey-100 text-midnight-blue">
-                          {getInitials(application.applicant.name)}
+                          {getInitials(applicantName, applicantEmail)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <div className="text-sm font-medium text-midnight-blue">
-                          {application.applicant.name}
+                          {applicantName || "Unknown applicant"}
                         </div>
                         <div className="text-xs text-primaryGrey-400">
-                          {application.applicant.email}
+                          {applicantEmail || "No email"}
                         </div>
                         <div className="text-xs text-primaryGrey-400">
-                          {application.applicant.phone}
+                          {applicantPhone || "No phone"}
                         </div>
                       </div>
                     </div>
