@@ -59,7 +59,7 @@ export const createLoanProductSchema = z.object({
   amortizationMethod: z.enum(AmortizationMethodEnum),
   interestCollectionMethod: z.string().optional(),
   interestRecognitionCriteria: z.string().optional(),
-  // Additional options
+  // Additional options (UI-only; stripped before API submission)
   isRevolvingCreditLine: z.boolean().optional(),
   // Step 3: Loan Fees (optional)
   fees: z.array(loanFeeSchema).optional(),

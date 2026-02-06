@@ -367,10 +367,12 @@ export function Step1BasicDetails({
             )}
           />
 
-          {/* Revolving credit line */}
+          {/* Revolving credit line (UI-only, not sent to backend) */}
           <FormField
-            control={form.control}
-            name="isRevolvingCreditLine"
+            // Cast to any because this field is UI-only and not part of the
+            // main CreateLoanProductFormData used for API submission.
+            control={form.control as any}
+            name={"isRevolvingCreditLine" as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel required className="text-sm text-[#444C53]">

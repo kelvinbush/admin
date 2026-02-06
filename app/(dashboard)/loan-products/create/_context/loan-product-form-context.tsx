@@ -186,8 +186,6 @@ export function LoanProductFormProvider({
         : step1.loanVisibility
           ? [step1.loanVisibility]
           : [], // Transform loanVisibility → userGroupIds array
-      isRevolvingCreditLine: (step1 as any).isRevolvingCreditLine,
-
       // Step 2 fields
       repaymentFrequency: step2?.repaymentFrequency,
       maxGracePeriod: (step2?.maxGracePeriod && step2.maxGracePeriod.trim() !== "") 
